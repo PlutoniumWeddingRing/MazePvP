@@ -22,6 +22,7 @@ import org.bukkit.entity.Zombie;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.ProjectileHitEvent;
@@ -258,7 +259,10 @@ public final class EventListeners implements Listener {
 		Iterator<Maze> mit = MazePvP.theMazePvP.mazes.iterator();
 		while (mit.hasNext()) {
 			Maze maze = mit.next();
-			if (maze.mazeBoss == event.getEntity()) maze.mazeBoss = null;
+			if (maze.mazeBoss == event.getEntity()) {
+				maze.mazeBoss = null;
+				event.getDrops().clear();
+			}
 			if (event.getEntity() instanceof Player || event.getEntity() instanceof Spider || event.getEntity() instanceof Zombie || event.getEntity() instanceof Skeleton || event.getEntity() instanceof Creeper) {
 				if (maze.isInsideMaze(event.getEntity().getLocation())) {
 					Location loc = event.getEntity().getLocation();
@@ -296,16 +300,22 @@ public final class EventListeners implements Listener {
 	    	if (maze.mazeBoss == event.getDamager() && event.getEntity() instanceof LivingEntity) {
 	    		if (maze.mazeBossTpCooldown > 0) {
 	    			event.setCancelled(true);
-	    		} else if (MazePvP.theMazePvP.hasBossDamaged) {
-	    			MazePvP.theMazePvP.hasBossDamaged = false;
 	    		} else {
-	    			MazePvP.theMazePvP.hasBossDamaged = true;
-	    			((LivingEntity)event.getEntity()).damage(1000, event.getDamager());
+	    			event.setDamage(maze.mazeBossStrength == 0 ? ((LivingEntity)event.getEntity()).getHealth()+10: maze.mazeBossStrength);
 	    		}
 	    	}
-	    	if (maze.mazeBoss == event.getEntity() && event.getDamager() instanceof Player) {
-	    		maze.mazeBossTargetPlayer = ((Player)event.getDamager()).getName();
-	    		maze.mazeBossTargetTimer = Math.min(MazePvP.BOSS_TIMER_MAX, maze.mazeBossTargetTimer+20);
+	    	if (maze.mazeBoss == event.getEntity()) {
+	    		if (event.getDamager() instanceof Player) {
+		    		maze.mazeBossTargetPlayer = ((Player)event.getDamager()).getName();
+		    		maze.mazeBossTargetTimer = Math.min(MazePvP.BOSS_TIMER_MAX, maze.mazeBossTargetTimer+20);
+	    		}
+	    		maze.mazeBossHp = Math.max(0.0,  maze.mazeBossHp-event.getDamage());
+	    		if (maze.mazeBossHp <= 0.0 && maze.mazeBossMaxHp != 0) {
+	    			maze.mazeBoss.setHealth(0);
+	    		}
+	    		if (event.getCause() == DamageCause.SUFFOCATION) {
+	    			maze.relocateMazeBoss(false);
+	    		}
 	    	}
 		}
     }

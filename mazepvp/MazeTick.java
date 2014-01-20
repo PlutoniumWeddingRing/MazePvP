@@ -73,8 +73,22 @@ public class MazeTick extends BukkitRunnable {
 				if (maze.mazeBossTargetTimer == 0) {
 					maze.mazeBossTargetPlayer = "";
 				}
-				maze.mazeBossTpCooldown = Math.max(0, maze.mazeBossTpCooldown-1);
 			}
+			maze.mazeBossTpCooldown = Math.max(0, maze.mazeBossTpCooldown-1);
+    		if (maze.mazeBoss != null && Math.random() < 0.02*maze.mazeBossTargetTimer/(double)MazePvP.BOSS_TIMER_MAX) {
+    			maze.mazeBossTargetTimer = MazePvP.BOSS_TIMER_MAX/3;
+    			Player player = Bukkit.getPlayer(maze.mazeBossTargetPlayer);
+    			if (player != null) {
+    				Location ploc = player.getLocation();
+    				Location mloc = maze.mazeBoss.getLocation();
+    				double angle = Math.atan2(mloc.getX()-ploc.getX(), mloc.getZ()-ploc.getZ());
+    				angle +=  Math.PI;
+    				maze.relocateMazeBoss(true, new Point2D.Double(ploc.getX() + 1.0*Math.sin(angle), ploc.getZ() + 1.0*Math.cos(angle)), ploc.getYaw(), mloc.getPitch());
+    			} else {
+    				maze.mazeBossTargetPlayer = "";
+    				maze.mazeBossTargetTimer = 0;
+    			}
+    		}
 			
 	      	if (main.wallChangeTimer >= Maze.WALL_CHANGE_SPEED) {
 	      		boolean isLookedAt[][] = new boolean[maze.mazeSize*2+1][];
@@ -460,21 +474,6 @@ public class MazeTick extends BukkitRunnable {
 	        		if (maze.mazeBoss == null) maze.makeNewMazeBoss(maze.mazeWorld);
 	        		if (Math.random() < 0.05) {
 	        			maze.relocateMazeBoss(false);
-	        		}
-	        		if (Math.random() < 0.7*maze.mazeBossTargetTimer/(double)MazePvP.BOSS_TIMER_MAX) {
-	        			maze.mazeBossTargetTimer = MazePvP.BOSS_TIMER_MAX/3;
-	        			Player player = Bukkit.getPlayer(maze.mazeBossTargetPlayer);
-	        			if (player != null) {
-	        				Location ploc = player.getLocation();
-	        				Location mloc = maze.mazeBoss.getLocation();
-	        				double angle = Math.atan2(mloc.getX()-ploc.getX(), mloc.getZ()-ploc.getZ());
-	        				angle +=  Math.PI;
-	        				System.out.println(Math.toDegrees(angle));
-	        				maze.relocateMazeBoss(true, new Point2D.Double(ploc.getX() + 1.0*Math.sin(angle), ploc.getZ() + 1.0*Math.cos(angle)), ploc.getYaw(), mloc.getPitch());
-	        			} else {
-	        				maze.mazeBossTargetPlayer = "";
-	        				maze.mazeBossTargetTimer = 0;
-	        			}
 	        		}
 	        	}
 	        	//main.saveMazeProps(maze);

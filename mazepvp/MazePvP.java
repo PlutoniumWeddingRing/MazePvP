@@ -28,8 +28,9 @@ public final class MazePvP extends JavaPlugin {
 
 	public MazeTick tickTask = null;
 	public ArrayList<Maze> mazes = new ArrayList<Maze>();
-	public boolean hasBossDamaged = false;
 	public String mazeBossName = "MazeBoss";
+	public int mazeBossMaxHp = 0;
+	public int mazeBossStrength = 0;
 	public double mazeSpawnMobProb = 1.0/3.0;
 	public double mazeChestAppearProb = 0.3;
 	public double mazeGroundReappearProb = 0.1;
@@ -102,7 +103,9 @@ public final class MazePvP extends JavaPlugin {
    @SuppressWarnings("deprecation")
    public void loadConfiguration() {
 		Configuration config = getConfig();
-		mazeBossName = config.getString("bossName");
+		mazeBossName = config.getString("boss.name");
+		mazeBossMaxHp = config.getInt("boss.hp");
+		mazeBossStrength = config.getInt("boss.attack");
 		mazeGroundReappearProb = config.getDouble("probabilities.groundReappear");
 		mazeChestAppearProb = config.getDouble("probabilities.chestAppear");
 		mazeSpawnMobProb = config.getDouble("probabilities.mobAppear");

@@ -34,6 +34,9 @@ public class Maze {
 	public String mazeBossTargetPlayer = "";
 	public int mazeBossTargetTimer = 0;
 	public int mazeBossTpCooldown = 0;
+	public int mazeBossMaxHp = 0;
+	public double mazeBossHp = 0.0;
+	public int mazeBossStrength = 0;
 	public double mazeSpawnMobProb = 1.0/3.0;
 	public double mazeChestAppearProb = 0.3;
 	public double mazeGroundReappearProb = 0.1;
@@ -48,6 +51,8 @@ public class Maze {
 	
 	public Maze() {
 		mazeBossName = MazePvP.theMazePvP.mazeBossName;
+		mazeBossHp = mazeBossMaxHp = MazePvP.theMazePvP.mazeBossMaxHp;
+		mazeBossStrength = MazePvP.theMazePvP.mazeBossStrength;
 		mazeGroundReappearProb = MazePvP.theMazePvP.mazeGroundReappearProb;
 		mazeChestAppearProb = MazePvP.theMazePvP.mazeChestAppearProb;
 		mazeSpawnMobProb = MazePvP.theMazePvP.mazeSpawnMobProb;
@@ -104,7 +109,7 @@ public class Maze {
 				worldObj.playEffect(new Location(worldObj, mazeBoss.getLocation().getX(), mazeBoss.getLocation().getY()+1, mazeBoss.getLocation().getZ()), Effect.SMOKE, j);
 			}
 		}
-		mazeBossTpCooldown = 20;
+		if (coolDown) mazeBossTpCooldown = 20;
 	}
 	 
 	public void makeNewMazeBoss(World worldObj) {
@@ -112,6 +117,8 @@ public class Maze {
 	 	mazeBoss = (Zombie)worldObj.spawnEntity(new Location(worldObj, bossLoc.x, mazeY+1, bossLoc.y), EntityType.ZOMBIE);
 	 	mazeBoss.setCustomName(mazeBossName);
 	 	mazeBossId = mazeBoss.getUniqueId();
+	 	mazeBossHp = mazeBossMaxHp;
+	 	worldObj.playEffect(new Location(worldObj, mazeBoss.getLocation().getX(), mazeBoss.getLocation().getY()+1, mazeBoss.getLocation().getZ()), Effect.MOBSPAWNER_FLAMES, 0);
 	 	ItemStack boots = new ItemStack(Material.LEATHER_BOOTS);
 	 	LeatherArmorMeta meta = (LeatherArmorMeta) boots.getItemMeta();
 	 	meta.setColor(Color.fromRGB(0, 0, 0));
