@@ -31,6 +31,9 @@ public class Maze {
 	public Zombie mazeBoss = null;
 	public String mazeBossName = "MazeBoss";
 	public UUID mazeBossId = null;
+	public String mazeBossTargetPlayer = "";
+	public int mazeBossTargetTimer = 0;
+	public int mazeBossTpCooldown = 0;
 	public double mazeSpawnMobProb = 1.0/3.0;
 	public double mazeChestAppearProb = 0.3;
 	public double mazeGroundReappearProb = 0.1;
@@ -76,8 +79,17 @@ public class Maze {
 	 	return new Point2D.Double(mazeX+bossX+MAZE_PASSAGE_WIDTH*0.5, mazeZ+bossZ+MAZE_PASSAGE_WIDTH*0.5);
 	 }
 	 
-	public void relocateMazeBoss() {
-	 	int j;
+	public void relocateMazeBoss(boolean coolDown) {
+	 	World worldObj = mazeBoss.getWorld();
+		relocateMazeBoss(coolDown, getMazeBossNewLocation(worldObj));
+	}
+	
+	public void relocateMazeBoss(boolean coolDown, Point2D.Double bossLoc) {
+		relocateMazeBoss(coolDown, bossLoc, mazeBoss.getLocation().getYaw(), mazeBoss.getLocation().getPitch());
+	}
+
+	public void relocateMazeBoss(boolean coolDown, Point2D.Double bossLoc, float yaw, float pitch) {
+		int j;
 	 	World worldObj = mazeBoss.getWorld();
 		for (j = 0; j <= 8; j++) {
 			worldObj.playEffect(mazeBoss.getLocation(), Effect.SMOKE, j);
@@ -85,15 +97,15 @@ public class Maze {
 				worldObj.playEffect(new Location(worldObj, mazeBoss.getLocation().getX(), mazeBoss.getLocation().getY()+1, mazeBoss.getLocation().getZ()), Effect.SMOKE, j);
 			}
 		}
-		Point2D.Double bossLoc = getMazeBossNewLocation(worldObj);
-		mazeBoss.teleport(new Location(worldObj, bossLoc.x, mazeY+1, bossLoc.y));
+		mazeBoss.teleport(new Location(worldObj, bossLoc.x, mazeY+1, bossLoc.y, yaw, pitch));
 		for (j = 0; j <= 8; j++) {
 			worldObj.playEffect(mazeBoss.getLocation(), Effect.SMOKE, j);
 			if (j != 4) {
 				worldObj.playEffect(new Location(worldObj, mazeBoss.getLocation().getX(), mazeBoss.getLocation().getY()+1, mazeBoss.getLocation().getZ()), Effect.SMOKE, j);
 			}
 		}
-	 }
+		mazeBossTpCooldown = 20;
+	}
 	 
 	public void makeNewMazeBoss(World worldObj) {
 	 	Point2D.Double bossLoc = getMazeBossNewLocation(worldObj);

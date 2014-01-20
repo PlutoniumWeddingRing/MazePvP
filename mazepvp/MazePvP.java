@@ -22,6 +22,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 public final class MazePvP extends JavaPlugin {
 	
 	public static final String MAIN_FILE_NAME = "maze-names.txt";
+	public static final int BOSS_TIMER_MAX = 100;
 	
 	public static MazePvP theMazePvP;
 

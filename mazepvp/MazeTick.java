@@ -1,10 +1,12 @@
 package mazepvp;
 
+import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Effect;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -33,7 +35,7 @@ public class MazeTick extends BukkitRunnable {
       		int i, j, posX, posZ, xx, zz;
       		if (maze.mazeBoss != null) {
       			maze.mazeBoss.setHealth(maze.mazeBoss.getMaxHealth());
-      			if (!maze.isInsideMaze(maze.mazeBoss.getLocation())) maze.relocateMazeBoss();
+      			if (!maze.isInsideMaze(maze.mazeBoss.getLocation())) maze.relocateMazeBoss(false);
       		}
 			Collection<LivingEntity> entities = maze.mazeWorld.getEntitiesByClass(LivingEntity.class);
 			Iterator<LivingEntity> iter = entities.iterator();
@@ -41,7 +43,7 @@ public class MazeTick extends BukkitRunnable {
 				LivingEntity en = iter.next();
 				if (en.getHealth() > 0 && maze.isInsideMaze(en.getLocation())) {
 					if (en.getLocation().getY() <= maze.mazeY-Maze.MAZE_PASSAGE_DEPTH+2.5 && en.getLocation().getY() >= maze.mazeY-Maze.MAZE_PASSAGE_DEPTH+1) {
-						if (maze.mazeBoss == en) maze.relocateMazeBoss();
+						if (maze.mazeBoss == en) maze.relocateMazeBoss(false);
 						else en.damage(en.getHealth()+10);
 					}
 				}
@@ -64,6 +66,14 @@ public class MazeTick extends BukkitRunnable {
 					player.getInventory().clear();
 				}
 				maze.playerInsideMaze.put(player.getName(), inside);
+			}
+			
+			if (maze.mazeBossTargetTimer > 0) {
+				maze.mazeBossTargetTimer--;
+				if (maze.mazeBossTargetTimer == 0) {
+					maze.mazeBossTargetPlayer = "";
+				}
+				maze.mazeBossTpCooldown = Math.max(0, maze.mazeBossTpCooldown-1);
 			}
 			
 	      	if (main.wallChangeTimer >= Maze.WALL_CHANGE_SPEED) {
@@ -449,7 +459,22 @@ public class MazeTick extends BukkitRunnable {
 	        	if (updateBoss) {
 	        		if (maze.mazeBoss == null) maze.makeNewMazeBoss(maze.mazeWorld);
 	        		if (Math.random() < 0.05) {
-	        			maze.relocateMazeBoss();
+	        			maze.relocateMazeBoss(false);
+	        		}
+	        		if (Math.random() < 0.7*maze.mazeBossTargetTimer/(double)MazePvP.BOSS_TIMER_MAX) {
+	        			maze.mazeBossTargetTimer = MazePvP.BOSS_TIMER_MAX/3;
+	        			Player player = Bukkit.getPlayer(maze.mazeBossTargetPlayer);
+	        			if (player != null) {
+	        				Location ploc = player.getLocation();
+	        				Location mloc = maze.mazeBoss.getLocation();
+	        				double angle = Math.atan2(mloc.getX()-ploc.getX(), mloc.getZ()-ploc.getZ());
+	        				angle +=  Math.PI;
+	        				System.out.println(Math.toDegrees(angle));
+	        				maze.relocateMazeBoss(true, new Point2D.Double(ploc.getX() + 1.0*Math.sin(angle), ploc.getZ() + 1.0*Math.cos(angle)), ploc.getYaw(), mloc.getPitch());
+	        			} else {
+	        				maze.mazeBossTargetPlayer = "";
+	        				maze.mazeBossTargetTimer = 0;
+	        			}
 	        		}
 	        	}
 	        	//main.saveMazeProps(maze);

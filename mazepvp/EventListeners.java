@@ -294,12 +294,18 @@ public final class EventListeners implements Listener {
 		while (mit.hasNext()) {
 			Maze maze = mit.next();
 	    	if (maze.mazeBoss == event.getDamager() && event.getEntity() instanceof LivingEntity) {
-	    		if (MazePvP.theMazePvP.hasBossDamaged) {
+	    		if (maze.mazeBossTpCooldown > 0) {
+	    			event.setCancelled(true);
+	    		} else if (MazePvP.theMazePvP.hasBossDamaged) {
 	    			MazePvP.theMazePvP.hasBossDamaged = false;
 	    		} else {
 	    			MazePvP.theMazePvP.hasBossDamaged = true;
 	    			((LivingEntity)event.getEntity()).damage(1000, event.getDamager());
 	    		}
+	    	}
+	    	if (maze.mazeBoss == event.getEntity() && event.getDamager() instanceof Player) {
+	    		maze.mazeBossTargetPlayer = ((Player)event.getDamager()).getName();
+	    		maze.mazeBossTargetTimer = Math.min(MazePvP.BOSS_TIMER_MAX, maze.mazeBossTargetTimer+20);
 	    	}
 		}
     }
