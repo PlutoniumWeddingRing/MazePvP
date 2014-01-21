@@ -297,11 +297,14 @@ public final class EventListeners implements Listener {
 		Iterator<Maze> mit = MazePvP.theMazePvP.mazes.iterator();
 		while (mit.hasNext()) {
 			Maze maze = mit.next();
+			if (event.getEntity() instanceof Player && maze.isInsideMaze(event.getEntity().getLocation())) {
+    			maze.mazeBoss.setCustomName(maze.mazeBossName);
+			}
 	    	if (maze.mazeBoss == event.getDamager() && event.getEntity() instanceof LivingEntity) {
 	    		if (maze.mazeBossTpCooldown > 0) {
 	    			event.setCancelled(true);
 	    		} else {
-	    			event.setDamage(maze.mazeBossStrength == 0 ? ((LivingEntity)event.getEntity()).getHealth()+10: maze.mazeBossStrength);
+	    			event.setDamage(maze.mazeBossStrength == 0 ? ((LivingEntity)event.getEntity()).getHealth()*10 : maze.mazeBossStrength);
 	    		}
 	    	}
 	    	if (maze.mazeBoss == event.getEntity()) {
@@ -310,7 +313,8 @@ public final class EventListeners implements Listener {
 		    		maze.mazeBossTargetTimer = Math.min(MazePvP.BOSS_TIMER_MAX, maze.mazeBossTargetTimer+20);
 	    		}
 	    		maze.mazeBossHp = Math.max(0.0,  maze.mazeBossHp-event.getDamage());
-	    		if (maze.mazeBossHp <= 0.0 && maze.mazeBossMaxHp != 0) {
+	    		maze.updateBossHpStr();
+	    		if (maze.mazeBossHp <= 0.0 && maze.mazeBossMaxHp > 0) {
 	    			maze.mazeBoss.setHealth(0);
 	    		}
 	    		if (event.getCause() == DamageCause.SUFFOCATION) {

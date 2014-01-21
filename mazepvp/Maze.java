@@ -30,6 +30,7 @@ public class Maze {
 	public int mazeX, mazeY, mazeZ;
 	public Zombie mazeBoss = null;
 	public String mazeBossName = "MazeBoss";
+	public String mazeBossHpStr = "\u25a0\u25a0\u25a0\u25a0\u25a0\u25a0\u25a0\u25a0";
 	public UUID mazeBossId = null;
 	public String mazeBossTargetPlayer = "";
 	public int mazeBossTargetTimer = 0;
@@ -48,10 +49,12 @@ public class Maze {
 	public double[] mazeChestWeighs;
 	public ItemStack[] mazeChestItems;
 	public String name = "";
+	public boolean updatingHp = false;
 	
 	public Maze() {
 		mazeBossName = MazePvP.theMazePvP.mazeBossName;
 		mazeBossHp = mazeBossMaxHp = MazePvP.theMazePvP.mazeBossMaxHp;
+		updateBossHpStr();
 		mazeBossStrength = MazePvP.theMazePvP.mazeBossStrength;
 		mazeGroundReappearProb = MazePvP.theMazePvP.mazeGroundReappearProb;
 		mazeChestAppearProb = MazePvP.theMazePvP.mazeChestAppearProb;
@@ -115,9 +118,9 @@ public class Maze {
 	public void makeNewMazeBoss(World worldObj) {
 	 	Point2D.Double bossLoc = getMazeBossNewLocation(worldObj);
 	 	mazeBoss = (Zombie)worldObj.spawnEntity(new Location(worldObj, bossLoc.x, mazeY+1, bossLoc.y), EntityType.ZOMBIE);
-	 	mazeBoss.setCustomName(mazeBossName);
 	 	mazeBossId = mazeBoss.getUniqueId();
 	 	mazeBossHp = mazeBossMaxHp;
+	 	updateBossHpStr();
 	 	worldObj.playEffect(new Location(worldObj, mazeBoss.getLocation().getX(), mazeBoss.getLocation().getY()+1, mazeBoss.getLocation().getZ()), Effect.MOBSPAWNER_FLAMES, 0);
 	 	ItemStack boots = new ItemStack(Material.LEATHER_BOOTS);
 	 	LeatherArmorMeta meta = (LeatherArmorMeta) boots.getItemMeta();
@@ -213,6 +216,23 @@ public class Maze {
 		return location.getX()-0.5 >= mazeX && location.getX()-0.5 <= mazeX+mazeSize*(1+Maze.MAZE_PASSAGE_WIDTH)
 		   &&  location.getZ()-0.5 >= mazeZ && location.getZ()-0.5 <= mazeZ+mazeSize*(1+Maze.MAZE_PASSAGE_WIDTH)
 		   &&  location.getY() >= mazeY-Maze.MAZE_PASSAGE_DEPTH && location.getY() <= mazeY+Maze.MAZE_PASSAGE_HEIGHT+1;
+	}
+
+	public void updateBossHpStr() {
+		if (mazeBossMaxHp <= 0) return;
+		if (updatingHp) return;
+		updatingHp = true;
+		double hpFraction = mazeBossHp/mazeBossMaxHp;
+		double barNum = MazePvP.BOSS_HEALTH_BARS*hpFraction;
+		if (hpFraction > 0.5) mazeBossHpStr = "§2";
+		else if (hpFraction > 0.25) mazeBossHpStr = "§6";
+		else mazeBossHpStr = "§4";
+		for (int i = 0; i < MazePvP.BOSS_HEALTH_BARS; i++) {
+			if (barNum-i > 0.75) mazeBossHpStr += "█";
+			else if (barNum-i > 0.25) mazeBossHpStr += "▌";
+			else mazeBossHpStr += " ";
+		}
+		updatingHp = false;
 	}
 
 }

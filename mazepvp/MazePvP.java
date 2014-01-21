@@ -23,6 +23,7 @@ public final class MazePvP extends JavaPlugin {
 	
 	public static final String MAIN_FILE_NAME = "maze-names.txt";
 	public static final int BOSS_TIMER_MAX = 100;
+	public static final int BOSS_HEALTH_BARS = 6;
 	
 	public static MazePvP theMazePvP;
 
