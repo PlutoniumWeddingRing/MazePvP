@@ -229,7 +229,7 @@ public class Maze {
 		else mazeBossHpStr = "§4";
 		for (int i = 0; i < MazePvP.BOSS_HEALTH_BARS; i++) {
 			if (barNum-i > 0.75) mazeBossHpStr += "█";
-			else if (barNum-i > 0.25) mazeBossHpStr += "▌";
+			else if (barNum-i > 0.25 || i == 0) mazeBossHpStr += "▌";
 			else mazeBossHpStr += " ";
 		}
 		updatingHp = false;
