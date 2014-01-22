@@ -260,8 +260,15 @@ public final class EventListeners implements Listener {
 		while (mit.hasNext()) {
 			Maze maze = mit.next();
 			if (maze.mazeBoss == event.getEntity()) {
-				maze.mazeBoss = null;
+				maze.mazeBoss.getEquipment().setBootsDropChance(0);
+				maze.mazeBoss.getEquipment().setLeggingsDropChance(0);
+				maze.mazeBoss.getEquipment().setChestplateDropChance(0);
+				maze.mazeBoss.getEquipment().setHelmetDropChance(0);
+				maze.mazeBoss.getEquipment().setItemInHandDropChance(0);
 				event.getDrops().clear();
+				maze.mazeBoss.setCustomName(null);
+				maze.mazeBoss.setCustomNameVisible(false);
+				maze.mazeBoss = null;
 			}
 			if (event.getEntity() instanceof Player || event.getEntity() instanceof Spider || event.getEntity() instanceof Zombie || event.getEntity() instanceof Skeleton || event.getEntity() instanceof Creeper) {
 				if (maze.isInsideMaze(event.getEntity().getLocation())) {
@@ -297,7 +304,7 @@ public final class EventListeners implements Listener {
 		Iterator<Maze> mit = MazePvP.theMazePvP.mazes.iterator();
 		while (mit.hasNext()) {
 			Maze maze = mit.next();
-			if (event.getEntity() instanceof Player && maze.isInsideMaze(event.getEntity().getLocation())) {
+			if (event.getEntity() instanceof Player) {
     			maze.mazeBoss.setCustomName(maze.mazeBossName);
 			}
 	    	if (maze.mazeBoss == event.getDamager() && event.getEntity() instanceof LivingEntity) {
