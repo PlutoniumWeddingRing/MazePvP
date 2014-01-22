@@ -304,8 +304,9 @@ public final class EventListeners implements Listener {
 		Iterator<Maze> mit = MazePvP.theMazePvP.mazes.iterator();
 		while (mit.hasNext()) {
 			Maze maze = mit.next();
-			if (event.getEntity() instanceof Player) {
+			if (maze.mazeBoss != null && event.getEntity() instanceof Player) {
     			maze.mazeBoss.setCustomName(maze.mazeBossName);
+    			maze.mazeBoss.setCustomNameVisible(false);
 			}
 	    	if (maze.mazeBoss == event.getDamager() && event.getEntity() instanceof LivingEntity) {
 	    		if (maze.mazeBossTpCooldown > 0) {
