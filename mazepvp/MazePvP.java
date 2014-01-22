@@ -82,7 +82,7 @@ public final class MazePvP extends JavaPlugin {
             	nameWriter.printf("%s\n", new Object[]{maze.name});
             	File mazeFile = new File(world.getWorldFolder(), maze.name+".maze");
             	PrintWriter var1 = new PrintWriter(new FileWriter(mazeFile, false));
-            	var1.printf("%d %d %d %d\n", new Object[] {maze.mazeX, maze.mazeY, maze.mazeZ, maze.mazeSize});
+            	var1.printf("%d %d %d %d %f\n", new Object[] {maze.mazeX, maze.mazeY, maze.mazeZ, maze.mazeSize, maze.mazeBossHp});
                 var1.printf("%s\n", new Object[]{(maze.mazeBossId==null)?"":maze.mazeBossId.toString()});
             	for (int i = 0; i < maze.mazeSize*2+1; i++) {
             		for (int j = 0; j < maze.mazeSize*2+1; j++) {
@@ -190,7 +190,7 @@ public final class MazePvP extends JavaPlugin {
 	            
 	            if ((var2 = var1.readLine()) != null) {
 	            	var3 = var2.split("\\s");
-	                if (var3.length != 4) {
+	                if (var3.length != 5) {
 	                	var1.close();
 	                	throw new Exception("Malformed input");
 	                }
@@ -198,6 +198,8 @@ public final class MazePvP extends JavaPlugin {
 	                maze.mazeY = Integer.parseInt(var3[1]);
 	                maze.mazeZ = Integer.parseInt(var3[2]);
 	                maze.mazeSize = Integer.parseInt(var3[3]);
+	                maze.mazeBossHp = Double.parseDouble(var3[4]);
+	                maze.updateBossHpStr();
 	                if ((var2 = var1.readLine()) != null) {
 	                	if (var2.equals("")) maze.mazeBossId = null;
 	                	else maze.mazeBossId = UUID.fromString(var2);
