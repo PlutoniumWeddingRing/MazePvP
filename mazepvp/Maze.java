@@ -65,9 +65,6 @@ public class Maze {
 		mazeChestItems = MazePvP.theMazePvP.mazeChestItems;
 		mazeBossDropWeighs = MazePvP.theMazePvP.mazeBossDropWeighs;
 		mazeBossDropItems = MazePvP.theMazePvP.mazeBossDropItems;
-		for (int i = 0; i < mazeBossDropItems.length; i++) System.out.println(mazeBossDropItems[i].getAmount());
-		System.out.println("______________");
-		for (int i = 0; i < mazeBossDropWeighs.length; i++) System.out.println("w: "+mazeBossDropWeighs[i]);
 	}
 	 
 	public int blockToMazeCoord(int blockCoord) {
