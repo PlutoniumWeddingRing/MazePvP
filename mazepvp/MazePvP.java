@@ -38,6 +38,8 @@ public final class MazePvP extends JavaPlugin {
 	public double[] mazeChestWeighs;
 	public ItemStack[] mazeChestItems;
 	public ItemStack[] startItems;
+	public ItemStack[] mazeBossDropItems;
+	public double[] mazeBossDropWeighs;
 	public int wallChangeTimer = 0;
 	
 	public MazePvP() {
@@ -134,6 +136,33 @@ public final class MazePvP extends JavaPlugin {
 			if (tempChestItems[i] != null) {
 				mazeChestItems[place] = tempChestItems[i];
 				mazeChestWeighs[place] = tempChestWeighs[i];
+				place++;
+			}
+		}
+		
+		itemCount = config.getInt("boss.drops.itemCount");
+		
+		ItemStack tempBossItems[] = new ItemStack[itemCount];
+		double tempBossWeighs[] = new double[itemCount];
+		int bossItemNum = 0;
+		for (int i = 0; i < itemCount; i++) {
+			int id = config.getInt("boss.drops.item"+(i+1)+".id");
+			int amount = config.getInt("boss.drops.item"+(i+1)+".amount");
+			double weigh = config.getDouble("boss.drops.item"+(i+1)+".weigh");
+			if (id == 0) tempBossItems[i] = null;
+			else {
+				tempBossItems[i] = new ItemStack(id, amount);
+				tempBossWeighs[i] = weigh;
+				bossItemNum++;
+			}
+		}
+		mazeBossDropWeighs = new double[bossItemNum];
+		mazeBossDropItems = new ItemStack[bossItemNum];
+		place = 0;
+		for (int i = 0; i < itemCount; i++) {
+			if (tempBossItems[i] != null) {
+				mazeBossDropItems[place] = tempBossItems[i];
+				mazeBossDropWeighs[place] = tempBossWeighs[i];
 				place++;
 			}
 		}

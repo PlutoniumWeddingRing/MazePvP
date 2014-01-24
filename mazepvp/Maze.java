@@ -48,6 +48,8 @@ public class Maze {
 	public HashMap<String, Boolean> playerInsideMaze = new HashMap<String, Boolean>();
 	public double[] mazeChestWeighs;
 	public ItemStack[] mazeChestItems;
+	public double[] mazeBossDropWeighs;
+	public ItemStack[] mazeBossDropItems;
 	public String name = "";
 	public boolean updatingHp = false;
 	
@@ -61,6 +63,11 @@ public class Maze {
 		mazeSpawnMobProb = MazePvP.theMazePvP.mazeSpawnMobProb;
 		mazeChestWeighs = MazePvP.theMazePvP.mazeChestWeighs;
 		mazeChestItems = MazePvP.theMazePvP.mazeChestItems;
+		mazeBossDropWeighs = MazePvP.theMazePvP.mazeBossDropWeighs;
+		mazeBossDropItems = MazePvP.theMazePvP.mazeBossDropItems;
+		for (int i = 0; i < mazeBossDropItems.length; i++) System.out.println(mazeBossDropItems[i].getAmount());
+		System.out.println("______________");
+		for (int i = 0; i < mazeBossDropWeighs.length; i++) System.out.println("w: "+mazeBossDropWeighs[i]);
 	}
 	 
 	public int blockToMazeCoord(int blockCoord) {

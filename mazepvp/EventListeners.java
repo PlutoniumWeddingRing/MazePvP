@@ -266,6 +266,16 @@ public final class EventListeners implements Listener {
 				maze.mazeBoss.getEquipment().setHelmetDropChance(0);
 				maze.mazeBoss.getEquipment().setItemInHandDropChance(0);
 				event.getDrops().clear();
+				double currentWeigh = 0.0;
+				double weighSum = 0.0;
+				int i;
+				for (i = 0; i < maze.mazeBossDropWeighs.length; i++) weighSum += maze.mazeBossDropWeighs[i];
+				double randNum = Math.random()*weighSum;
+				for (i = 0; i < maze.mazeBossDropWeighs.length; i++) {
+					currentWeigh += maze.mazeBossDropWeighs[i];
+					if (currentWeigh >= randNum) break;
+				}
+				event.getDrops().add(maze.mazeBossDropItems[i].clone());
 				maze.mazeBoss.setCustomName(null);
 				maze.mazeBoss.setCustomNameVisible(false);
 				maze.mazeBoss = null;
