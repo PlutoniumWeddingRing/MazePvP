@@ -81,6 +81,8 @@ public final class MazePvP extends JavaPlugin {
             while (it.hasNext()) {
             	Maze maze = it.next();
             	if (maze.mazeWorld != world) continue;
+                try
+                {
             	if (nameWriter == null) nameWriter = new PrintWriter(new FileWriter(mazeNamesFile, false));
             	nameWriter.printf("%s\n", new Object[]{maze.name});
             	File mazeFile = new File(world.getWorldFolder(), maze.name+".maze");
@@ -94,11 +96,14 @@ public final class MazePvP extends JavaPlugin {
             		}
             	}
                 var1.close();
+                } catch (Exception var4)
+                {
+                	getLogger().info("Failed to load properties of maze \""+maze.name+"\": "+var4.getMessage());
+                }
             }
 
             if (nameWriter != null) nameWriter.close();
-        }
-        catch (Exception var4)
+        } catch (Exception var4)
         {
         	getLogger().info("Failed to save maze properties: " + var4);
         }
@@ -108,7 +113,6 @@ public final class MazePvP extends JavaPlugin {
    public void loadConfiguration() {
 		Configuration config = getConfig();
 		showHeads = config.getBoolean("showHeadsOnSpikes");
-		System.out.println(showHeads);
 		mazeBossName = config.getString("boss.name");
 		mazeBossMaxHp = config.getInt("boss.hp");
 		mazeBossStrength = config.getInt("boss.attack");
@@ -211,6 +215,8 @@ public final class MazePvP extends JavaPlugin {
             Iterator<String> it = mazeNames.iterator();
             while (it.hasNext()) {
             	String str = it.next();
+            	try
+                {
             	File mazeFile = new File(world.getWorldFolder(), str+".maze");
             	if (!mazeFile.exists()) {
                 	throw new Exception("Couldn't find maze file \""+str+".maze\" in world \""+world.getName()+"\"");
@@ -219,10 +225,9 @@ public final class MazePvP extends JavaPlugin {
 	            String[] var3;
             	Maze maze = new Maze();
             	maze.name = str;
-	            
 	            if ((var2 = var1.readLine()) != null) {
 	            	var3 = var2.split("\\s");
-	                if (var3.length != 5) {
+	                if (var3.length != 4 && var3.length != 5) {
 	                	var1.close();
 	                	throw new Exception("Malformed input");
 	                }
@@ -230,7 +235,7 @@ public final class MazePvP extends JavaPlugin {
 	                maze.mazeY = Integer.parseInt(var3[1]);
 	                maze.mazeZ = Integer.parseInt(var3[2]);
 	                maze.mazeSize = Integer.parseInt(var3[3]);
-	                maze.mazeBossHp = Double.parseDouble(var3[4]);
+	                maze.mazeBossHp = (var3.length == 5) ? Double.parseDouble(var3[4]) : 0;
 	                maze.updateBossHpStr();
 	                if ((var2 = var1.readLine()) != null) {
 	                	if (var2.equals("")) maze.mazeBossId = null;
@@ -278,9 +283,11 @@ public final class MazePvP extends JavaPlugin {
 	            }
 	            mazes.add(maze);
 	            var1.close();
+	            } catch (Exception var4) {
+	            	getLogger().info("Failed to load properties of maze \""+str+"\": "+var4.getMessage());
+	            }
             }
-        }
-        catch (Exception var4)
+        } catch (Exception var4)
         {
         	getLogger().info("Failed to load maze properties: "+var4.getMessage());
         	mazes = new ArrayList<Maze>();
