@@ -41,6 +41,7 @@ public final class MazePvP extends JavaPlugin {
 	public ItemStack[] mazeBossDropItems;
 	public double[] mazeBossDropWeighs;
 	public int wallChangeTimer = 0;
+	public boolean showHeads = true;
 	
 	public MazePvP() {
 	}
@@ -106,6 +107,8 @@ public final class MazePvP extends JavaPlugin {
    @SuppressWarnings("deprecation")
    public void loadConfiguration() {
 		Configuration config = getConfig();
+		showHeads = config.getBoolean("showHeadsOnSpikes");
+		System.out.println(showHeads);
 		mazeBossName = config.getString("boss.name");
 		mazeBossMaxHp = config.getInt("boss.hp");
 		mazeBossStrength = config.getInt("boss.attack");

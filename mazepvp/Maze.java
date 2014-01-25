@@ -30,7 +30,7 @@ public class Maze {
 	public int mazeX, mazeY, mazeZ;
 	public Zombie mazeBoss = null;
 	public String mazeBossName = "MazeBoss";
-	public String mazeBossHpStr = "\u25a0\u25a0\u25a0\u25a0\u25a0\u25a0\u25a0\u25a0";
+	public String mazeBossHpStr = "";
 	public UUID mazeBossId = null;
 	public String mazeBossTargetPlayer = "";
 	public int mazeBossTargetTimer = 0;

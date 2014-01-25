@@ -290,11 +290,13 @@ public class MazeTick extends BukkitRunnable {
 	            	}
 	            	for (xx = 1; xx <= maze.mazeSize*2-1; xx += 2) {
 	            		for (zz = 1; zz <= maze.mazeSize*2-1; zz += 2) {
-	            			if (!maze.isBeingChanged[xx][zz] && !isLookedAt[xx][zz] && Math.random() < maze.mazeGroundReappearProb) {
+	            			if (!maze.isBeingChanged[xx][zz] && !isLookedAt[xx][zz] && Math.random() < maze.mazeGroundReappearProb &&
+	            				maze.mazeWorld.getBlockAt(maze.mazeToBlockCoord(xx), maze.mazeY, maze.mazeToBlockCoord(zz)).isEmpty()) {
 	            				for (int xxx = maze.mazeToBlockCoord(xx); xxx <= maze.mazeToBlockCoord(xx)+Maze.MAZE_PASSAGE_WIDTH-1; xxx++) {
 	            					for (int zzz = maze.mazeToBlockCoord(zz); zzz <= maze.mazeToBlockCoord(zz)+Maze.MAZE_PASSAGE_WIDTH-1; zzz++) {
 	            						maze.mazeWorld.getBlockAt(maze.mazeX+xxx, maze.mazeY, maze.mazeZ+zzz).setTypeId(98);
 	            						maze.mazeWorld.getBlockAt(maze.mazeX+xxx, maze.mazeY, maze.mazeZ+zzz).setData((byte) 0);
+	  		        					if (MazePvP.theMazePvP.showHeads) maze.mazeWorld.getBlockAt(maze.mazeX+xxx, maze.mazeY-Maze.MAZE_PASSAGE_DEPTH+2, maze.mazeZ+zzz).setType(Material.AIR);
 	            					}
 	            				}
 	            			}
@@ -449,7 +451,7 @@ public class MazeTick extends BukkitRunnable {
 		        					} else if (coords.type == 10) {
 			        					if (maze.mazeWorld.getBlockAt(maze.mazeX+xx, maze.mazeY+yy, maze.mazeZ+zz) == null || maze.mazeWorld.getBlockAt(maze.mazeX+xx, maze.mazeY+yy, maze.mazeZ+zz).isEmpty()) {
 			        						bId = 98;
-				            				maze.mazeWorld.getBlockAt(maze.mazeX+xx, maze.mazeY-Maze.MAZE_PASSAGE_DEPTH+2, maze.mazeZ+zz).setType(Material.AIR);
+				            				if (MazePvP.theMazePvP.showHeads) maze.mazeWorld.getBlockAt(maze.mazeX+xx, maze.mazeY-Maze.MAZE_PASSAGE_DEPTH+2, maze.mazeZ+zz).setType(Material.AIR);
 			        					} else if (!spawnMob)
 			        						bId = 0;
 			        				}
@@ -543,7 +545,7 @@ public class MazeTick extends BukkitRunnable {
 	      			sz = maze.mazeToBlockCoord(coords.z);
 	  				ey = Maze.MAZE_PASSAGE_HEIGHT+1;
 	  				boolean restoreFloor = false;
-		        		if (coords.x%2 == 0 || coords.z%2 == 0) {
+		        	if (coords.x%2 == 0 || coords.z%2 == 0) {
 	      				if (coords.x%2 != 0) {
 	      					ex = sx+Maze.MAZE_PASSAGE_WIDTH-1;
 	          				ez = sz;
@@ -596,7 +598,7 @@ public class MazeTick extends BukkitRunnable {
 	    	        		if (maze.maze[coords.x][coords.z] == 0 && !(coords.x%2 == 1 && coords.z%2 == 1)) maze.maze[coords.x][coords.z] = 1;
 	        				//save = true;
 	    	        		maze.isBeingChanged[coords.x][coords.z] = false;
-	    	        		if (restoreFloor) {
+	    	        		if (restoreFloor && MazePvP.theMazePvP.showHeads) {
 	    	        			for (xx = sx; xx <= ex; xx++) {
 	  		        				for (zz = sz; zz <= ez; zz++) {
 	  		        					maze.mazeWorld.getBlockAt(maze.mazeX+xx, maze.mazeY-Maze.MAZE_PASSAGE_DEPTH+2, maze.mazeZ+zz).setType(Material.AIR);

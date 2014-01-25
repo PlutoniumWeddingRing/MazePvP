@@ -280,7 +280,7 @@ public final class EventListeners implements Listener {
 				maze.mazeBoss.setCustomNameVisible(false);
 				maze.mazeBoss = null;
 			}
-			if (event.getEntity() instanceof Player || event.getEntity() instanceof Spider || event.getEntity() instanceof Zombie || event.getEntity() instanceof Skeleton || event.getEntity() instanceof Creeper) {
+			if (MazePvP.theMazePvP.showHeads && event.getEntity() instanceof Player || event.getEntity() instanceof Spider || event.getEntity() instanceof Zombie || event.getEntity() instanceof Skeleton || event.getEntity() instanceof Creeper) {
 				if (maze.isInsideMaze(event.getEntity().getLocation())) {
 					Location loc = event.getEntity().getLocation();
 					if (loc.getY() <= maze.mazeY-Maze.MAZE_PASSAGE_DEPTH+2.5) {
