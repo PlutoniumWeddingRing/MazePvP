@@ -54,6 +54,8 @@ public final class MazePvP extends JavaPlugin {
 		getCommand("createmaze").setExecutor(new CommandCreateMaze(this));
 		getCommand("listmazes").setExecutor(new CommandListMazes(this));
 		getCommand("deletemaze").setExecutor(new CommandDeleteMaze(this));
+		getCommand("setwp").setExecutor(new CommandSetWaitingPlace(this));
+		getCommand("removewp").setExecutor(new CommandRemoveWaitingPlace(this));
 		saveDefaultConfig();
 		loadConfiguration();
 		Iterator<World> wit = Bukkit.getServer().getWorlds().iterator();
@@ -87,7 +89,7 @@ public final class MazePvP extends JavaPlugin {
             	nameWriter.printf("%s\n", new Object[]{maze.name});
             	File mazeFile = new File(world.getWorldFolder(), maze.name+".maze");
             	PrintWriter var1 = new PrintWriter(new FileWriter(mazeFile, false));
-            	var1.printf("%d %d %d %d %f %d\n", new Object[] {maze.mazeX, maze.mazeY, maze.mazeZ, maze.mazeSize, maze.mazeBossHp, maze.canBeEntered?1:0});
+            	var1.printf("%d %d %d %d %f %d %d %d %d\n", new Object[] {maze.mazeX, maze.mazeY, maze.mazeZ, maze.mazeSize, maze.mazeBossHp, maze.canBeEntered?1:0, maze.waitX, maze.waitY, maze.waitZ});
                 var1.printf("%s\n", new Object[]{(maze.mazeBossId==null)?"":maze.mazeBossId.toString()});
             	for (int i = 0; i < maze.mazeSize*2+1; i++) {
             		for (int j = 0; j < maze.mazeSize*2+1; j++) {
@@ -227,7 +229,7 @@ public final class MazePvP extends JavaPlugin {
             	maze.name = str;
 	            if ((var2 = var1.readLine()) != null) {
 	            	var3 = var2.split("\\s");
-	                if (var3.length < 4 || var3.length > 6) {
+	                if (var3.length < 4 || var3.length > 9) {
 	                	var1.close();
 	                	throw new Exception("Malformed input");
 	                }
@@ -237,7 +239,11 @@ public final class MazePvP extends JavaPlugin {
 	                maze.mazeSize = Integer.parseInt(var3[3]);
 	                maze.mazeBossHp = (var3.length >= 5) ? Double.parseDouble(var3[4]) : 0;
 	                maze.canBeEntered = (var3.length >= 6) ? (Integer.parseInt(var3[5]) != 0) : true;
-	                maze.updateBossHpStr();
+	                if (!maze.canBeEntered) {
+	                	maze.waitX = (var3.length >= 7) ? Integer.parseInt(var3[6]) : 0;
+	                	maze.waitY = (var3.length >= 8) ? Integer.parseInt(var3[7]) : 0;
+	                	maze.waitZ = (var3.length >= 9) ? Integer.parseInt(var3[8]) : 0;
+	                }
 	                if ((var2 = var1.readLine()) != null) {
 	                	if (var2.equals("")) maze.mazeBossId = null;
 	                	else maze.mazeBossId = UUID.fromString(var2);

@@ -53,6 +53,7 @@ public class Maze {
 	public String name = "";
 	public boolean updatingHp = false;
 	public boolean canBeEntered = true;
+	public int waitX = 0, waitY = 0, waitZ = 0;
 	
 	public Maze() {
 		mazeBossName = MazePvP.theMazePvP.mazeBossName;
@@ -238,6 +239,50 @@ public class Maze {
 			else mazeBossHpStr += " ";
 		}
 		updatingHp = false;
+	}
+
+	@SuppressWarnings("deprecation")
+	public void removeEntrances() {
+		for (int xx = 0; xx < mazeSize*2+1; xx ++) {
+			for (int zz = 0; zz < mazeSize*2+1; zz ++) {
+				if (!(xx == 0 || xx == mazeSize*2) && !(zz == 0 || zz == mazeSize*2)) continue;
+				if (maze[xx][zz] != 1) {
+					int sx = mazeToBlockCoord(xx);
+					int ex = sx+((zz == 0 || zz == mazeSize*2) ? MAZE_PASSAGE_WIDTH-1 : 0);
+					int sz = mazeToBlockCoord(zz);
+					int ez = sz+((xx == 0 || xx == mazeSize*2) ? MAZE_PASSAGE_WIDTH-1 : 0);
+					for (int xxx = sx; xxx <= ex; xxx++) {
+						for (int zzz = sz; zzz <= ez; zzz++) {
+							for (int yyy = 1; yyy <= MAZE_PASSAGE_HEIGHT+1; yyy++) {
+			    				mazeWorld.getBlockAt(mazeX+xxx, mazeY+yyy, mazeZ+zzz).setTypeId(98);
+			    				mazeWorld.getBlockAt(mazeX+xxx, mazeY+yyy, mazeZ+zzz).setData((byte)3);
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	public void restoreEntrances() {
+		for (int xx = 0; xx < mazeSize*2+1; xx ++) {
+			for (int zz = 0; zz < mazeSize*2+1; zz ++) {
+				if (!(xx == 0 || xx == mazeSize*2) && !(zz == 0 || zz == mazeSize*2)) continue;
+				if (maze[xx][zz] != 1) {
+					int sx = mazeToBlockCoord(xx);
+					int ex = sx+((zz == 0 || zz == mazeSize*2) ? MAZE_PASSAGE_WIDTH-1 : 0);
+					int sz = mazeToBlockCoord(zz);
+					int ez = sz+((xx == 0 || xx == mazeSize*2) ? MAZE_PASSAGE_WIDTH-1 : 0);
+					for (int xxx = sx; xxx <= ex; xxx++) {
+						for (int zzz = sz; zzz <= ez; zzz++) {
+							for (int yyy = 1; yyy <= MAZE_PASSAGE_HEIGHT+1; yyy++) {
+			    				mazeWorld.getBlockAt(mazeX+xxx, mazeY+yyy, mazeZ+zzz).setType(Material.AIR);
+							}
+						}
+					}
+				}
+			}
+		}
 	}
 
 }
