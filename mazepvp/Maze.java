@@ -13,6 +13,8 @@ import org.bukkit.Effect;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
+import org.bukkit.block.Block;
+import org.bukkit.block.Sign;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Zombie;
 import org.bukkit.inventory.EntityEquipment;
@@ -54,6 +56,11 @@ public class Maze {
 	public boolean updatingHp = false;
 	public boolean canBeEntered = true;
 	public int waitX = 0, waitY = 0, waitZ = 0;
+	public int minPlayers = 0;
+	public int maxPlayers = 0;
+	public int currentPlayers = 0;
+	private boolean fightStarted = false;
+	public LinkedList<int[]> joinSigns = new LinkedList<int[]>();
 	
 	public Maze() {
 		mazeBossName = MazePvP.theMazePvP.mazeBossName;
@@ -283,6 +290,111 @@ public class Maze {
 				}
 			}
 		}
+	}
+
+	public void addJoinSign(int x, int y, int z, int x2, int y2, int z2) {
+		int[] newSign = new int[]{Math.min(x, x2), Math.min(y, y2), Math.min(z, z2),
+								  Math.max(x, x2), Math.max(y, y2), Math.max(z, z2)};
+		Iterator<int[]> it = joinSigns.iterator();
+    	while (it.hasNext()) {
+    		int[] sign = it.next();
+    		if (sign[0] <= newSign[3] && sign[1] <= newSign[4] && sign[2] <= newSign[5]
+    		 && sign[3] >= newSign[0] && sign[4] >= newSign[1] && sign[5] >= newSign[2]) {
+    			removeJoinSign(sign, false);
+    			it.remove();
+    		}
+    	}
+		joinSigns.add(newSign);
+	}
+
+	public int[] findJoinSign(Location location) {
+		Iterator<int[]> it = joinSigns.iterator();
+    	while (it.hasNext()) {
+    		int[] sign = it.next();
+    		if (sign[0] <= location.getBlockX() && sign[1] <= location.getBlockY() && sign[2] <= location.getBlockZ()
+    		 && sign[3] >= location.getBlockX() && sign[4] >= location.getBlockY() && sign[5] >= location.getBlockZ())
+    			return sign;
+    	}
+		return null;
+	}
+
+	public void removeJoinSign(int[] sign) {
+		removeJoinSign(sign, true);
+	}
+
+	public void removeJoinSign(int[] sign, boolean removeFromList) {
+		if (removeFromList) joinSigns.remove(sign);
+		for (int xx = sign[0]; xx <= sign[3]; xx++) {
+			for (int yy = sign[1]; yy <= sign[4]; yy++) {
+				for (int zz = sign[2]; zz <= sign[5]; zz++) {
+					Block block = mazeWorld.getBlockAt(xx, yy, zz);
+					if (block.getType() == Material.WALL_SIGN || block.getType() == Material.SIGN_POST) {
+						Sign signState = (Sign)block.getState(); 
+						for (int i = 0; i < 4; i++) signState.setLine(i, "");
+						signState.update();
+					}
+				}
+			}
+		}
+	}
+
+	public String parseSignText(String str) {
+		String newStr = "";
+		String subtStr = "";
+		boolean escaping = false;
+		boolean insideSubt = false;
+		for (int i = 0; i < str.length(); i++) {
+			if (escaping) escaping = false;
+			else {
+				if (insideSubt) {
+					if (str.charAt(i) == '>') {
+						insideSubt = false;
+						if (subtStr.equals("name")) subtStr = name;
+						else if (subtStr.equals("minP")) subtStr = Integer.toString(minPlayers);
+						else if (subtStr.equals("maxP")) subtStr = Integer.toString(maxPlayers);
+						else if (subtStr.equals("currentP")) subtStr = Integer.toString(currentPlayers);
+						else if (subtStr.equals("state")) subtStr = fightStarted?"Started":"Waiting";
+						else subtStr = "<"+subtStr+">";
+						newStr += subtStr;
+					} else subtStr += str.charAt(i);
+					continue;
+				} else if (str.charAt(i) == '\\') {
+					escaping = true;
+					continue;
+				} else if (str.charAt(i) == '<') {
+					insideSubt = true;
+					subtStr = "";
+					continue;
+				}
+			}
+			newStr += str.charAt(i);
+		}
+		if (insideSubt) newStr += "<"+subtStr;
+		return newStr;
+	}
+
+	public void updateJoinSigns() {
+		Iterator<int[]> it = joinSigns.iterator();
+    	while (it.hasNext()) {
+    		int[] sign = it.next();
+    		int place = 0;
+    		outerLoop: for (int xx = sign[0]; xx <= sign[3]; xx++) {
+    			for (int yy = sign[1]; yy <= sign[4]; yy++) {
+    				for (int zz = sign[2]; zz <= sign[5]; zz++) {
+    					Block block = mazeWorld.getBlockAt(xx, yy, zz);
+    					if (block.getType() == Material.WALL_SIGN || block.getType() == Material.SIGN_POST) {
+    						Sign signState = (Sign)block.getState();
+    						for (int i = 0; i < 4; i++) {
+    							if (place >= MazePvP.theMazePvP.joinSignText.length) break outerLoop;
+    							signState.setLine(i, parseSignText(MazePvP.theMazePvP.joinSignText[place]));
+    							place++;
+    						}
+    						signState.update();
+    					} else place += 4;
+    				}
+    			}
+    		}
+    	}
 	}
 
 }

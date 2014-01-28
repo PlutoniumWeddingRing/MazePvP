@@ -21,6 +21,7 @@ import org.bukkit.entity.Spider;
 import org.bukkit.entity.Zombie;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import org.bukkit.event.entity.EntityDeathEvent;
@@ -363,5 +364,22 @@ public final class EventListeners implements Listener {
 			}
 		}
     }
+	
+	@EventHandler
+	public void blockBreakListener(BlockBreakEvent event) {
+		if (event.getBlock().getType() == Material.SIGN_POST || event.getBlock().getType() == Material.WALL_SIGN) {
+			Iterator<Maze> mit = MazePvP.theMazePvP.mazes.iterator();
+			while (mit.hasNext()) {
+				Maze maze = mit.next();
+				if (maze.canBeEntered) continue;
+				if (maze.mazeWorld != event.getBlock().getWorld()) continue;
+				int[] sign = maze.findJoinSign(event.getBlock().getLocation());
+				if (sign != null) {
+					maze.removeJoinSign(sign);
+					break;
+				}
+			}
+		}
+	}
 
 }

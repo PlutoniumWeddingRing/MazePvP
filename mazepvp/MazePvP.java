@@ -42,6 +42,7 @@ public final class MazePvP extends JavaPlugin {
 	public double[] mazeBossDropWeighs;
 	public int wallChangeTimer = 0;
 	public boolean showHeads = true;
+	public String[] joinSignText;
 	
 	public MazePvP() {
 	}
@@ -56,6 +57,8 @@ public final class MazePvP extends JavaPlugin {
 		getCommand("deletemaze").setExecutor(new CommandDeleteMaze(this));
 		getCommand("setwp").setExecutor(new CommandSetWaitingPlace(this));
 		getCommand("removewp").setExecutor(new CommandRemoveWaitingPlace(this));
+		getCommand("setplayernum").setExecutor(new CommandSetPlayerNum(this));
+		getCommand("joinsign").setExecutor(new CommandCreateJoinSign(this));
 		saveDefaultConfig();
 		loadConfiguration();
 		Iterator<World> wit = Bukkit.getServer().getWorlds().iterator();
@@ -89,7 +92,7 @@ public final class MazePvP extends JavaPlugin {
             	nameWriter.printf("%s\n", new Object[]{maze.name});
             	File mazeFile = new File(world.getWorldFolder(), maze.name+".maze");
             	PrintWriter var1 = new PrintWriter(new FileWriter(mazeFile, false));
-            	var1.printf("%d %d %d %d %f %d %d %d %d\n", new Object[] {maze.mazeX, maze.mazeY, maze.mazeZ, maze.mazeSize, maze.mazeBossHp, maze.canBeEntered?1:0, maze.waitX, maze.waitY, maze.waitZ});
+            	var1.printf("%d %d %d %d %f %d %d %d %d %d %d\n", new Object[] {maze.mazeX, maze.mazeY, maze.mazeZ, maze.mazeSize, maze.mazeBossHp, maze.canBeEntered?1:0, maze.waitX, maze.waitY, maze.waitZ, maze.minPlayers, maze.maxPlayers});
                 var1.printf("%s\n", new Object[]{(maze.mazeBossId==null)?"":maze.mazeBossId.toString()});
             	for (int i = 0; i < maze.mazeSize*2+1; i++) {
             		for (int j = 0; j < maze.mazeSize*2+1; j++) {
@@ -97,10 +100,16 @@ public final class MazePvP extends JavaPlugin {
             			else var1.printf("%d ", new Object[] {maze.maze[i][j]});
             		}
             	}
+            	var1.printf("%d\n", new Object[]{maze.joinSigns.size()});
+            	Iterator<int[]> jit = maze.joinSigns.iterator();
+            	while (jit.hasNext()) {
+            		int[] sign = jit.next();
+            		for (int i = 0; i < sign.length; i++) var1.printf((i+1 == sign.length) ? "%d\n":"%d ", new Object[]{sign[i]});
+            	}
                 var1.close();
                 } catch (Exception var4)
                 {
-                	getLogger().info("Failed to load properties of maze \""+maze.name+"\": "+var4.getMessage());
+                	getLogger().info("Failed to save properties of maze \""+maze.name+"\": "+var4.getMessage());
                 }
             }
 
@@ -196,6 +205,8 @@ public final class MazePvP extends JavaPlugin {
 				place++;
 			}
 		}
+		
+		joinSignText = new String[]{"Maze:", "<name>", "", "", "players:", "<currentP>/<maxP>", "needed players:", "<minP>", "state:", "<state>"};
    }
 
 	public void loadMazeProps(World world) {
@@ -229,7 +240,7 @@ public final class MazePvP extends JavaPlugin {
             	maze.name = str;
 	            if ((var2 = var1.readLine()) != null) {
 	            	var3 = var2.split("\\s");
-	                if (var3.length < 4 || var3.length > 9) {
+	                if (var3.length < 4 || var3.length > 11) {
 	                	var1.close();
 	                	throw new Exception("Malformed input");
 	                }
@@ -239,11 +250,11 @@ public final class MazePvP extends JavaPlugin {
 	                maze.mazeSize = Integer.parseInt(var3[3]);
 	                maze.mazeBossHp = (var3.length >= 5) ? Double.parseDouble(var3[4]) : 0;
 	                maze.canBeEntered = (var3.length >= 6) ? (Integer.parseInt(var3[5]) != 0) : true;
-	                if (!maze.canBeEntered) {
-	                	maze.waitX = (var3.length >= 7) ? Integer.parseInt(var3[6]) : 0;
-	                	maze.waitY = (var3.length >= 8) ? Integer.parseInt(var3[7]) : 0;
-	                	maze.waitZ = (var3.length >= 9) ? Integer.parseInt(var3[8]) : 0;
-	                }
+                	maze.waitX = (var3.length >= 7) ? Integer.parseInt(var3[6]) : 0;
+                	maze.waitY = (var3.length >= 8) ? Integer.parseInt(var3[7]) : 0;
+                	maze.waitZ = (var3.length >= 9) ? Integer.parseInt(var3[8]) : 0;
+                	maze.minPlayers = (var3.length >= 10) ? Integer.parseInt(var3[9]) : 0;
+                	maze.maxPlayers = (var3.length >= 11) ? Integer.parseInt(var3[10]) : 0;
 	                if ((var2 = var1.readLine()) != null) {
 	                	if (var2.equals("")) maze.mazeBossId = null;
 	                	else maze.mazeBossId = UUID.fromString(var2);
@@ -254,13 +265,10 @@ public final class MazePvP extends JavaPlugin {
 	                maze.mazeWorld = world;
 	                maze.maze = new int[maze.mazeSize*2+1][];
 	                maze.isBeingChanged = new boolean[maze.mazeSize*2+1][];
-	            	for (int i = 0; ; i++) {
+	            	for (int i = 0; i < maze.mazeSize*2+1; i++) {
 	            		if ((var2 = var1.readLine()) == null) {
-	            			if (i < maze.mazeSize*2) {
-	                        	var1.close();
-	                        	throw new Exception("Malformed input");
-	            			}
-	            			break;
+                        	var1.close();
+                        	throw new Exception("Malformed input");
 	            		}
 	                	var3 = var2.split("\\s");
 	                    if (var3.length != maze.mazeSize*2+1) {
@@ -274,6 +282,28 @@ public final class MazePvP extends JavaPlugin {
 	            			maze.isBeingChanged[i][j] = false;
 	            		}
 	            	}
+	            	if ((var2 = var1.readLine()) != null && var2.length() > 0) {
+	                	int joinSignNum = Integer.parseInt(var2);
+	                	for (int i = 0; i < joinSignNum; i++) {
+	                		if ((var2 = var1.readLine()) != null) {
+	    	                	var3 = var2.split("\\s");
+	                			if (var3.length != 6) {
+	                				var1.close();
+			                    	throw new Exception("Malformed input");
+	                			}
+	                			int x1 = Integer.parseInt(var3[0]);
+	                			int y1 = Integer.parseInt(var3[1]);
+	                			int z1 = Integer.parseInt(var3[2]);
+	                			int x2 = Integer.parseInt(var3[3]);
+	                			int y2 = Integer.parseInt(var3[4]);
+	                			int z2 = Integer.parseInt(var3[5]);
+	                			maze.joinSigns.add(new int[]{x1, y1, z1, x2, y2, z2});
+	                		} else {
+	                			var1.close();
+		                    	throw new Exception("Malformed input");
+	                		}
+	                	}
+	                }
 	        		Collection<Zombie> entities = maze.mazeWorld.getEntitiesByClass(Zombie.class);
 	    			Iterator<Zombie> iter = entities.iterator();
 	    			while (iter.hasNext()) {
