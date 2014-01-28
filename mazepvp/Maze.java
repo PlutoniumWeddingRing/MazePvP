@@ -52,6 +52,7 @@ public class Maze {
 	public ItemStack[] mazeBossDropItems;
 	public String name = "";
 	public boolean updatingHp = false;
+	public boolean canBeEntered = true;
 	
 	public Maze() {
 		mazeBossName = MazePvP.theMazePvP.mazeBossName;

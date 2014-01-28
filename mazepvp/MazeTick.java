@@ -69,7 +69,7 @@ public class MazeTick extends BukkitRunnable {
 				} else if (prevInside && !inside) {
 					player.getInventory().clear();
 				}
-				maze.playerInsideMaze.put(player.getName(), inside);
+				if (inside) maze.playerInsideMaze.put(player.getName(), inside);
 			}
 			
 			if (maze.mazeBossTargetTimer > 0) {

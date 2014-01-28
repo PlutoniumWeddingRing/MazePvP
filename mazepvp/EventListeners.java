@@ -347,6 +347,7 @@ public final class EventListeners implements Listener {
 		Iterator<Maze> mit = MazePvP.theMazePvP.mazes.iterator();
 		while (mit.hasNext()) {
 			Maze maze = mit.next();
+			if (!maze.canBeEntered) continue;
 			maze.playerInsideMaze.remove(event.getPlayer().getName());
 		}
     }
@@ -356,9 +357,10 @@ public final class EventListeners implements Listener {
 		Iterator<Maze> mit = MazePvP.theMazePvP.mazes.iterator();
 		while (mit.hasNext()) {
 			Maze maze = mit.next();
+			if (!maze.canBeEntered) continue;
 			if (maze.isInsideMaze(event.getPlayer().getLocation())) {
 				maze.playerInsideMaze.put(event.getPlayer().getName(), true);
-			} else maze.playerInsideMaze.put(event.getPlayer().getName(), false);
+			}
 		}
     }
 
