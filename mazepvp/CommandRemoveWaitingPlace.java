@@ -27,10 +27,8 @@ public class CommandRemoveWaitingPlace implements CommandExecutor {
         	sender.sendMessage("There's no maze with that name");
 			return true;
         }
-        if (!maze.canBeEntered) {
-        	maze.canBeEntered = true;
-        	sender.sendMessage("Restoring entrances...");
-        	maze.restoreEntrances();
+		if (maze.hasWaitArea) {
+        	maze.hasWaitArea = false;
     		sender.sendMessage("Waiting place for "+mazeName+" removed");
         } else sender.sendMessage(mazeName+" didn't have a waiting place");
     	return true;

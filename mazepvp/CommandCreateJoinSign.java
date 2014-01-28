@@ -84,6 +84,12 @@ public class CommandCreateJoinSign implements CommandExecutor {
             	loc.setZ(loc.getZ()+zOffs);
         	}
         }
+        if (maze.canBeEntered) {
+        	maze.canBeEntered = false;
+        	sender.sendMessage("Removing entrances...");
+        	maze.removeEntrances();
+        }
+    	sender.sendMessage("Join sign created");
     	return true;
 	}
 }

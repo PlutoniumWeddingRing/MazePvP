@@ -55,6 +55,7 @@ public class Maze {
 	public String name = "";
 	public boolean updatingHp = false;
 	public boolean canBeEntered = true;
+	public boolean hasWaitArea = false;
 	public int waitX = 0, waitY = 0, waitZ = 0;
 	public int minPlayers = 0;
 	public int maxPlayers = 0;
@@ -335,6 +336,10 @@ public class Maze {
 					}
 				}
 			}
+		}
+		if (removeFromList && joinSigns.isEmpty() && !canBeEntered) {
+    		canBeEntered = true;
+    		restoreEntrances();
 		}
 	}
 

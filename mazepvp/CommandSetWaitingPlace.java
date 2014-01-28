@@ -48,12 +48,9 @@ public class CommandSetWaitingPlace implements CommandExecutor {
     	maze.waitX = posX;
     	maze.waitY = posY;
     	maze.waitZ = posZ;
-        if (maze.canBeEntered) {
-        	maze.canBeEntered = false;
-        	sender.sendMessage("Removing entrances...");
-        	maze.removeEntrances();
-    		sender.sendMessage("Waiting place for "+mazeName+" set");
-        } else sender.sendMessage("Waiting place for "+mazeName+" relocated");
+		if (!maze.hasWaitArea) sender.sendMessage("Waiting place for "+mazeName+" set");
+		else sender.sendMessage("Waiting place for "+mazeName+" relocated");
+    	maze.hasWaitArea = true;
     	return true;
 	}
 }
