@@ -59,7 +59,6 @@ public class Maze {
 	public int waitX = 0, waitY = 0, waitZ = 0;
 	public int minPlayers = 0;
 	public int maxPlayers = 0;
-	public int currentPlayers = 0;
 	private boolean fightStarted = false;
 	public LinkedList<int[]> joinSigns = new LinkedList<int[]>();
 	
@@ -357,7 +356,7 @@ public class Maze {
 						if (subtStr.equals("name")) subtStr = name;
 						else if (subtStr.equals("minP")) subtStr = Integer.toString(minPlayers);
 						else if (subtStr.equals("maxP")) subtStr = Integer.toString(maxPlayers);
-						else if (subtStr.equals("currentP")) subtStr = Integer.toString(currentPlayers);
+						else if (subtStr.equals("currentP")) subtStr = Integer.toString(playerInsideMaze.size());
 						else if (subtStr.equals("state")) subtStr = fightStarted?"Started":"Waiting";
 						else subtStr = "<"+subtStr+">";
 						newStr += subtStr;
@@ -382,7 +381,7 @@ public class Maze {
 		Iterator<int[]> it = joinSigns.iterator();
     	while (it.hasNext()) {
     		int[] sign = it.next();
-    		int place = 0;
+    		Iterator<String> strIt = MazePvP.theMazePvP.joinSignText.iterator();
     		outerLoop: for (int xx = sign[0]; xx <= sign[3]; xx++) {
     			for (int yy = sign[1]; yy <= sign[4]; yy++) {
     				for (int zz = sign[2]; zz <= sign[5]; zz++) {
@@ -390,12 +389,11 @@ public class Maze {
     					if (block.getType() == Material.WALL_SIGN || block.getType() == Material.SIGN_POST) {
     						Sign signState = (Sign)block.getState();
     						for (int i = 0; i < 4; i++) {
-    							if (place >= MazePvP.theMazePvP.joinSignText.length) break outerLoop;
-    							signState.setLine(i, parseSignText(MazePvP.theMazePvP.joinSignText[place]));
-    							place++;
+    							if (!strIt.hasNext()) break outerLoop;
+    							signState.setLine(i, parseSignText(strIt.next()));
     						}
     						signState.update();
-    					} else place += 4;
+    					}
     				}
     			}
     		}

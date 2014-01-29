@@ -1,5 +1,7 @@
 package mazepvp;
 
+import java.util.Iterator;
+
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -42,7 +44,7 @@ public class CommandCreateJoinSign implements CommandExecutor {
         }
         Location loc = block.getLocation().clone();
         int xOffs = 0, zOffs = 0;
-        int signNum = (int)Math.ceil(MazePvP.theMazePvP.joinSignText.length/4.0);
+        int signNum = (int)Math.ceil(MazePvP.theMazePvP.joinSignText.size()/4.0);
         Material type = world.getBlockAt(new Location(world, loc.getX()+1, loc.getY(), loc.getZ())).getType();
         if (type == Material.WALL_SIGN || type == Material.SIGN_POST) xOffs = 1;
         else {
@@ -57,7 +59,6 @@ public class CommandCreateJoinSign implements CommandExecutor {
                 }
             }
         }
-        System.out.println(xOffs+" "+zOffs);
         if (xOffs == 0 && zOffs == 0 && signNum > 1) {
         	sender.sendMessage("There must be "+signNum+" signs next to each other");
         	return true;
@@ -74,10 +75,12 @@ public class CommandCreateJoinSign implements CommandExecutor {
         Location startLoc = block.getLocation().clone();
         maze.addJoinSign((int)Math.round(startLoc.getX()), (int)Math.round(startLoc.getY()), (int)Math.round(startLoc.getZ()), (int)Math.round(loc.getX()), (int)Math.round(loc.getY()), (int)Math.round(loc.getZ()));
         loc = block.getLocation().clone();
-        for (int i = 0; i < MazePvP.theMazePvP.joinSignText.length; i++) {
+        Iterator<String> it = MazePvP.theMazePvP.joinSignText.iterator();
+        for (int i = 0; i < MazePvP.theMazePvP.joinSignText.size(); i++) {
+        	String str = it.next();
         	block = world.getBlockAt(loc);
     		Sign sign = (Sign)block.getState(); 
-        	sign.setLine(i%4, maze.parseSignText(MazePvP.theMazePvP.joinSignText[i]));
+        	sign.setLine(i%4, maze.parseSignText(str));
     		sign.update();
         	if ((i+1)%4 == 0) {
         		loc.setX(loc.getX()+xOffs);
@@ -86,6 +89,7 @@ public class CommandCreateJoinSign implements CommandExecutor {
         }
         if (maze.canBeEntered) {
         	maze.canBeEntered = false;
+        	maze.playerInsideMaze.clear();
         	sender.sendMessage("Removing entrances...");
         	maze.removeEntrances();
         }

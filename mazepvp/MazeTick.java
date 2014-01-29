@@ -62,15 +62,17 @@ public class MazeTick extends BukkitRunnable {
 						player.damage(player.getHealth()+10);
 					}
 				}
-				boolean inside = maze.isInsideMaze(player.getLocation());
-				Boolean prevInside = maze.playerInsideMaze.containsKey(player.getName())?maze.playerInsideMaze.get(player.getName()):false;
-				if (!prevInside && inside) {
-					MazePvP.theMazePvP.giveStartItemsToPlayer(player);
-				} else if (prevInside && !inside) {
-					player.getInventory().clear();
+				if (maze.canBeEntered) {
+					boolean inside = maze.isInsideMaze(player.getLocation());
+					Boolean prevInside = maze.playerInsideMaze.containsKey(player.getName())?maze.playerInsideMaze.get(player.getName()):false;
+					if (!prevInside && inside) {
+						MazePvP.theMazePvP.giveStartItemsToPlayer(player);
+					} else if (prevInside && !inside) {
+						player.getInventory().clear();
+					}
+					if (inside) maze.playerInsideMaze.put(player.getName(), inside);
+					else if (prevInside) maze.playerInsideMaze.remove(player.getName());
 				}
-				if (inside) maze.playerInsideMaze.put(player.getName(), inside);
-				else if (prevInside) maze.playerInsideMaze.remove(player.getName());
 			}
 			
 			if (maze.mazeBossTargetTimer > 0) {

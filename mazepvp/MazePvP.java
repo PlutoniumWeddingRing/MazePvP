@@ -8,6 +8,7 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
@@ -42,7 +43,7 @@ public final class MazePvP extends JavaPlugin {
 	public double[] mazeBossDropWeighs;
 	public int wallChangeTimer = 0;
 	public boolean showHeads = true;
-	public String[] joinSignText;
+	public List<String> joinSignText;
 	
 	public MazePvP() {
 	}
@@ -206,7 +207,7 @@ public final class MazePvP extends JavaPlugin {
 			}
 		}
 		
-		joinSignText = new String[]{"Maze:", "<name>", "", "", "players:", "<currentP>/<maxP>", "needed players:", "<minP>", "state:", "<state>"};
+		joinSignText = config.getStringList("joinSignText");
    }
 
 	public void loadMazeProps(World world) {
