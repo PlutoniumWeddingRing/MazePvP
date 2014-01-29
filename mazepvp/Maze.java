@@ -59,7 +59,7 @@ public class Maze {
 	public int waitX = 0, waitY = 0, waitZ = 0;
 	public int minPlayers = 0;
 	public int maxPlayers = 0;
-	private boolean fightStarted = false;
+	public boolean fightStarted = false;
 	public LinkedList<int[]> joinSigns = new LinkedList<int[]>();
 	
 	public Maze() {

@@ -21,12 +21,14 @@ import org.bukkit.entity.Spider;
 import org.bukkit.entity.Zombie;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.ProjectileHitEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
@@ -348,8 +350,8 @@ public final class EventListeners implements Listener {
 		Iterator<Maze> mit = MazePvP.theMazePvP.mazes.iterator();
 		while (mit.hasNext()) {
 			Maze maze = mit.next();
-			if (!maze.canBeEntered) continue;
 			maze.playerInsideMaze.remove(event.getPlayer().getName());
+			if (!maze.canBeEntered) maze.updateJoinSigns();
 		}
     }
 	
@@ -381,5 +383,39 @@ public final class EventListeners implements Listener {
 			}
 		}
 	}
-
+	
+	@EventHandler
+	public void onPlayerInteract(PlayerInteractEvent event) {
+		if (event.getAction() == Action.RIGHT_CLICK_BLOCK) {
+			if (event.getClickedBlock().getType() == Material.WALL_SIGN || event.getClickedBlock().getType() == Material.SIGN_POST) {
+				Iterator<Maze> mit = MazePvP.theMazePvP.mazes.iterator();
+				while (mit.hasNext()) {
+					Maze maze = mit.next();
+					if (maze.canBeEntered) continue;
+					if (maze.mazeWorld != event.getClickedBlock().getWorld()) continue;
+					int[] sign = maze.findJoinSign(event.getClickedBlock().getLocation());
+					if (sign != null) {
+						String pName = event.getPlayer().getName();
+						if (maze.playerInsideMaze.containsKey(pName) && maze.playerInsideMaze.get(pName)) {
+							maze.playerInsideMaze.remove(pName);
+							maze.updateJoinSigns();
+							event.getPlayer().sendMessage("You left maze \""+maze.name+"\"");
+						} else {
+							if (maze.fightStarted) {
+								event.getPlayer().sendMessage("The fight has already started");
+							} else if (maze.maxPlayers <= maze.playerInsideMaze.size()) {
+								event.getPlayer().sendMessage("No more players can join that maze");
+							} else {
+								maze.playerInsideMaze.put(pName, true);
+								maze.updateJoinSigns();
+								event.getPlayer().sendMessage("You joined maze \""+maze.name+"\"");
+							}
+						}
+						break;
+					}
+				}
+			}
+		}
+	}
+	
 }
