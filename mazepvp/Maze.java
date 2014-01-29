@@ -6,8 +6,10 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Color;
 import org.bukkit.Effect;
 import org.bukkit.Location;
@@ -16,6 +18,7 @@ import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
 import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Player;
 import org.bukkit.entity.Zombie;
 import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.ItemStack;
@@ -48,6 +51,7 @@ public class Maze {
 	public List<MazeCoords> blocksToRemove = new LinkedList<MazeCoords>();
 	public List<MazeCoords> blocksToRestore = new LinkedList<MazeCoords>();
 	public HashMap<String, Boolean> playerInsideMaze = new HashMap<String, Boolean>();
+	public static HashMap<String, Boolean> playerInsideAMaze = new HashMap<String, Boolean>();
 	public double[] mazeChestWeighs;
 	public ItemStack[] mazeChestItems;
 	public double[] mazeBossDropWeighs;
@@ -57,9 +61,10 @@ public class Maze {
 	public boolean canBeEntered = true;
 	public boolean hasWaitArea = false;
 	public int waitX = 0, waitY = 0, waitZ = 0;
-	public int minPlayers = 0;
-	public int maxPlayers = 0;
+	public int minPlayers = 5;
+	public int maxPlayers = 20;
 	public boolean fightStarted = false;
+	public int fightStartTimer = 0;
 	public LinkedList<int[]> joinSigns = new LinkedList<int[]>();
 	
 	public Maze() {
@@ -294,7 +299,8 @@ public class Maze {
 
 	public void addJoinSign(int x, int y, int z, int x2, int y2, int z2) {
 		int[] newSign = new int[]{Math.min(x, x2), Math.min(y, y2), Math.min(z, z2),
-								  Math.max(x, x2), Math.max(y, y2), Math.max(z, z2)};
+								  Math.max(x, x2), Math.max(y, y2), Math.max(z, z2),
+								  (x2 < x || y2 < y || z2 < z)?1:0};
 		Iterator<int[]> it = joinSigns.iterator();
     	while (it.hasNext()) {
     		int[] sign = it.next();
@@ -357,6 +363,8 @@ public class Maze {
 						else if (subtStr.equals("minP")) subtStr = Integer.toString(minPlayers);
 						else if (subtStr.equals("maxP")) subtStr = Integer.toString(maxPlayers);
 						else if (subtStr.equals("currentP")) subtStr = Integer.toString(playerInsideMaze.size());
+						else if (subtStr.equals("remainingP")) subtStr = Integer.toString(Math.max(0, minPlayers-playerInsideMaze.size()));
+						else if (subtStr.equals("timeLeft")) subtStr = Integer.toString((MazePvP.theMazePvP.fightStartDelay-fightStartTimer)/20);
 						else if (subtStr.equals("state")) subtStr = fightStarted?"Started":"Waiting";
 						else subtStr = "<"+subtStr+">";
 						newStr += subtStr;
@@ -385,19 +393,80 @@ public class Maze {
     		outerLoop: for (int xx = sign[0]; xx <= sign[3]; xx++) {
     			for (int yy = sign[1]; yy <= sign[4]; yy++) {
     				for (int zz = sign[2]; zz <= sign[5]; zz++) {
-    					Block block = mazeWorld.getBlockAt(xx, yy, zz);
+    					Block block = mazeWorld.getBlockAt((sign[6] != 0)?(sign[3]-xx+sign[0]):xx, (sign[6] != 0)?(sign[4]-yy+sign[1]):yy,
+    													   (sign[6] != 0)?(sign[5]-zz+sign[2]):zz);
     					if (block.getType() == Material.WALL_SIGN || block.getType() == Material.SIGN_POST) {
     						Sign signState = (Sign)block.getState();
     						for (int i = 0; i < 4; i++) {
-    							if (!strIt.hasNext()) break outerLoop;
-    							signState.setLine(i, parseSignText(strIt.next()));
+    							if (!strIt.hasNext()) break;
+    	    					String signLine = strIt.next();
+    							signState.setLine(i, parseSignText(signLine));
     						}
     						signState.update();
-    					}
+							if (!strIt.hasNext()) break outerLoop;
+    					} else {for (int i = 0; i < 4; i++) strIt.next();}
     				}
     			}
     		}
     	}
+	}
+
+	public void playerJoin(Player player) {
+		if (canBeEntered) MazePvP.theMazePvP.giveStartItemsToPlayer(player);
+		playerInsideMaze.put(player.getName(), true);
+		if (!canBeEntered) {
+			Maze.playerInsideAMaze.put(player.getName(), true);
+			if (!fightStarted) {
+				sendWaitMessageToJoinedPlayers();
+			}
+		}
+	}
+
+	public void playerQuit(Player player) {
+		if (canBeEntered) player.getInventory().clear();
+		playerInsideMaze.remove(player.getName());
+		if (!canBeEntered) {
+			Maze.playerInsideAMaze.remove(player.getName());
+			if (!fightStarted) {
+				sendWaitMessageToJoinedPlayers();
+				if (playerInsideMaze.size() < minPlayers) fightStartTimer = 0; 
+			}
+		}
+	}
+
+	public void sendWaitMessageToJoinedPlayers() {
+		Iterator<Map.Entry<String,Boolean>> it = playerInsideMaze.entrySet().iterator();
+		while(it.hasNext()) {
+			Map.Entry<String,Boolean> entry = it.next();
+			if (entry.getValue()) {
+				Player player = Bukkit.getPlayer(entry.getKey());
+				if (playerInsideMaze.size() < minPlayers) {
+					player.sendMessage(playerInsideMaze.size()+" player(s) joined, waiting for "+(minPlayers-playerInsideMaze.size())+" more");
+				} else player.sendMessage(playerInsideMaze.size()+" player(s) joined");
+			}
+		}
+	}
+
+	public void sendTimeMessageToJoinedPlayers() {
+		Iterator<Map.Entry<String,Boolean>> it = playerInsideMaze.entrySet().iterator();
+		while(it.hasNext()) {
+			Map.Entry<String,Boolean> entry = it.next();
+			if (entry.getValue()) {
+				Player player = Bukkit.getPlayer(entry.getKey());
+				player.sendMessage("Match will start in "+(MazePvP.theMazePvP.fightStartDelay-(fightStartTimer==1?0:fightStartTimer))/20);
+			}
+		}
+	}
+
+	public void sendStartMessageToJoinedPlayers() {
+		Iterator<Map.Entry<String,Boolean>> it = playerInsideMaze.entrySet().iterator();
+		while(it.hasNext()) {
+			Map.Entry<String,Boolean> entry = it.next();
+			if (entry.getValue()) {
+				Player player = Bukkit.getPlayer(entry.getKey());
+				player.sendMessage("The match has started! Good luck!");
+			}
+		}
 	}
 
 }

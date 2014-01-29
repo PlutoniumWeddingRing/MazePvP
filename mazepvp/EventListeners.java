@@ -350,8 +350,14 @@ public final class EventListeners implements Listener {
 		Iterator<Maze> mit = MazePvP.theMazePvP.mazes.iterator();
 		while (mit.hasNext()) {
 			Maze maze = mit.next();
-			maze.playerInsideMaze.remove(event.getPlayer().getName());
-			if (!maze.canBeEntered) maze.updateJoinSigns();
+			if (maze.playerInsideMaze.containsKey(event.getPlayer().getName()) && maze.playerInsideMaze.get(event.getPlayer().getName())) {
+				if (!maze.canBeEntered) {
+					maze.playerQuit(event.getPlayer());
+					maze.updateJoinSigns();
+				} else {
+					maze.playerInsideMaze.remove(event.getPlayer().getName());
+				}
+			}
 		}
     }
 	
@@ -360,8 +366,7 @@ public final class EventListeners implements Listener {
 		Iterator<Maze> mit = MazePvP.theMazePvP.mazes.iterator();
 		while (mit.hasNext()) {
 			Maze maze = mit.next();
-			if (!maze.canBeEntered) continue;
-			if (maze.isInsideMaze(event.getPlayer().getLocation())) {
+			if (maze.canBeEntered && maze.isInsideMaze(event.getPlayer().getLocation())) {
 				maze.playerInsideMaze.put(event.getPlayer().getName(), true);
 			}
 		}
@@ -397,18 +402,21 @@ public final class EventListeners implements Listener {
 					if (sign != null) {
 						String pName = event.getPlayer().getName();
 						if (maze.playerInsideMaze.containsKey(pName) && maze.playerInsideMaze.get(pName)) {
-							maze.playerInsideMaze.remove(pName);
-							maze.updateJoinSigns();
 							event.getPlayer().sendMessage("You left maze \""+maze.name+"\"");
+							maze.playerQuit(event.getPlayer());
+							maze.updateJoinSigns();
 						} else {
 							if (maze.fightStarted) {
 								event.getPlayer().sendMessage("The fight has already started");
 							} else if (maze.maxPlayers <= maze.playerInsideMaze.size()) {
 								event.getPlayer().sendMessage("No more players can join that maze");
+							} else if (Maze.playerInsideAMaze.containsKey(pName) && Maze.playerInsideAMaze.get(pName)) {
+								event.getPlayer().sendMessage("You already joined a maze.");
+								event.getPlayer().sendMessage("Click on its sign again to leave that maze");
 							} else {
-								maze.playerInsideMaze.put(pName, true);
-								maze.updateJoinSigns();
 								event.getPlayer().sendMessage("You joined maze \""+maze.name+"\"");
+								maze.playerJoin(event.getPlayer());
+								maze.updateJoinSigns();
 							}
 						}
 						break;

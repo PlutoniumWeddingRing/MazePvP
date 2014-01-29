@@ -43,6 +43,7 @@ public final class MazePvP extends JavaPlugin {
 	public double[] mazeBossDropWeighs;
 	public int wallChangeTimer = 0;
 	public boolean showHeads = true;
+	public int fightStartDelay = 5*20;
 	public List<String> joinSignText;
 	
 	public MazePvP() {
@@ -125,6 +126,7 @@ public final class MazePvP extends JavaPlugin {
    public void loadConfiguration() {
 		Configuration config = getConfig();
 		showHeads = config.getBoolean("showHeadsOnSpikes");
+		fightStartDelay = config.getInt("fightStartDelay")*20;
 		mazeBossName = config.getString("boss.name");
 		mazeBossMaxHp = config.getInt("boss.hp");
 		mazeBossStrength = config.getInt("boss.attack");
@@ -289,7 +291,7 @@ public final class MazePvP extends JavaPlugin {
 	                	for (int i = 0; i < joinSignNum; i++) {
 	                		if ((var2 = var1.readLine()) != null) {
 	    	                	var3 = var2.split("\\s");
-	                			if (var3.length != 6) {
+	                			if (var3.length != 7) {
 	                				var1.close();
 			                    	throw new Exception("Malformed input");
 	                			}
@@ -299,7 +301,8 @@ public final class MazePvP extends JavaPlugin {
 	                			int x2 = Integer.parseInt(var3[3]);
 	                			int y2 = Integer.parseInt(var3[4]);
 	                			int z2 = Integer.parseInt(var3[5]);
-	                			maze.joinSigns.add(new int[]{x1, y1, z1, x2, y2, z2});
+	                			int reversed = Integer.parseInt(var3[6]);
+	                			maze.joinSigns.add(new int[]{x1, y1, z1, x2, y2, z2, reversed});
 	                		} else {
 	                			var1.close();
 		                    	throw new Exception("Malformed input");
@@ -320,6 +323,7 @@ public final class MazePvP extends JavaPlugin {
 	            	var1.close();
 	            	throw new Exception("Malformed input");
 	            }
+	            maze.updateJoinSigns();
 	            mazes.add(maze);
 	            var1.close();
 	            } catch (Exception var4) {

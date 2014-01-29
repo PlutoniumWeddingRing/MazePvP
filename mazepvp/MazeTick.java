@@ -33,6 +33,19 @@ public class MazeTick extends BukkitRunnable {
 		while (mit.hasNext()) {
 			Maze maze = mit.next();
       		int i, j, posX, posZ, xx, zz;
+      		
+      		if (!maze.canBeEntered && !maze.fightStarted) {
+      			if (maze.playerInsideMaze.size() >= maze.minPlayers) {
+      				maze.fightStartTimer++;
+      				if (maze.fightStartTimer == MazePvP.theMazePvP.fightStartDelay) {
+      					maze.fightStartTimer = 0;
+      					maze.fightStarted = true;
+      					maze.updateJoinSigns();
+      					maze.sendStartMessageToJoinedPlayers();
+      				} else if (maze.fightStartTimer == 1 || maze.fightStartTimer%20 == 0) maze.sendTimeMessageToJoinedPlayers();
+      			}
+      		}
+      		
       		if (maze.mazeBoss != null) {
       			maze.mazeBoss.setHealth(maze.mazeBoss.getMaxHealth());
       			if (!maze.isInsideMaze(maze.mazeBoss.getLocation())) maze.relocateMazeBoss(false);
@@ -66,12 +79,10 @@ public class MazeTick extends BukkitRunnable {
 					boolean inside = maze.isInsideMaze(player.getLocation());
 					Boolean prevInside = maze.playerInsideMaze.containsKey(player.getName())?maze.playerInsideMaze.get(player.getName()):false;
 					if (!prevInside && inside) {
-						MazePvP.theMazePvP.giveStartItemsToPlayer(player);
+						maze.playerJoin(player);
 					} else if (prevInside && !inside) {
-						player.getInventory().clear();
+						maze.playerQuit(player);
 					}
-					if (inside) maze.playerInsideMaze.put(player.getName(), inside);
-					else if (prevInside) maze.playerInsideMaze.remove(player.getName());
 				}
 			}
 			
