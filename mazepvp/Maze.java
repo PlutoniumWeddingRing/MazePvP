@@ -51,6 +51,7 @@ public class Maze {
 	public List<MazeCoords> blocksToRemove = new LinkedList<MazeCoords>();
 	public List<MazeCoords> blocksToRestore = new LinkedList<MazeCoords>();
 	public HashMap<String, Boolean> playerInsideMaze = new HashMap<String, Boolean>();
+	public HashMap<String, PlayerProps> joinedPlayerProps = new HashMap<String, PlayerProps>();
 	public static HashMap<String, Boolean> playerInsideAMaze = new HashMap<String, Boolean>();
 	public double[] mazeChestWeighs;
 	public ItemStack[] mazeChestItems;
@@ -424,6 +425,11 @@ public class Maze {
 			Maze.playerInsideAMaze.put(player.getName(), true);
 			if (!fightStarted) {
 				sendWaitMessageToJoinedPlayers();
+				if (hasWaitArea) {
+					int telepY = MazePvP.getSafeY(waitX, waitY, waitZ, mazeWorld);
+					joinedPlayerProps.put(player.getName(), new PlayerProps(player.getLocation()));
+					player.teleport(new Location(mazeWorld, waitX+0.5, telepY, waitZ+0.5));
+				}
 			}
 		}
 	}
@@ -435,9 +441,14 @@ public class Maze {
 			Maze.playerInsideAMaze.remove(player.getName());
 			if (!fightStarted) {
 				sendWaitMessageToJoinedPlayers();
-				if (playerInsideMaze.size() < minPlayers) fightStartTimer = 0; 
+				if (playerInsideMaze.size() < minPlayers) fightStartTimer = 0;
+			}
+			PlayerProps savedProps = joinedPlayerProps.get(player.getName());
+			if (savedProps != null) {
+				player.teleport(savedProps.prevLocation);
 			}
 		}
+		joinedPlayerProps.remove(player.getName());
 	}
 
 	public void sendWaitMessageToJoinedPlayers() {

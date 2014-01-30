@@ -90,6 +90,7 @@ public class CommandCreateJoinSign implements CommandExecutor {
         if (maze.canBeEntered) {
         	maze.canBeEntered = false;
         	maze.playerInsideMaze.clear();
+        	maze.joinedPlayerProps.clear();
         	sender.sendMessage("Removing entrances...");
         	maze.removeEntrances();
         }

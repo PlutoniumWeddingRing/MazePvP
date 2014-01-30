@@ -384,4 +384,23 @@ public final class MazePvP extends JavaPlugin {
 		return BlockFace.WEST_SOUTH_WEST;
 	}
 
+	public static int getSafeY(int posX, int posY, int posZ, World world) {
+		posY--;
+		int yy, prevPosY = posY;
+		for (yy = posY; yy <= 254; yy++) {
+			if (world.getBlockAt(posX, yy, posZ).getType().isSolid() && !world.getBlockAt(posX, yy+1, posZ).getType().isSolid()) {
+				posY = yy;
+				break;
+			}
+		}
+		for (yy = posY; yy >= 0; yy--) {
+			if (world.getBlockAt(posX, yy, posZ).getType().isSolid() && !world.getBlockAt(posX, yy+1, posZ).getType().isSolid()) {
+				if (posY == prevPosY || posY-prevPosY > prevPosY-yy) posY = yy;
+				break;
+			}
+		}
+		posY++;
+		return posY;
+	}
+
 }

@@ -428,7 +428,12 @@ public final class EventListeners implements Listener {
 					}
 					sign = maze.findSign(event.getClickedBlock().getLocation(), maze.leaveSigns);
 					if (sign != null) {
-						event.getPlayer().sendMessage("You left maze \""+maze.name+"\"");
+						String pName = event.getPlayer().getName();
+						if (maze.playerInsideMaze.containsKey(pName) && maze.playerInsideMaze.get(pName)) {
+							event.getPlayer().sendMessage("You left maze \""+maze.name+"\"");
+							maze.playerQuit(event.getPlayer());
+							maze.updateSigns();
+						}
 					}
 				}
 			}
