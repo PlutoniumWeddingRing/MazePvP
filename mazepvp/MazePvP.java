@@ -46,6 +46,15 @@ public final class MazePvP extends JavaPlugin {
 	public int fightStartDelay = 5*20;
 	public List<String> joinSignText;
 	public List<String> leaveSignText;
+	public List<String> joinMazeText;
+	public List<String> leaveMazeText;
+	public List<String> fightAlreadyStartedText;
+	public List<String> mazeFullText;
+	public List<String> joinedOtherText;
+	public List<String> countdownText;
+	public List<String> fightStartedText;
+	public List<String> waitBroadcastText;
+	public List<String> waitBroadcastFullText;
 	
 	public MazePvP() {
 	}
@@ -104,11 +113,16 @@ public final class MazePvP extends JavaPlugin {
             			else var1.printf("%d ", new Object[] {maze.maze[i][j]});
             		}
             	}
-            	var1.printf("%d\n", new Object[]{maze.joinSigns.size()});
-            	Iterator<int[]> jit = maze.joinSigns.iterator();
-            	while (jit.hasNext()) {
-            		int[] sign = jit.next();
-            		for (int i = 0; i < sign.length; i++) var1.printf((i+1 == sign.length) ? "%d\n":"%d ", new Object[]{sign[i]});
+            	List<int[]> signList;
+            	for (int s = 0; s < 2; s++) {
+            		if (s == 0) signList = maze.joinSigns;
+            		else signList = maze.leaveSigns;
+	            	var1.printf("%d\n", new Object[]{signList.size()});
+	            	Iterator<int[]> jit = signList.iterator();
+	            	while (jit.hasNext()) {
+	            		int[] sign = jit.next();
+	            		for (int i = 0; i < sign.length; i++) var1.printf((i+1 == sign.length) ? "%d\n":"%d ", new Object[]{sign[i]});
+	            	}
             	}
                 var1.close();
                 } catch (Exception var4)
@@ -211,8 +225,18 @@ public final class MazePvP extends JavaPlugin {
 			}
 		}
 		
-		joinSignText = config.getStringList("joinSignText");
-		leaveSignText = config.getStringList("leaveSignText");
+		joinSignText = config.getStringList("texts.joinSign");
+		leaveSignText = config.getStringList("texts.leaveSign");
+		joinMazeText = config.getStringList("texts.onJoin");
+		leaveMazeText = config.getStringList("texts.onLeave");
+		fightAlreadyStartedText = config.getStringList("texts.onJoinAfterFightStarted");
+		mazeFullText = config.getStringList("texts.onJoinWhenMazeFull");
+		joinedOtherText = config.getStringList("texts.onJoinWhenAlreadyJoinedOtherMaze");
+		mazeFullText = config.getStringList("texts.onJoinWhenMazeFull");
+		countdownText = config.getStringList("texts.countdown");
+		fightStartedText = config.getStringList("texts.fightStarted");
+		waitBroadcastText = config.getStringList("texts.joinBroadcast");
+		waitBroadcastFullText = config.getStringList("texts.joinBroadcastWhenFull");
    }
 
 	public void loadMazeProps(World world) {
@@ -289,29 +313,34 @@ public final class MazePvP extends JavaPlugin {
 	            			maze.isBeingChanged[i][j] = false;
 	            		}
 	            	}
-	            	if ((var2 = var1.readLine()) != null && var2.length() > 0) {
-	                	int joinSignNum = Integer.parseInt(var2);
-	                	for (int i = 0; i < joinSignNum; i++) {
-	                		if ((var2 = var1.readLine()) != null) {
-	    	                	var3 = var2.split("\\s");
-	                			if (var3.length != 7) {
-	                				var1.close();
+	            	List<int[]> signList;
+	            	for (int s = 0; s < 2; s++) {
+	            		if (s == 0) signList = maze.joinSigns;
+	            		else signList = maze.leaveSigns;
+		            	if ((var2 = var1.readLine()) != null && var2.length() > 0) {
+		                	int joinSignNum = Integer.parseInt(var2);
+		                	for (int i = 0; i < joinSignNum; i++) {
+		                		if ((var2 = var1.readLine()) != null) {
+		    	                	var3 = var2.split("\\s");
+		                			if (var3.length != 7) {
+		                				var1.close();
+				                    	throw new Exception("Malformed input");
+		                			}
+		                			int x1 = Integer.parseInt(var3[0]);
+		                			int y1 = Integer.parseInt(var3[1]);
+		                			int z1 = Integer.parseInt(var3[2]);
+		                			int x2 = Integer.parseInt(var3[3]);
+		                			int y2 = Integer.parseInt(var3[4]);
+		                			int z2 = Integer.parseInt(var3[5]);
+		                			int reversed = Integer.parseInt(var3[6]);
+		                			signList.add(new int[]{x1, y1, z1, x2, y2, z2, reversed});
+		                		} else {
+		                			var1.close();
 			                    	throw new Exception("Malformed input");
-	                			}
-	                			int x1 = Integer.parseInt(var3[0]);
-	                			int y1 = Integer.parseInt(var3[1]);
-	                			int z1 = Integer.parseInt(var3[2]);
-	                			int x2 = Integer.parseInt(var3[3]);
-	                			int y2 = Integer.parseInt(var3[4]);
-	                			int z2 = Integer.parseInt(var3[5]);
-	                			int reversed = Integer.parseInt(var3[6]);
-	                			maze.joinSigns.add(new int[]{x1, y1, z1, x2, y2, z2, reversed});
-	                		} else {
-	                			var1.close();
-		                    	throw new Exception("Malformed input");
-	                		}
-	                	}
-	                }
+		                		}
+		                	}
+		                }
+	            	}
 	        		Collection<Zombie> entities = maze.mazeWorld.getEntitiesByClass(Zombie.class);
 	    			Iterator<Zombie> iter = entities.iterator();
 	    			while (iter.hasNext()) {

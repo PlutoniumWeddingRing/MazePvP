@@ -407,19 +407,18 @@ public final class EventListeners implements Listener {
 					if (sign != null) {
 						String pName = event.getPlayer().getName();
 						if (maze.playerInsideMaze.containsKey(pName) && maze.playerInsideMaze.get(pName)) {
-							event.getPlayer().sendMessage("You left maze \""+maze.name+"\"");
+							maze.sendStringListToPlayer(event.getPlayer(), MazePvP.theMazePvP.leaveMazeText);
 							maze.playerQuit(event.getPlayer());
 							maze.updateSigns();
 						} else {
 							if (maze.fightStarted) {
-								event.getPlayer().sendMessage("The fight has already started");
+								maze.sendStringListToPlayer(event.getPlayer(), MazePvP.theMazePvP.fightAlreadyStartedText);
 							} else if (maze.maxPlayers <= maze.playerInsideMaze.size()) {
-								event.getPlayer().sendMessage("No more players can join that maze");
+								maze.sendStringListToPlayer(event.getPlayer(), MazePvP.theMazePvP.mazeFullText);
 							} else if (Maze.playerInsideAMaze.containsKey(pName) && Maze.playerInsideAMaze.get(pName)) {
-								event.getPlayer().sendMessage("You already joined a maze.");
-								event.getPlayer().sendMessage("Click on its sign again to leave that maze");
+								maze.sendStringListToPlayer(event.getPlayer(), MazePvP.theMazePvP.joinedOtherText);
 							} else {
-								event.getPlayer().sendMessage("You joined maze \""+maze.name+"\"");
+								maze.sendStringListToPlayer(event.getPlayer(), MazePvP.theMazePvP.joinMazeText);
 								maze.playerJoin(event.getPlayer());
 								maze.updateSigns();
 							}
@@ -430,7 +429,7 @@ public final class EventListeners implements Listener {
 					if (sign != null) {
 						String pName = event.getPlayer().getName();
 						if (maze.playerInsideMaze.containsKey(pName) && maze.playerInsideMaze.get(pName)) {
-							event.getPlayer().sendMessage("You left maze \""+maze.name+"\"");
+							maze.sendStringListToPlayer(event.getPlayer(), MazePvP.theMazePvP.leaveMazeText);
 							maze.playerQuit(event.getPlayer());
 							maze.updateSigns();
 						}

@@ -350,7 +350,7 @@ public class Maze {
 		}
 	}
 
-	public String parseSignText(String str) {
+	public String parseText(String str) {
 		String newStr = "";
 		String subtStr = "";
 		boolean escaping = false;
@@ -366,7 +366,7 @@ public class Maze {
 						else if (subtStr.equals("maxP")) subtStr = Integer.toString(maxPlayers);
 						else if (subtStr.equals("currentP")) subtStr = Integer.toString(playerInsideMaze.size());
 						else if (subtStr.equals("remainingP")) subtStr = Integer.toString(Math.max(0, minPlayers-playerInsideMaze.size()));
-						else if (subtStr.equals("timeLeft")) subtStr = Integer.toString((MazePvP.theMazePvP.fightStartDelay-fightStartTimer)/20);
+						else if (subtStr.equals("timeLeft")) subtStr = Integer.toString((fightStartTimer == 1) ? MazePvP.theMazePvP.fightStartDelay/20 : (MazePvP.theMazePvP.fightStartDelay-fightStartTimer)/20);
 						else if (subtStr.equals("state")) subtStr = fightStarted?"Started":"Waiting";
 						else subtStr = "<"+subtStr+">";
 						newStr += subtStr;
@@ -407,7 +407,7 @@ public class Maze {
     						for (int i = 0; i < 4; i++) {
     							if (!strIt.hasNext()) break;
     	    					String signLine = strIt.next();
-    							signState.setLine(i, parseSignText(signLine));
+    							signState.setLine(i, parseText(signLine));
     						}
     						signState.update();
 							if (!strIt.hasNext()) break outerLoop;
@@ -458,8 +458,8 @@ public class Maze {
 			if (entry.getValue()) {
 				Player player = Bukkit.getPlayer(entry.getKey());
 				if (playerInsideMaze.size() < minPlayers) {
-					player.sendMessage(playerInsideMaze.size()+" player(s) joined, waiting for "+(minPlayers-playerInsideMaze.size())+" more");
-				} else player.sendMessage(playerInsideMaze.size()+" player(s) joined");
+					sendStringListToPlayer(player, MazePvP.theMazePvP.waitBroadcastText);
+				} else sendStringListToPlayer(player, MazePvP.theMazePvP.waitBroadcastFullText);
 			}
 		}
 	}
@@ -470,7 +470,7 @@ public class Maze {
 			Map.Entry<String,Boolean> entry = it.next();
 			if (entry.getValue()) {
 				Player player = Bukkit.getPlayer(entry.getKey());
-				player.sendMessage("Match will start in "+(MazePvP.theMazePvP.fightStartDelay-(fightStartTimer==1?0:fightStartTimer))/20);
+				sendStringListToPlayer(player, MazePvP.theMazePvP.countdownText);
 			}
 		}
 	}
@@ -481,8 +481,16 @@ public class Maze {
 			Map.Entry<String,Boolean> entry = it.next();
 			if (entry.getValue()) {
 				Player player = Bukkit.getPlayer(entry.getKey());
-				player.sendMessage("The match has started! Good luck!");
+				sendStringListToPlayer(player, MazePvP.theMazePvP.fightStartedText);
 			}
+		}
+	}
+
+	public void sendStringListToPlayer(Player player, List<String> strList) {
+		Iterator<String> it = strList.iterator();
+		while (it.hasNext()) {
+			String message = it.next();
+			player.sendMessage(parseText(message));
 		}
 	}
 
