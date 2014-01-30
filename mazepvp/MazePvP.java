@@ -41,6 +41,7 @@ public final class MazePvP extends JavaPlugin {
 	public ItemStack[] startItems;
 	public ItemStack[] mazeBossDropItems;
 	public double[] mazeBossDropWeighs;
+	public int playerMaxDeaths = 3;
 	public int wallChangeTimer = 0;
 	public boolean showHeads = true;
 	public int fightStartDelay = 5*20;
@@ -55,6 +56,11 @@ public final class MazePvP extends JavaPlugin {
 	public List<String> fightStartedText;
 	public List<String> waitBroadcastText;
 	public List<String> waitBroadcastFullText;
+	public String startedStateText;
+	public String waitingStateText;
+	public List<String> fightRespawnText;
+	public List<String> lastRespawnText;
+	public List<String> winText;
 	
 	public MazePvP() {
 	}
@@ -143,6 +149,7 @@ public final class MazePvP extends JavaPlugin {
 		Configuration config = getConfig();
 		showHeads = config.getBoolean("showHeadsOnSpikes");
 		fightStartDelay = config.getInt("fightStartDelay")*20;
+		playerMaxDeaths = config.getInt("playerLives");
 		mazeBossName = config.getString("boss.name");
 		mazeBossMaxHp = config.getInt("boss.hp");
 		mazeBossStrength = config.getInt("boss.attack");
@@ -237,6 +244,11 @@ public final class MazePvP extends JavaPlugin {
 		fightStartedText = config.getStringList("texts.fightStarted");
 		waitBroadcastText = config.getStringList("texts.joinBroadcast");
 		waitBroadcastFullText = config.getStringList("texts.joinBroadcastWhenFull");
+		fightRespawnText = config.getStringList("texts.fightRespawn");
+		lastRespawnText = config.getStringList("texts.fightRespawnLastLife");
+		winText = config.getStringList("texts.fightWin");
+		startedStateText = config.getString("texts.startedState");
+		waitingStateText = config.getString("texts.waitingState");
    }
 
 	public void loadMazeProps(World world) {

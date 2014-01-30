@@ -34,15 +34,27 @@ public class MazeTick extends BukkitRunnable {
 			Maze maze = mit.next();
       		int i, j, posX, posZ, xx, zz;
       		
-      		if (!maze.canBeEntered && !maze.fightStarted) {
-      			if (maze.playerInsideMaze.size() >= maze.minPlayers) {
+      		if (!maze.canBeEntered) {
+      			if (!maze.fightStarted) {
+	      			if (maze.playerInsideMaze.size() >= maze.minPlayers) {
+	      				maze.fightStartTimer++;
+	      				if (maze.fightStartTimer == MazePvP.theMazePvP.fightStartDelay) {
+	      					maze.fightStartTimer = 0;
+	      					maze.fightStarted = true;
+	      					maze.startFight();
+	      					maze.updateSigns();
+	      					maze.sendStartMessageToJoinedPlayers();
+	      				} else if (maze.fightStartTimer == 1 || maze.fightStartTimer%20 == 0) maze.sendTimeMessageToJoinedPlayers();
+	      			}
+      			}
+      			if (maze.lastPlayer != null) {
       				maze.fightStartTimer++;
-      				if (maze.fightStartTimer == MazePvP.theMazePvP.fightStartDelay) {
+      				if (maze.fightStartTimer >= Maze.FIGHT_STOP_SPEED) {
       					maze.fightStartTimer = 0;
-      					maze.fightStarted = true;
-      					maze.updateSigns();
-      					maze.sendStartMessageToJoinedPlayers();
-      				} else if (maze.fightStartTimer == 1 || maze.fightStartTimer%20 == 0) maze.sendTimeMessageToJoinedPlayers();
+						if (maze.lastPlayer != null && !maze.lastPlayer.isDead()) {
+	      					maze.playerQuit(maze.lastPlayer);
+						}
+      				}
       			}
       		}
       		

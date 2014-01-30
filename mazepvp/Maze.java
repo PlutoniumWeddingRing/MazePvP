@@ -29,6 +29,7 @@ public class Maze {
 	public static final int MAZE_PASSAGE_HEIGHT = 5;
 	public static final int MAZE_PASSAGE_DEPTH = 5;
 	public static final int WALL_CHANGE_SPEED = 60;
+	public static final int FIGHT_STOP_SPEED = 60;
 	
 	public World mazeWorld;
 	public int mazeSize;
@@ -43,6 +44,7 @@ public class Maze {
 	public int mazeBossMaxHp = 0;
 	public double mazeBossHp = 0.0;
 	public int mazeBossStrength = 0;
+	public int playerMaxDeaths = 3;
 	public double mazeSpawnMobProb = 1.0/3.0;
 	public double mazeChestAppearProb = 0.3;
 	public double mazeGroundReappearProb = 0.1;
@@ -68,6 +70,7 @@ public class Maze {
 	public int fightStartTimer = 0;
 	public LinkedList<int[]> joinSigns = new LinkedList<int[]>();
 	public LinkedList<int[]> leaveSigns = new LinkedList<int[]>();
+	public Player lastPlayer;
 	
 	public Maze() {
 		mazeBossName = MazePvP.theMazePvP.mazeBossName;
@@ -81,6 +84,7 @@ public class Maze {
 		mazeChestItems = MazePvP.theMazePvP.mazeChestItems;
 		mazeBossDropWeighs = MazePvP.theMazePvP.mazeBossDropWeighs;
 		mazeBossDropItems = MazePvP.theMazePvP.mazeBossDropItems;
+		playerMaxDeaths = MazePvP.theMazePvP.playerMaxDeaths;
 	}
 	 
 	public int blockToMazeCoord(int blockCoord) {
@@ -350,7 +354,7 @@ public class Maze {
 		}
 	}
 
-	public String parseText(String str) {
+	public String parseText(String str, Player player) {
 		String newStr = "";
 		String subtStr = "";
 		boolean escaping = false;
@@ -367,7 +371,15 @@ public class Maze {
 						else if (subtStr.equals("currentP")) subtStr = Integer.toString(playerInsideMaze.size());
 						else if (subtStr.equals("remainingP")) subtStr = Integer.toString(Math.max(0, minPlayers-playerInsideMaze.size()));
 						else if (subtStr.equals("timeLeft")) subtStr = Integer.toString((fightStartTimer == 1) ? MazePvP.theMazePvP.fightStartDelay/20 : (MazePvP.theMazePvP.fightStartDelay-fightStartTimer)/20);
-						else if (subtStr.equals("state")) subtStr = fightStarted?"Started":"Waiting";
+						else if (subtStr.equals("state")) subtStr = fightStarted?MazePvP.theMazePvP.startedStateText:MazePvP.theMazePvP.waitingStateText;
+						else if (subtStr.equals("livesLeft")) {
+							if (player == null) subtStr = "X";
+							else {
+								PlayerProps props = joinedPlayerProps.get(player.getName());
+								if (props == null) subtStr = "X";
+								else subtStr = Integer.toString(playerMaxDeaths-props.deathCount);
+							}
+						}
 						else subtStr = "<"+subtStr+">";
 						newStr += subtStr;
 					} else subtStr += str.charAt(i);
@@ -407,7 +419,7 @@ public class Maze {
     						for (int i = 0; i < 4; i++) {
     							if (!strIt.hasNext()) break;
     	    					String signLine = strIt.next();
-    							signState.setLine(i, parseText(signLine));
+    							signState.setLine(i, parseText(signLine, null));
     						}
     						signState.update();
 							if (!strIt.hasNext()) break outerLoop;
@@ -448,7 +460,16 @@ public class Maze {
 				player.teleport(savedProps.prevLocation);
 			}
 		}
+		if (!canBeEntered && fightStarted) {
+			player.getInventory().clear();
+			player.getEquipment().clear();
+		}
 		joinedPlayerProps.remove(player.getName());
+		if (!canBeEntered && fightStarted && joinedPlayerProps.isEmpty()) {
+			lastPlayer = null;
+			fightStarted = false;
+		}
+		if (!canBeEntered) updateSigns();
 	}
 
 	public void sendWaitMessageToJoinedPlayers() {
@@ -490,7 +511,24 @@ public class Maze {
 		Iterator<String> it = strList.iterator();
 		while (it.hasNext()) {
 			String message = it.next();
-			player.sendMessage(parseText(message));
+			player.sendMessage(parseText(message, player));
+		}
+	}
+
+	public void startFight() {
+		Iterator<Map.Entry<String,Boolean>> it = playerInsideMaze.entrySet().iterator();
+		boolean propsEmpty = joinedPlayerProps.isEmpty();
+		while(it.hasNext()) {
+			Map.Entry<String,Boolean> entry = it.next();
+			Player player = Bukkit.getPlayer(entry.getKey());
+			if (propsEmpty) {
+				joinedPlayerProps.put(player.getName(), new PlayerProps(player.getLocation()));
+			}
+			Point2D.Double loc = getMazeBossNewLocation(mazeWorld);
+        	player.teleport(new Location(mazeWorld, loc.x, mazeY+1, loc.y));
+			player.getInventory().clear();
+			player.getEquipment().clear();
+			MazePvP.theMazePvP.giveStartItemsToPlayer(player);
 		}
 	}
 

@@ -2,7 +2,9 @@ package mazepvp;
 
 import java.awt.geom.Point2D;
 import java.util.Iterator;
+import java.util.Map;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Effect;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -31,6 +33,7 @@ import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
 import org.bukkit.event.world.WorldLoadEvent;
@@ -309,6 +312,28 @@ public final class EventListeners implements Listener {
 					}
 				}
 			}
+			if (event.getEntity() instanceof Player) {
+				Player player = (Player)event.getEntity();
+				if (!maze.canBeEntered && maze.fightStarted) {
+					PlayerProps props = maze.joinedPlayerProps.get(player.getName());
+					if (props != null) {
+						props.deathCount++;
+						if (player == maze.lastPlayer || props.deathCount >= maze.playerMaxDeaths) {
+							if (maze.joinedPlayerProps.size() == 2) {
+								Iterator<Map.Entry<String,Boolean>> pit = maze.playerInsideMaze.entrySet().iterator();
+								Map.Entry<String,Boolean> entry = pit.next();
+								if (entry.getKey().equals(player.getName())) entry = pit.next();
+								Player lastPlayer = Bukkit.getPlayer(entry.getKey());
+								if (lastPlayer != null) {
+									maze.sendStringListToPlayer(lastPlayer, MazePvP.theMazePvP.winText);
+									maze.fightStartTimer = 0;
+									maze.lastPlayer = lastPlayer;
+								}
+							}
+						}
+					}
+				}
+			}
 		}
     }
 	
@@ -395,7 +420,7 @@ public final class EventListeners implements Listener {
 	}
 	
 	@EventHandler
-	public void onPlayerInteract(PlayerInteractEvent event) {
+	public void playerInteractListener(PlayerInteractEvent event) {
 		if (event.getAction() == Action.RIGHT_CLICK_BLOCK) {
 			if (event.getClickedBlock().getType() == Material.WALL_SIGN || event.getClickedBlock().getType() == Material.SIGN_POST) {
 				Iterator<Maze> mit = MazePvP.theMazePvP.mazes.iterator();
@@ -434,6 +459,34 @@ public final class EventListeners implements Listener {
 							maze.updateSigns();
 						}
 					}
+				}
+			}
+		}
+	}
+	
+	@EventHandler
+	public void playerRespawnListener(PlayerRespawnEvent event) {
+		Player player = event.getPlayer();
+		if (Maze.playerInsideAMaze.containsKey(player.getName()) && Maze.playerInsideAMaze.get((player.getName()))) {
+			Iterator<Maze> mit = MazePvP.theMazePvP.mazes.iterator();
+			while (mit.hasNext()) {
+				Maze maze = mit.next();
+				if (maze.canBeEntered || !maze.fightStarted) continue;
+				PlayerProps props = maze.joinedPlayerProps.get(player.getName());
+				if (props != null) {
+					if (event.getPlayer() != maze.lastPlayer && props.deathCount < maze.playerMaxDeaths) {
+						Point2D.Double loc = maze.getMazeBossNewLocation(maze.mazeWorld);
+						player.getInventory().clear();
+						player.getEquipment().clear();
+						MazePvP.theMazePvP.giveStartItemsToPlayer(player);
+						event.setRespawnLocation(new Location(maze.mazeWorld, loc.x, maze.mazeY+1, loc.y));
+						if (props.deathCount+1 < maze.playerMaxDeaths) maze.sendStringListToPlayer(player, MazePvP.theMazePvP.fightRespawnText);
+						else maze.sendStringListToPlayer(player, MazePvP.theMazePvP.lastRespawnText);
+					} else {
+						event.setRespawnLocation(props.prevLocation);
+						maze.playerQuit(player);
+					}
+					break;
 				}
 			}
 		}

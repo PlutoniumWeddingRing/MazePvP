@@ -84,7 +84,7 @@ public class CommandCreateLeaveSign implements CommandExecutor {
         	String str = it.next();
         	block = world.getBlockAt(loc);
     		Sign sign = (Sign)block.getState(); 
-        	sign.setLine(i%4, maze.parseText(str));
+        	sign.setLine(i%4, maze.parseText(str, null));
     		sign.update();
         	if ((i+1)%4 == 0) {
         		loc.setX(loc.getX()+xOffs);
