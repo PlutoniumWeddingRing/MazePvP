@@ -45,7 +45,7 @@ public class CommandSetPlayerNum implements CommandExecutor {
         }
         maze.minPlayers = minNum;
         maze.maxPlayers = maxNum;
-        maze.updateJoinSigns();
+        maze.updateSigns();
     	return true;
 	}
 }

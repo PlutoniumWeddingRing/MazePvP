@@ -40,7 +40,7 @@ public class MazeTick extends BukkitRunnable {
       				if (maze.fightStartTimer == MazePvP.theMazePvP.fightStartDelay) {
       					maze.fightStartTimer = 0;
       					maze.fightStarted = true;
-      					maze.updateJoinSigns();
+      					maze.updateSigns();
       					maze.sendStartMessageToJoinedPlayers();
       				} else if (maze.fightStartTimer == 1 || maze.fightStartTimer%20 == 0) maze.sendTimeMessageToJoinedPlayers();
       			}

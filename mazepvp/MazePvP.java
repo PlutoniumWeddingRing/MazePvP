@@ -45,6 +45,7 @@ public final class MazePvP extends JavaPlugin {
 	public boolean showHeads = true;
 	public int fightStartDelay = 5*20;
 	public List<String> joinSignText;
+	public List<String> leaveSignText;
 	
 	public MazePvP() {
 	}
@@ -61,6 +62,7 @@ public final class MazePvP extends JavaPlugin {
 		getCommand("removewp").setExecutor(new CommandRemoveWaitingPlace(this));
 		getCommand("setplayernum").setExecutor(new CommandSetPlayerNum(this));
 		getCommand("joinsign").setExecutor(new CommandCreateJoinSign(this));
+		getCommand("leavesign").setExecutor(new CommandCreateLeaveSign(this));
 		saveDefaultConfig();
 		loadConfiguration();
 		Iterator<World> wit = Bukkit.getServer().getWorlds().iterator();
@@ -210,6 +212,7 @@ public final class MazePvP extends JavaPlugin {
 		}
 		
 		joinSignText = config.getStringList("joinSignText");
+		leaveSignText = config.getStringList("leaveSignText");
    }
 
 	public void loadMazeProps(World world) {
@@ -323,7 +326,7 @@ public final class MazePvP extends JavaPlugin {
 	            	var1.close();
 	            	throw new Exception("Malformed input");
 	            }
-	            maze.updateJoinSigns();
+	            maze.updateSigns();
 	            mazes.add(maze);
 	            var1.close();
 	            } catch (Exception var4) {

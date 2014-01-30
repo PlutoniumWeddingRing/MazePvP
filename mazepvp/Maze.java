@@ -66,6 +66,7 @@ public class Maze {
 	public boolean fightStarted = false;
 	public int fightStartTimer = 0;
 	public LinkedList<int[]> joinSigns = new LinkedList<int[]>();
+	public LinkedList<int[]> leaveSigns = new LinkedList<int[]>();
 	
 	public Maze() {
 		mazeBossName = MazePvP.theMazePvP.mazeBossName;
@@ -297,24 +298,24 @@ public class Maze {
 		}
 	}
 
-	public void addJoinSign(int x, int y, int z, int x2, int y2, int z2) {
+	public void addSign(int x, int y, int z, int x2, int y2, int z2, List<int[]> signList) {
 		int[] newSign = new int[]{Math.min(x, x2), Math.min(y, y2), Math.min(z, z2),
 								  Math.max(x, x2), Math.max(y, y2), Math.max(z, z2),
 								  (x2 < x || y2 < y || z2 < z)?1:0};
-		Iterator<int[]> it = joinSigns.iterator();
+		Iterator<int[]> it = signList.iterator();
     	while (it.hasNext()) {
     		int[] sign = it.next();
     		if (sign[0] <= newSign[3] && sign[1] <= newSign[4] && sign[2] <= newSign[5]
     		 && sign[3] >= newSign[0] && sign[4] >= newSign[1] && sign[5] >= newSign[2]) {
-    			removeJoinSign(sign, false);
+    			removeSign(sign, signList, false);
     			it.remove();
     		}
     	}
-		joinSigns.add(newSign);
+    	signList.add(newSign);
 	}
 
-	public int[] findJoinSign(Location location) {
-		Iterator<int[]> it = joinSigns.iterator();
+	public int[] findSign(Location location, List<int[]> signList) {
+		Iterator<int[]> it = signList.iterator();
     	while (it.hasNext()) {
     		int[] sign = it.next();
     		if (sign[0] <= location.getBlockX() && sign[1] <= location.getBlockY() && sign[2] <= location.getBlockZ()
@@ -324,12 +325,12 @@ public class Maze {
 		return null;
 	}
 
-	public void removeJoinSign(int[] sign) {
-		removeJoinSign(sign, true);
+	public void removeSign(int[] sign, List<int[]> signList) {
+		removeSign(sign, signList, true);
 	}
 
-	public void removeJoinSign(int[] sign, boolean removeFromList) {
-		if (removeFromList) joinSigns.remove(sign);
+	public void removeSign(int[] sign, List<int[]> signList, boolean removeFromList) {
+		if (removeFromList) signList.remove(sign);
 		for (int xx = sign[0]; xx <= sign[3]; xx++) {
 			for (int yy = sign[1]; yy <= sign[4]; yy++) {
 				for (int zz = sign[2]; zz <= sign[5]; zz++) {
@@ -384,12 +385,17 @@ public class Maze {
 		if (insideSubt) newStr += "<"+subtStr;
 		return newStr;
 	}
-
-	public void updateJoinSigns() {
-		Iterator<int[]> it = joinSigns.iterator();
+	
+	public void updateSigns() {
+		updateSigns(joinSigns);
+		updateSigns(leaveSigns);
+	}
+	
+	public void updateSigns(List<int[]> signList) {
+		Iterator<int[]> it = signList.iterator();
     	while (it.hasNext()) {
     		int[] sign = it.next();
-    		Iterator<String> strIt = MazePvP.theMazePvP.joinSignText.iterator();
+    		Iterator<String> strIt = signList==joinSigns?MazePvP.theMazePvP.joinSignText.iterator():MazePvP.theMazePvP.leaveSignText.iterator();
     		outerLoop: for (int xx = sign[0]; xx <= sign[3]; xx++) {
     			for (int yy = sign[1]; yy <= sign[4]; yy++) {
     				for (int zz = sign[2]; zz <= sign[5]; zz++) {

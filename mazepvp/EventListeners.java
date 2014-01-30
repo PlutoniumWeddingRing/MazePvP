@@ -353,7 +353,7 @@ public final class EventListeners implements Listener {
 			if (maze.playerInsideMaze.containsKey(event.getPlayer().getName()) && maze.playerInsideMaze.get(event.getPlayer().getName())) {
 				if (!maze.canBeEntered) {
 					maze.playerQuit(event.getPlayer());
-					maze.updateJoinSigns();
+					maze.updateSigns();
 				} else {
 					maze.playerInsideMaze.remove(event.getPlayer().getName());
 				}
@@ -380,9 +380,14 @@ public final class EventListeners implements Listener {
 				Maze maze = mit.next();
 				if (maze.canBeEntered) continue;
 				if (maze.mazeWorld != event.getBlock().getWorld()) continue;
-				int[] sign = maze.findJoinSign(event.getBlock().getLocation());
+				int[] sign = maze.findSign(event.getBlock().getLocation(), maze.joinSigns);
 				if (sign != null) {
-					maze.removeJoinSign(sign);
+					maze.removeSign(sign, maze.joinSigns);
+					break;
+				}
+				sign = maze.findSign(event.getBlock().getLocation(), maze.leaveSigns);
+				if (sign != null) {
+					maze.removeSign(sign, maze.leaveSigns);
 					break;
 				}
 			}
@@ -398,13 +403,13 @@ public final class EventListeners implements Listener {
 					Maze maze = mit.next();
 					if (maze.canBeEntered) continue;
 					if (maze.mazeWorld != event.getClickedBlock().getWorld()) continue;
-					int[] sign = maze.findJoinSign(event.getClickedBlock().getLocation());
+					int[] sign = maze.findSign(event.getClickedBlock().getLocation(), maze.joinSigns);
 					if (sign != null) {
 						String pName = event.getPlayer().getName();
 						if (maze.playerInsideMaze.containsKey(pName) && maze.playerInsideMaze.get(pName)) {
 							event.getPlayer().sendMessage("You left maze \""+maze.name+"\"");
 							maze.playerQuit(event.getPlayer());
-							maze.updateJoinSigns();
+							maze.updateSigns();
 						} else {
 							if (maze.fightStarted) {
 								event.getPlayer().sendMessage("The fight has already started");
@@ -416,10 +421,14 @@ public final class EventListeners implements Listener {
 							} else {
 								event.getPlayer().sendMessage("You joined maze \""+maze.name+"\"");
 								maze.playerJoin(event.getPlayer());
-								maze.updateJoinSigns();
+								maze.updateSigns();
 							}
 						}
 						break;
+					}
+					sign = maze.findSign(event.getClickedBlock().getLocation(), maze.leaveSigns);
+					if (sign != null) {
+						event.getPlayer().sendMessage("You left maze \""+maze.name+"\"");
 					}
 				}
 			}
