@@ -317,7 +317,7 @@ public final class EventListeners implements Listener {
 					PlayerProps props = maze.joinedPlayerProps.get(player.getName());
 					if (props != null) {
 						props.deathCount++;
-						if (player != maze.lastPlayer && props.deathCount >= maze.playerMaxDeaths) {
+						if (maze.lastPlayer == null && props.deathCount >= maze.playerMaxDeaths) {
 							List<Player> players = maze.getPlayersInGame();
 							if (players.size() == 1) {
 								Player lastPlayer = players.get(0);

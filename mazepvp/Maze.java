@@ -481,11 +481,13 @@ public class Maze {
 		if (!canBeEntered && fightStarted) {
 			List<Player> players = getPlayersInGame();
 			if (players.size() == 1) {
-				Player lPlayer = players.get(0);
-				if (lPlayer != null) {
-					sendStringListToPlayer(lPlayer, MazePvP.theMazePvP.winText);
-					fightStartTimer = 0;
-					lastPlayer = lPlayer;
+				if (lastPlayer == null) {
+					Player lPlayer = players.get(0);
+					if (lPlayer != null) {
+						sendStringListToPlayer(lPlayer, MazePvP.theMazePvP.winText);
+						fightStartTimer = 0;
+						lastPlayer = lPlayer;
+					}
 				}
 			} else sendPlayerOutMessageToPlayers();
 		}
