@@ -476,6 +476,7 @@ public final class EventListeners implements Listener {
 						MazePvP.cleanUpPlayer(player);
 						MazePvP.theMazePvP.giveStartItemsToPlayer(player);
 						event.setRespawnLocation(new Location(maze.mazeWorld, loc.x, maze.mazeY+1, loc.y));
+					 	maze.mazeWorld.playEffect(event.getRespawnLocation(), Effect.MOBSPAWNER_FLAMES, 0);
 						if (props.deathCount+1 < maze.playerMaxDeaths) maze.sendStringListToPlayer(player, MazePvP.theMazePvP.fightRespawnText);
 						else maze.sendStringListToPlayer(player, MazePvP.theMazePvP.lastRespawnText);
 					} else {
