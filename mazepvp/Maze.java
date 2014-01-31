@@ -368,8 +368,13 @@ public class Maze {
 						if (subtStr.equals("name")) subtStr = name;
 						else if (subtStr.equals("minP")) subtStr = Integer.toString(minPlayers);
 						else if (subtStr.equals("maxP")) subtStr = Integer.toString(maxPlayers);
-						else if (subtStr.equals("currentP")) subtStr = Integer.toString(playerInsideMaze.size());
-						else if (subtStr.equals("remainingP")) subtStr = Integer.toString(Math.max(0, minPlayers-playerInsideMaze.size()));
+						else if (subtStr.equals("currentP")) {
+							if (fightStarted) subtStr = Integer.toString(getPlayersInGame().size());
+							else subtStr = Integer.toString(playerInsideMaze.size());
+						} else if (subtStr.equals("remainingP")) {
+							if (fightStarted) subtStr = "0";
+							else subtStr = Integer.toString(Math.max(0, minPlayers-playerInsideMaze.size()));
+						}
 						else if (subtStr.equals("timeLeft")) subtStr = Integer.toString((fightStartTimer == 1) ? MazePvP.theMazePvP.fightStartDelay/20 : (MazePvP.theMazePvP.fightStartDelay-fightStartTimer)/20);
 						else if (subtStr.equals("state")) subtStr = fightStarted?MazePvP.theMazePvP.startedStateText:MazePvP.theMazePvP.waitingStateText;
 						else if (subtStr.equals("livesLeft")) {
@@ -530,6 +535,18 @@ public class Maze {
 			player.getEquipment().clear();
 			MazePvP.theMazePvP.giveStartItemsToPlayer(player);
 		}
+	}
+
+	public List<Player> getPlayersInGame() {
+		Iterator<Map.Entry<String,PlayerProps>> it = joinedPlayerProps.entrySet().iterator();
+		ArrayList<Player> players = new ArrayList<Player>();
+		while(it.hasNext()) {
+			Map.Entry<String,PlayerProps> entry = it.next();
+			if (entry.getValue().deathCount < playerMaxDeaths) {
+				players.add(Bukkit.getPlayer(entry.getKey()));
+			}
+		}
+		return players;
 	}
 
 }

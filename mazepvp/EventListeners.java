@@ -2,9 +2,8 @@ package mazepvp;
 
 import java.awt.geom.Point2D;
 import java.util.Iterator;
-import java.util.Map;
+import java.util.List;
 
-import org.bukkit.Bukkit;
 import org.bukkit.Effect;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -318,12 +317,10 @@ public final class EventListeners implements Listener {
 					PlayerProps props = maze.joinedPlayerProps.get(player.getName());
 					if (props != null) {
 						props.deathCount++;
-						if (player == maze.lastPlayer || props.deathCount >= maze.playerMaxDeaths) {
-							if (maze.joinedPlayerProps.size() == 2) {
-								Iterator<Map.Entry<String,Boolean>> pit = maze.playerInsideMaze.entrySet().iterator();
-								Map.Entry<String,Boolean> entry = pit.next();
-								if (entry.getKey().equals(player.getName())) entry = pit.next();
-								Player lastPlayer = Bukkit.getPlayer(entry.getKey());
+						if (player != maze.lastPlayer && props.deathCount >= maze.playerMaxDeaths) {
+							List<Player> players = maze.getPlayersInGame();
+							if (players.size() == 1) {
+								Player lastPlayer = players.get(0);
 								if (lastPlayer != null) {
 									maze.sendStringListToPlayer(lastPlayer, MazePvP.theMazePvP.winText);
 									maze.fightStartTimer = 0;
