@@ -75,6 +75,7 @@ public final class MazePvP extends JavaPlugin {
 		getCommand("createmaze").setExecutor(new CommandCreateMaze(this));
 		getCommand("listmazes").setExecutor(new CommandListMazes(this));
 		getCommand("deletemaze").setExecutor(new CommandDeleteMaze(this));
+		getCommand("clearmaze").setExecutor(new CommandClearMaze(this));
 		getCommand("setwp").setExecutor(new CommandSetWaitingPlace(this));
 		getCommand("removewp").setExecutor(new CommandRemoveWaitingPlace(this));
 		getCommand("setplayernum").setExecutor(new CommandSetPlayerNum(this));

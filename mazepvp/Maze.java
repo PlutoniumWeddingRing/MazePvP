@@ -2,6 +2,7 @@ package mazepvp;
 
 import java.awt.geom.Point2D;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -16,7 +17,9 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
+import org.bukkit.block.Chest;
 import org.bukkit.block.Sign;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Zombie;
@@ -571,6 +574,50 @@ public class Maze {
 			}
 		}
 		return players;
+	}
+
+	@SuppressWarnings("deprecation")
+	public void cleanUpMaze() {
+		int xx, zz;
+		for (xx = 1; xx <= mazeSize*2-1; xx += 2) {
+    		for (zz = 1; zz <= mazeSize*2-1; zz += 2) {
+    			if (!isBeingChanged[xx][zz] &&
+    				mazeWorld.getBlockAt(mazeX+mazeToBlockCoord(xx), mazeY, mazeZ+mazeToBlockCoord(zz)).isEmpty()) {
+    				for (int xxx = mazeToBlockCoord(xx); xxx <= mazeToBlockCoord(xx)+Maze.MAZE_PASSAGE_WIDTH-1; xxx++) {
+    					for (int zzz = mazeToBlockCoord(zz); zzz <= mazeToBlockCoord(zz)+Maze.MAZE_PASSAGE_WIDTH-1; zzz++) {
+    						mazeWorld.getBlockAt(mazeX+xxx, mazeY, mazeZ+zzz).setTypeId(98);
+    						mazeWorld.getBlockAt(mazeX+xxx, mazeY, mazeZ+zzz).setData((byte) 0);
+	        				if (MazePvP.theMazePvP.showHeads) mazeWorld.getBlockAt(mazeX+xxx, mazeY-Maze.MAZE_PASSAGE_DEPTH+2, mazeZ+zzz).setType(Material.AIR);
+    					}
+    				}
+    			}
+    		}
+    	}
+		
+		for (xx = 2; xx <= mazeSize*2; xx += 2) {
+    		for (zz = 2; zz <= mazeSize*2; zz += 2) {
+    			int posX = mazeToBlockCoord(xx);
+    			int posZ = mazeToBlockCoord(zz);
+    			if (mazeWorld.getBlockAt(mazeX+posX, mazeY+2, mazeZ+posZ) == null || mazeWorld.getBlockAt(mazeX+posX, mazeY+2, mazeZ+posZ).isEmpty()) {
+					if (mazeWorld.getBlockAt(mazeX+posX, mazeY+1, mazeZ+posZ).getType() == Material.CHEST) {
+						Chest chest = ((Chest)mazeWorld.getBlockAt(mazeX+posX, mazeY+1, mazeZ+posZ).getState());
+						chest.getInventory().clear();
+					}
+					mazeWorld.getBlockAt(mazeX+posX, mazeY+1, mazeZ+posZ).setTypeId(98);
+					mazeWorld.getBlockAt(mazeX+posX, mazeY+1, mazeZ+posZ).setData((byte) 1);
+					mazeWorld.getBlockAt(mazeX+posX, mazeY+2, mazeZ+posZ).setTypeId(98);
+					mazeWorld.getBlockAt(mazeX+posX, mazeY+2, mazeZ+posZ).setData((byte) 1);
+				}
+    		}
+		}
+
+        Collection<Entity> entities = mazeWorld.getEntitiesByClass(Entity.class);
+        Iterator<Entity> it = entities.iterator();
+        while (it.hasNext()) {
+        	Entity en = it.next();
+        	if (!(en instanceof Player) && isInsideMaze(en.getLocation())) en.remove();
+        }
+        mazeBoss = null;
 	}
 
 }
