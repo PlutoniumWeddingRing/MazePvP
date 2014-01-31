@@ -489,6 +489,7 @@ public class Maze {
 			lastPlayer = null;
 			fightStarted = false;
 			fightStartTimer = 0;
+			cleanUpMaze();
 		}
 		if (!canBeEntered) updateSigns();
 	}
@@ -545,6 +546,7 @@ public class Maze {
 	}
 
 	public void startFight() {
+		cleanUpMaze();
 		Iterator<Map.Entry<String,Boolean>> it = playerInsideMaze.entrySet().iterator();
 		boolean propsEmpty = joinedPlayerProps.isEmpty();
 		while(it.hasNext()) {
