@@ -317,7 +317,7 @@ public class MazeTick extends BukkitRunnable {
 	            	for (xx = 1; xx <= maze.mazeSize*2-1; xx += 2) {
 	            		for (zz = 1; zz <= maze.mazeSize*2-1; zz += 2) {
 	            			if (!maze.isBeingChanged[xx][zz] && !isLookedAt[xx][zz] && Math.random() < maze.mazeGroundReappearProb &&
-	            				maze.mazeWorld.getBlockAt(maze.mazeToBlockCoord(xx), maze.mazeY, maze.mazeToBlockCoord(zz)).isEmpty()) {
+	            				maze.mazeWorld.getBlockAt(maze.mazeX+maze.mazeToBlockCoord(xx), maze.mazeY, maze.mazeZ+maze.mazeToBlockCoord(zz)).isEmpty()) {
 	            				for (int xxx = maze.mazeToBlockCoord(xx); xxx <= maze.mazeToBlockCoord(xx)+Maze.MAZE_PASSAGE_WIDTH-1; xxx++) {
 	            					for (int zzz = maze.mazeToBlockCoord(zz); zzz <= maze.mazeToBlockCoord(zz)+Maze.MAZE_PASSAGE_WIDTH-1; zzz++) {
 	            						maze.mazeWorld.getBlockAt(maze.mazeX+xxx, maze.mazeY, maze.mazeZ+zzz).setTypeId(98);
