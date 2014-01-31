@@ -19,7 +19,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.entity.Zombie;
 import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public final class MazePvP extends JavaPlugin {
@@ -456,11 +455,11 @@ public final class MazePvP extends JavaPlugin {
 		player.getInventory().setChestplate(null);
 		player.getInventory().setLeggings(null);
 		player.getInventory().setBoots(null);
+		player.getEnderChest().clear();
 	}
 
-	public static ItemStack[] cloneInventory(PlayerInventory inventory) {
-		if (inventory == null) return null;
-		ItemStack[] items = inventory.getContents();
+	public static ItemStack[] cloneItems(ItemStack[] items) {
+		if (items == null) return null;
 		ItemStack[] cloneItems = new ItemStack[items.length];
 		for (int i = 0; i < items.length; i++) {
 			cloneItems[i] = (items[i]==null)?null:items[i].clone();

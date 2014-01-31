@@ -444,7 +444,8 @@ public class Maze {
 				sendWaitMessageToJoinedPlayers();
 				if (hasWaitArea) {
 					int telepY = MazePvP.getSafeY(waitX, waitY, waitZ, mazeWorld);
-					joinedPlayerProps.put(player.getName(), new PlayerProps(player.getLocation(), MazePvP.cloneInventory(player.getInventory()), MazePvP.getClonedArmor(player.getEquipment())));
+					joinedPlayerProps.put(player.getName(), new PlayerProps(player.getLocation(), MazePvP.cloneItems(player.getInventory().getContents()),
+							MazePvP.getClonedArmor(player.getEquipment()), MazePvP.cloneItems(player.getEnderChest().getContents())));
 					player.teleport(new Location(mazeWorld, waitX+0.5, telepY, waitZ+0.5));
 				}
 			}
@@ -464,10 +465,9 @@ public class Maze {
 			if (savedProps != null) {
 				player.teleport(savedProps.prevLocation);
 				MazePvP.cleanUpPlayer(player);
-				for (int i = 0; i < savedProps.savedInventory.length; i++)
-					player.getInventory().setItem(i, savedProps.savedInventory[i]);
-				for (int i = 0; i < savedProps.savedArmor.length; i++)
-					player.getEquipment().setArmorContents(savedProps.savedArmor);
+				player.getInventory().setContents(savedProps.savedInventory);
+				player.getEquipment().setArmorContents(savedProps.savedArmor);
+				player.getEnderChest().setContents(savedProps.savedEnderChest);
 			}
 		}
 		joinedPlayerProps.remove(player.getName());
@@ -548,7 +548,8 @@ public class Maze {
 			Map.Entry<String,Boolean> entry = it.next();
 			Player player = Bukkit.getPlayer(entry.getKey());
 			if (propsEmpty) {
-				PlayerProps props = new PlayerProps(player.getLocation(), MazePvP.cloneInventory(player.getInventory()), MazePvP.getClonedArmor(player.getEquipment()));
+				PlayerProps props = new PlayerProps(player.getLocation(), MazePvP.cloneItems(player.getInventory().getContents()),
+													MazePvP.getClonedArmor(player.getEquipment()), MazePvP.cloneItems(player.getEnderChest().getContents()));
 				joinedPlayerProps.put(player.getName(), props);
 			}
 			Point2D.Double loc = getMazeBossNewLocation(mazeWorld);
