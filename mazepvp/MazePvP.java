@@ -17,7 +17,9 @@ import org.bukkit.block.BlockFace;
 import org.bukkit.configuration.Configuration;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Zombie;
+import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public final class MazePvP extends JavaPlugin {
@@ -444,6 +446,35 @@ public final class MazePvP extends JavaPlugin {
 		}
 		posY++;
 		return posY;
+	}
+
+	public static void cleanUpPlayer(Player player) {
+		player.getInventory().clear();
+		player.setHealth(player.getMaxHealth());
+		player.setFoodLevel(20);
+		player.getInventory().setHelmet(null);
+		player.getInventory().setChestplate(null);
+		player.getInventory().setLeggings(null);
+		player.getInventory().setBoots(null);
+	}
+
+	public static ItemStack[] cloneInventory(PlayerInventory inventory) {
+		if (inventory == null) return null;
+		ItemStack[] items = inventory.getContents();
+		ItemStack[] cloneItems = new ItemStack[items.length];
+		for (int i = 0; i < items.length; i++) {
+			cloneItems[i] = (items[i]==null)?null:items[i].clone();
+		}
+		return cloneItems;
+	}
+
+	public static ItemStack[] getClonedArmor(EntityEquipment armor) {
+		ItemStack[] items = armor.getArmorContents();
+		ItemStack[] cloneArmor = new ItemStack[items.length];
+		for (int i = 0; i < items.length; i++) {
+			cloneArmor[i] = (items[i]==null)?null:items[i].clone();
+		}
+		return cloneArmor;
 	}
 
 }

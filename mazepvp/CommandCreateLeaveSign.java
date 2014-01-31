@@ -83,7 +83,7 @@ public class CommandCreateLeaveSign implements CommandExecutor {
         for (int i = 0; i < MazePvP.theMazePvP.leaveSignText.size(); i++) {
         	String str = it.next();
         	block = world.getBlockAt(loc);
-    		Sign sign = (Sign)block.getState(); 
+    		Sign sign = (Sign)block.getState();
         	sign.setLine(i%4, maze.parseText(str, null));
     		sign.update();
         	if ((i+1)%4 == 0) {
