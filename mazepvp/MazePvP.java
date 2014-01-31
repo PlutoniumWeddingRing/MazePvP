@@ -60,6 +60,7 @@ public final class MazePvP extends JavaPlugin {
 	public String waitingStateText;
 	public List<String> fightRespawnText;
 	public List<String> lastRespawnText;
+	public List<String> playerOutText;
 	public List<String> winText;
 	
 	public MazePvP() {
@@ -246,6 +247,7 @@ public final class MazePvP extends JavaPlugin {
 		waitBroadcastFullText = config.getStringList("texts.joinBroadcastWhenFull");
 		fightRespawnText = config.getStringList("texts.fightRespawn");
 		lastRespawnText = config.getStringList("texts.fightRespawnLastLife");
+		playerOutText = config.getStringList("texts.fightPlayerOut");
 		winText = config.getStringList("texts.fightWin");
 		startedStateText = config.getString("texts.startedState");
 		waitingStateText = config.getString("texts.waitingState");

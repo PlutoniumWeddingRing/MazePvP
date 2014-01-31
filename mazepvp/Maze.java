@@ -470,6 +470,17 @@ public class Maze {
 			player.getEquipment().clear();
 		}
 		joinedPlayerProps.remove(player.getName());
+		if (!canBeEntered && fightStarted) {
+			List<Player> players = getPlayersInGame();
+			if (players.size() == 1) {
+				Player lPlayer = players.get(0);
+				if (lPlayer != null) {
+					sendStringListToPlayer(lPlayer, MazePvP.theMazePvP.winText);
+					fightStartTimer = 0;
+					lastPlayer = lPlayer;
+				}
+			} else sendPlayerOutMessageToPlayers();
+		}
 		if (!canBeEntered && fightStarted && joinedPlayerProps.isEmpty()) {
 			lastPlayer = null;
 			fightStarted = false;
@@ -509,6 +520,14 @@ public class Maze {
 				Player player = Bukkit.getPlayer(entry.getKey());
 				sendStringListToPlayer(player, MazePvP.theMazePvP.fightStartedText);
 			}
+		}
+	}
+
+	public void sendPlayerOutMessageToPlayers() {
+		Iterator<Player> it = getPlayersInGame().iterator();
+		while(it.hasNext()) {
+			Player player = it.next();
+			sendStringListToPlayer(player, MazePvP.theMazePvP.playerOutText);
 		}
 	}
 

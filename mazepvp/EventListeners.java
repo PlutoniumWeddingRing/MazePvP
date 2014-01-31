@@ -326,7 +326,7 @@ public final class EventListeners implements Listener {
 									maze.fightStartTimer = 0;
 									maze.lastPlayer = lastPlayer;
 								}
-							}
+							} else maze.sendPlayerOutMessageToPlayers();
 						}
 					}
 				}
