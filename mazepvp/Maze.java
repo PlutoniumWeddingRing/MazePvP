@@ -439,24 +439,28 @@ public class Maze {
 	}
 
 	public void playerJoin(Player player) {
-		if (canBeEntered) MazePvP.theMazePvP.giveStartItemsToPlayer(player);
 		playerInsideMaze.put(player.getName(), true);
+		if (canBeEntered || !canBeEntered && !fightStarted && hasWaitArea) {
+			joinedPlayerProps.put(player.getName(), new PlayerProps(player.getLocation(), MazePvP.cloneItems(player.getInventory().getContents()),
+					MazePvP.getClonedArmor(player.getEquipment()), MazePvP.cloneItems(player.getEnderChest().getContents())));
+		}
 		if (!canBeEntered) {
 			Maze.playerInsideAMaze.put(player.getName(), true);
 			if (!fightStarted) {
 				sendWaitMessageToJoinedPlayers();
 				if (hasWaitArea) {
 					int telepY = MazePvP.getSafeY(waitX, waitY, waitZ, mazeWorld);
-					joinedPlayerProps.put(player.getName(), new PlayerProps(player.getLocation(), MazePvP.cloneItems(player.getInventory().getContents()),
-							MazePvP.getClonedArmor(player.getEquipment()), MazePvP.cloneItems(player.getEnderChest().getContents())));
 					player.teleport(new Location(mazeWorld, waitX+0.5, telepY, waitZ+0.5));
 				}
 			}
 		}
+		if (canBeEntered) {
+			MazePvP.cleanUpPlayer(player, canBeEntered);
+			MazePvP.theMazePvP.giveStartItemsToPlayer(player);
+		}
 	}
 
 	public void playerQuit(Player player) {
-		if (canBeEntered) player.getInventory().clear();
 		playerInsideMaze.remove(player.getName());
 		if (!canBeEntered) {
 			Maze.playerInsideAMaze.remove(player.getName());
@@ -464,14 +468,14 @@ public class Maze {
 				sendWaitMessageToJoinedPlayers();
 				if (playerInsideMaze.size() < minPlayers) fightStartTimer = 0;
 			}
-			PlayerProps savedProps = joinedPlayerProps.get(player.getName());
-			if (savedProps != null) {
-				player.teleport(savedProps.prevLocation);
-				MazePvP.cleanUpPlayer(player);
-				player.getInventory().setContents(savedProps.savedInventory);
-				player.getEquipment().setArmorContents(savedProps.savedArmor);
-				player.getEnderChest().setContents(savedProps.savedEnderChest);
-			}
+		}
+		PlayerProps savedProps = joinedPlayerProps.get(player.getName());
+		if (savedProps != null) {
+			if (!canBeEntered) player.teleport(savedProps.prevLocation);
+			MazePvP.cleanUpPlayer(player, canBeEntered);
+			player.getInventory().setContents(savedProps.savedInventory);
+			player.getEquipment().setArmorContents(savedProps.savedArmor);
+			if (!canBeEntered) player.getEnderChest().setContents(savedProps.savedEnderChest);
 		}
 		joinedPlayerProps.remove(player.getName());
 		if (!canBeEntered && fightStarted) {
@@ -560,7 +564,7 @@ public class Maze {
 			Point2D.Double loc = getMazeBossNewLocation(mazeWorld);
 			if (!player.isDead()) {
 				player.teleport(new Location(mazeWorld, loc.x, mazeY+1, loc.y));
-        		MazePvP.cleanUpPlayer(player);
+        		MazePvP.cleanUpPlayer(player, canBeEntered);
 				MazePvP.theMazePvP.giveStartItemsToPlayer(player);
 			} 
 		}

@@ -448,7 +448,7 @@ public final class MazePvP extends JavaPlugin {
 		return posY;
 	}
 
-	public static void cleanUpPlayer(Player player) {
+	public static void cleanUpPlayer(Player player, boolean keepEnderChest) {
 		player.getInventory().clear();
 		player.setHealth(player.getMaxHealth());
 		player.setFoodLevel(20);
@@ -456,7 +456,7 @@ public final class MazePvP extends JavaPlugin {
 		player.getInventory().setChestplate(null);
 		player.getInventory().setLeggings(null);
 		player.getInventory().setBoots(null);
-		player.getEnderChest().clear();
+		if (!keepEnderChest) player.getEnderChest().clear();
 	}
 
 	public static ItemStack[] cloneItems(ItemStack[] items) {

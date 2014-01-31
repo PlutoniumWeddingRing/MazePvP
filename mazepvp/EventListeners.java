@@ -473,7 +473,7 @@ public final class EventListeners implements Listener {
 				if (props != null) {
 					if (event.getPlayer() != maze.lastPlayer && props.deathCount < maze.playerMaxDeaths) {
 						Point2D.Double loc = maze.getMazeBossNewLocation(maze.mazeWorld);
-						MazePvP.cleanUpPlayer(player);
+						MazePvP.cleanUpPlayer(player, props.deathCount != 0);
 						MazePvP.theMazePvP.giveStartItemsToPlayer(player);
 						event.setRespawnLocation(new Location(maze.mazeWorld, loc.x, maze.mazeY+1, loc.y));
 					 	maze.mazeWorld.playEffect(event.getRespawnLocation(), Effect.MOBSPAWNER_FLAMES, 0);
