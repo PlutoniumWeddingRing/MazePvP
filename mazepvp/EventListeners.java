@@ -329,6 +329,7 @@ public final class EventListeners implements Listener {
 							} else maze.sendPlayerOutMessageToPlayers();
 						}
 					}
+					new ForceRespawnRunnable(player.getName()).runTaskLater(MazePvP.theMazePvP, 60L);
 				}
 			}
 		}
