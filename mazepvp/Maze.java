@@ -573,6 +573,16 @@ public class Maze {
 		}
 	}
 
+	public void stopFight(boolean sendMessage) {
+		fightStarted = false;
+		fightStartTimer = 0;
+		while(!playerInsideMaze.isEmpty()) {
+			Player player = Bukkit.getPlayer(playerInsideMaze.keySet().iterator().next());
+			if (sendMessage) this.sendStringListToPlayer(player, MazePvP.theMazePvP.fightStoppedText);
+			playerQuit(player);
+		}
+	}
+
 	public List<Player> getPlayersInGame() {
 		Iterator<Map.Entry<String,PlayerProps>> it = joinedPlayerProps.entrySet().iterator();
 		ArrayList<Player> players = new ArrayList<Player>();

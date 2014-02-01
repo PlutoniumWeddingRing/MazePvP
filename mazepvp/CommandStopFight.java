@@ -6,11 +6,11 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-public class CommandClearMaze implements CommandExecutor {
+public class CommandStopFight implements CommandExecutor {
 	 
 	private MazePvP main;
  
-	public CommandClearMaze(MazePvP main) {
+	public CommandStopFight(MazePvP main) {
 		this.main = main;
 	}
  
@@ -27,9 +27,12 @@ public class CommandClearMaze implements CommandExecutor {
         	sender.sendMessage("There's no maze with that name");
 			return true;
         }
-    	sender.sendMessage("Clearing maze...");
-        maze.cleanUpMaze();
-    	sender.sendMessage("Maze cleared");
+        if (maze.canBeEntered || !maze.fightStarted && maze.playerInsideMaze.isEmpty()) {
+        	sender.sendMessage("No fight is going on in this maze");
+			return true;
+        }
+        maze.stopFight(true);
+    	sender.sendMessage("Fight stopped");
     	return true;
 	}
 }

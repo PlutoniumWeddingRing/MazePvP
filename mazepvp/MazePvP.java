@@ -64,6 +64,7 @@ public final class MazePvP extends JavaPlugin {
 	public List<String> lastRespawnText;
 	public List<String> playerOutText;
 	public List<String> winText;
+	public List<String> fightStoppedText;
 	
 	public MazePvP() {
 	}
@@ -82,6 +83,7 @@ public final class MazePvP extends JavaPlugin {
 		getCommand("setplayernum").setExecutor(new CommandSetPlayerNum(this));
 		getCommand("joinsign").setExecutor(new CommandCreateJoinSign(this));
 		getCommand("leavesign").setExecutor(new CommandCreateLeaveSign(this));
+		getCommand("stopfight").setExecutor(new CommandStopFight(this));
 		saveDefaultConfig();
 		loadConfiguration();
 		Iterator<World> wit = Bukkit.getServer().getWorlds().iterator();
@@ -252,6 +254,7 @@ public final class MazePvP extends JavaPlugin {
 		lastRespawnText = config.getStringList("texts.fightRespawnLastLife");
 		playerOutText = config.getStringList("texts.fightPlayerOut");
 		winText = config.getStringList("texts.fightWin");
+		fightStoppedText = config.getStringList("texts.fightStopped");
 		startedStateText = config.getString("texts.startedState");
 		waitingStateText = config.getString("texts.waitingState");
    }
