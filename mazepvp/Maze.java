@@ -32,6 +32,7 @@ public class Maze {
 	public static final int MAZE_PASSAGE_HEIGHT = 5;
 	public static final int MAZE_PASSAGE_DEPTH = 5;
 	public static final int WALL_CHANGE_SPEED = 60;
+	public static final int BOSS_RESTORE_SPEED = 100;
 	public static final int FIGHT_STOP_SPEED = 60;
 	
 	public World mazeWorld;

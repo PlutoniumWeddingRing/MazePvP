@@ -15,6 +15,7 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Skeleton;
+import org.bukkit.entity.Zombie;
 import org.bukkit.entity.Skeleton.SkeletonType;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -29,11 +30,25 @@ public class MazeTick extends BukkitRunnable {
 	@SuppressWarnings("deprecation")
 	public void run() {
 		main.wallChangeTimer++;
+		main.mazeBossRestoreTimer++;
 		Iterator<Maze> mit = main.mazes.iterator();
 		while (mit.hasNext()) {
 			Maze maze = mit.next();
       		int i, j, posX, posZ, xx, zz;
       		
+      		if (main.mazeBossRestoreTimer >= Maze.BOSS_RESTORE_SPEED) {
+        		Collection<Zombie> entities = maze.mazeWorld.getEntitiesByClass(Zombie.class);
+    			Iterator<Zombie> iter = entities.iterator();
+    			while (iter.hasNext()) {
+    				Zombie en = iter.next();
+    				if (en.getUniqueId().equals(maze.mazeBossId)) {
+    					break;
+    				}
+    				if (!iter.hasNext()) {
+    					maze.mazeBoss = null;
+    				}
+    			}
+      		}
       		if (!maze.canBeEntered) {
       			if (!maze.fightStarted) {
 	      			if (maze.playerInsideMaze.size() >= maze.minPlayers) {
@@ -644,6 +659,9 @@ public class MazeTick extends BukkitRunnable {
 		}
 		if (main.wallChangeTimer >= Maze.WALL_CHANGE_SPEED) {
 			main.wallChangeTimer = 0;
+		}
+		if (main.mazeBossRestoreTimer >= Maze.BOSS_RESTORE_SPEED) {
+			main.mazeBossRestoreTimer = 0;
 		}
 	}
 

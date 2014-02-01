@@ -44,6 +44,7 @@ public final class MazePvP extends JavaPlugin {
 	public double[] mazeBossDropWeighs;
 	public int playerMaxDeaths = 3;
 	public int wallChangeTimer = 0;
+	public int mazeBossRestoreTimer = 0;
 	public boolean showHeads = true;
 	public int fightStartDelay = 5*20;
 	public List<String> joinSignText;
