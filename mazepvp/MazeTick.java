@@ -58,8 +58,8 @@ public class MazeTick extends BukkitRunnable {
       			}
       		}
       		
-      		if (maze.mazeBoss != null) {
-      			maze.mazeBoss.setHealth(maze.mazeBoss.getMaxHealth());
+      		if (maze.mazeBoss != null && maze.mazeBossMaxHp > 0 && maze.mazeBossHp > 0) {
+      			//maze.mazeBoss.setHealth(maze.mazeBoss.getMaxHealth());
       			if (!maze.isInsideMaze(maze.mazeBoss.getLocation())) maze.relocateMazeBoss(false);
       			if (!maze.mazeBossHpStr.equals(maze.mazeBoss.getCustomName())) {
       				maze.mazeBoss.setCustomName(maze.mazeBossMaxHp > 0 ? maze.mazeBossHpStr : null);

@@ -25,6 +25,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
@@ -336,7 +337,7 @@ public final class EventListeners implements Listener {
     }
 	
 	@EventHandler
-    public void entityDamageListener(EntityDamageByEntityEvent event) {
+    public void entityDamageByEntityListener(EntityDamageByEntityEvent event) {
 		Iterator<Maze> mit = MazePvP.theMazePvP.mazes.iterator();
 		while (mit.hasNext()) {
 			Maze maze = mit.next();
@@ -356,17 +357,30 @@ public final class EventListeners implements Listener {
 		    		maze.mazeBossTargetPlayer = ((Player)event.getDamager()).getName();
 		    		maze.mazeBossTargetTimer = Math.min(MazePvP.BOSS_TIMER_MAX, maze.mazeBossTargetTimer+20);
 	    		}
+	    	}
+		}
+    }
+
+
+	@EventHandler
+	public void entityDamageListener(EntityDamageEvent event) {
+		Iterator<Maze> mit = MazePvP.theMazePvP.mazes.iterator();
+		while (mit.hasNext()) {
+			Maze maze = mit.next();
+	    	if (maze.mazeBoss == event.getEntity()) {
 	    		maze.mazeBossHp = Math.max(0.0,  maze.mazeBossHp-event.getDamage());
 	    		maze.updateBossHpStr();
 	    		if (maze.mazeBossHp <= 0.0 && maze.mazeBossMaxHp > 0) {
 	    			maze.mazeBoss.setHealth(0);
+	    		} else {
+	    			event.setDamage(0);
 	    		}
 	    		if (event.getCause() == DamageCause.SUFFOCATION) {
 	    			maze.relocateMazeBoss(false);
 	    		}
 	    	}
 		}
-    }
+	}
 	
 	@EventHandler
     public void playerQuitListener(PlayerQuitEvent event) {
