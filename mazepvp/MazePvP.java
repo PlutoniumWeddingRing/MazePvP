@@ -465,6 +465,8 @@ public final class MazePvP extends JavaPlugin {
 			player.setHealth(player.getMaxHealth());
 			player.setFoodLevel(20);
 		}
+		while (!player.getActivePotionEffects().isEmpty())
+			player.removePotionEffect(player.getActivePotionEffects().iterator().next().getType());
 		player.getInventory().setHelmet(null);
 		player.getInventory().setChestplate(null);
 		player.getInventory().setLeggings(null);
