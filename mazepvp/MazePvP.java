@@ -35,7 +35,8 @@ public final class MazePvP extends JavaPlugin {
 	public int mazeBossMaxHp = 0;
 	public int mazeBossStrength = 0;
 	public double mazeSpawnMobProb = 1.0/3.0;
-	public double mazeChestAppearProb = 0.3;
+	public double mazeChestAppearProb = 0.1;
+	public double mazeEnderChestAppearProb = 0.2;
 	public double mazeGroundReappearProb = 0.1;
 	public double[] mazeChestWeighs;
 	public ItemStack[] mazeChestItems;
@@ -168,6 +169,7 @@ public final class MazePvP extends JavaPlugin {
 		mazeBossStrength = config.getInt("boss.attack");
 		mazeGroundReappearProb = config.getDouble("probabilities.groundReappear");
 		mazeChestAppearProb = config.getDouble("probabilities.chestAppear");
+		mazeEnderChestAppearProb = config.getDouble("probabilities.enderChestAppear");
 		mazeSpawnMobProb = config.getDouble("probabilities.mobAppear");
 		
 		int itemCount = config.getInt("chestItems.itemCount");

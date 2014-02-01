@@ -353,7 +353,7 @@ public class MazeTick extends BukkitRunnable {
 	            	changedNum = 0;
 	            	pChangedBlocks = new ArrayList<MazeCoords>();
 	            	while (true) {
-	            		boolean chestShouldAppear = (Math.random() < maze.mazeChestAppearProb);
+	            		boolean chestShouldAppear = (Math.random() < maze.mazeChestAppearProb+maze.mazeEnderChestAppearProb);
 	            		if (chestShouldAppear) {
 			            	for (xx = Math.max(2, playerMazeX[pp][0]-distance); xx <= Math.min(maze.mazeSize*2-2, playerMazeX[pp][0]+distance); xx += 2) {
 			            		for (zz = Math.max(2, playerMazeZ[pp][0]-distance); zz <= Math.min(maze.mazeSize*2-2, playerMazeZ[pp][0]+distance); zz += 2) {
@@ -429,7 +429,7 @@ public class MazeTick extends BukkitRunnable {
 	      				endY = Maze.MAZE_PASSAGE_HEIGHT+1;
 	      				if (coords.type == 20) {
 	      					if (maze.mazeWorld.getBlockAt(maze.mazeX+posX, maze.mazeY+2, maze.mazeZ+posZ) != null && !maze.mazeWorld.getBlockAt(maze.mazeX+posX, maze.mazeY+2, maze.mazeZ+posZ).isEmpty()) {
-	          					if (Math.random() < 2.0/3.0) {
+	          					if (Math.random()*(maze.mazeChestAppearProb+maze.mazeEnderChestAppearProb) < maze.mazeEnderChestAppearProb) {
 	              					maze.mazeWorld.getBlockAt(maze.mazeX+posX, maze.mazeY+1, maze.mazeZ+posZ).setType(Material.ENDER_CHEST); 
 	          						maze.mazeWorld.getBlockAt(maze.mazeX+posX, maze.mazeY+2, maze.mazeZ+posZ).setType(Material.AIR);
 	          					} else {

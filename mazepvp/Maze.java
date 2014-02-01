@@ -50,7 +50,8 @@ public class Maze {
 	public int mazeBossStrength = 0;
 	public int playerMaxDeaths = 3;
 	public double mazeSpawnMobProb = 1.0/3.0;
-	public double mazeChestAppearProb = 0.3;
+	public double mazeChestAppearProb = 0.1;
+	public double mazeEnderChestAppearProb = 0.2;
 	public double mazeGroundReappearProb = 0.1;
 	public int[][] maze;
 	public boolean[][] isBeingChanged;
@@ -83,6 +84,7 @@ public class Maze {
 		mazeBossStrength = MazePvP.theMazePvP.mazeBossStrength;
 		mazeGroundReappearProb = MazePvP.theMazePvP.mazeGroundReappearProb;
 		mazeChestAppearProb = MazePvP.theMazePvP.mazeChestAppearProb;
+		mazeEnderChestAppearProb = MazePvP.theMazePvP.mazeEnderChestAppearProb;
 		mazeSpawnMobProb = MazePvP.theMazePvP.mazeSpawnMobProb;
 		mazeChestWeighs = MazePvP.theMazePvP.mazeChestWeighs;
 		mazeChestItems = MazePvP.theMazePvP.mazeChestItems;
