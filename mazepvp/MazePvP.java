@@ -296,12 +296,12 @@ public final class MazePvP extends JavaPlugin {
 	                maze.mazeSize = Integer.parseInt(var3[3]);
 	                maze.mazeBossHp = (var3.length >= 5) ? Double.parseDouble(var3[4]) : 0;
 	                maze.canBeEntered = (var3.length >= 6) ? (Integer.parseInt(var3[5]) != 0) : true;
-	        		maze.hasWaitArea = (var3.length >= 7) ? (Integer.parseInt(var3[6]) != 0) : true;
-                	maze.waitX = (var3.length >= 8) ? Integer.parseInt(var3[7]) : 0;
-                	maze.waitY = (var3.length >= 9) ? Integer.parseInt(var3[8]) : 0;
-                	maze.waitZ = (var3.length >= 10) ? Integer.parseInt(var3[9]) : 0;
-                	maze.minPlayers = (var3.length >= 11) ? Integer.parseInt(var3[10]) : 0;
-                	maze.maxPlayers = (var3.length >= 12) ? Integer.parseInt(var3[11]) : 0;
+	        		if (var3.length >= 7) maze.hasWaitArea = Integer.parseInt(var3[6]) != 0;
+	        		if (var3.length >= 8) maze.waitX = Integer.parseInt(var3[7]);
+	        		if (var3.length >= 9) maze.waitY = Integer.parseInt(var3[8]);
+	        		if (var3.length >= 10) maze.waitZ = Integer.parseInt(var3[9]);
+                	if (var3.length >= 11) maze.minPlayers = Integer.parseInt(var3[10]);
+                	if (var3.length >= 12) maze.maxPlayers = Integer.parseInt(var3[11]);
 	                if ((var2 = var1.readLine()) != null) {
 	                	if (var2.equals("")) maze.mazeBossId = null;
 	                	else maze.mazeBossId = UUID.fromString(var2);
