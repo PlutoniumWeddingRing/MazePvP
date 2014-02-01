@@ -98,6 +98,13 @@ public final class MazePvP extends JavaPlugin {
 		while (wit.hasNext()) {
 			saveMazeProps(wit.next());
 		}
+		 Iterator<Maze> it = mazes.iterator();
+         while (it.hasNext()) {
+         	Maze maze = it.next();
+	        if (!maze.canBeEntered && !maze.playerInsideMaze.isEmpty()) {
+		        maze.stopFight(false);
+	        }
+         }
 	 }
 
    public void saveMazeProps(World world)
