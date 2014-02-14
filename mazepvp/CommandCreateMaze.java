@@ -152,36 +152,44 @@ public class CommandCreateMaze implements CommandExecutor {
 		sender.sendMessage("Creating maze...");
     	for (xx = 0; xx <= maze.mazeSize*(1+Maze.MAZE_PASSAGE_WIDTH); xx++) {
     		for (zz = 0; zz <= maze.mazeSize*(1+Maze.MAZE_PASSAGE_WIDTH); zz++) {
+				int xCoord = maze.blockToMazeCoord(xx), zCoord = maze.blockToMazeCoord(zz);
     			for (yy = -Maze.MAZE_PASSAGE_DEPTH; yy <= Maze.MAZE_PASSAGE_HEIGHT+2; yy++) {
     				int bId = 0;
     				byte bData = 0;
-    				if (yy == 0 || yy == -Maze.MAZE_PASSAGE_DEPTH) bId = 98;
-    				else if (yy == -Maze.MAZE_PASSAGE_DEPTH+1) {
-    					if (maze.blockToMazeCoord(xx)%2 != 0 && maze.blockToMazeCoord(zz)%2 != 0) {
-    						int xCoord = maze.blockToMazeCoord(xx), zCoord = maze.blockToMazeCoord(zz);
-    						if ((xx-maze.mazeToBlockCoord(xCoord)+zz-maze.mazeToBlockCoord(zCoord))%2 == 0) bId = 113;
-    						else bId = 85;
+    				if (xCoord%2 == 0 || zCoord%2 == 0) {
+    					boolean edges = (xx == 0 || xx == maze.mazeSize*(1+Maze.MAZE_PASSAGE_WIDTH) || zz == 0 || zz == maze.mazeSize*(1+Maze.MAZE_PASSAGE_WIDTH));
+    					int place;
+    					if (xCoord%2 == 0 && zCoord%2 == 0) {
+    						if (edges) place = 3;
+    						else place = 2;
+    						bId = maze.configProps.blockTypes[place][maze.configProps.blockTypes[place].length-1-yy-Maze.MAZE_PASSAGE_DEPTH][0][0];
+	    					bData = (byte)maze.configProps.blockTypes[place][maze.configProps.blockTypes[place].length-1-yy-Maze.MAZE_PASSAGE_DEPTH][0][1];
     					} else {
-    						if (xx == 0 || xx == maze.mazeSize*(1+Maze.MAZE_PASSAGE_WIDTH) || zz == 0 || zz == maze.mazeSize*(1+Maze.MAZE_PASSAGE_WIDTH))
-    							bId = 98;
-    						else {
-    							bId = 44;
-    							bData = 0x5+0x8;
-    						}
+    						if (edges) place = 1;
+    						else place = 0;
+    						if (yy >= 1 && yy <= Maze.MAZE_PASSAGE_HEIGHT+1 && maze.maze[xCoord][zCoord] != 1) {
+    							bId = 0;
+    							bData = 0;
+    						} else if (xCoord%2 == 0) {
+	    						bId = maze.configProps.blockTypes[place][maze.configProps.blockTypes[place].length-1-yy-Maze.MAZE_PASSAGE_DEPTH][zz-maze.mazeToBlockCoord(zCoord)][0];
+		    					bData = (byte)maze.configProps.blockTypes[place][maze.configProps.blockTypes[place].length-1-yy-Maze.MAZE_PASSAGE_DEPTH][zz-maze.mazeToBlockCoord(zCoord)][1];
+	    					} else {
+	    						bId = maze.configProps.blockTypes[place][maze.configProps.blockTypes[place].length-1-yy-Maze.MAZE_PASSAGE_DEPTH][xx-maze.mazeToBlockCoord(xCoord)][0];
+		    					bData = (byte)maze.configProps.blockTypes[place][maze.configProps.blockTypes[place].length-1-yy-Maze.MAZE_PASSAGE_DEPTH][xx-maze.mazeToBlockCoord(xCoord)][1];
+	    					}
     					}
-    				} else if (yy == Maze.MAZE_PASSAGE_HEIGHT+2) bId = 89;
-    				else if (yy < 0) {
-    					if (maze.blockToMazeCoord(xx)%2 == 0 || maze.blockToMazeCoord(zz)%2 == 0)
-    						bId = 98;
-    				} else if (maze.maze[maze.blockToMazeCoord(xx)][maze.blockToMazeCoord(zz)] == 1) {
-    					if (xx == 0 || xx == maze.mazeSize*(1+Maze.MAZE_PASSAGE_WIDTH) ||
-						zz == 0 || zz == maze.mazeSize*(1+Maze.MAZE_PASSAGE_WIDTH)) {
-    						bId = 98;
-    						bData = 3;
-    					} else {
-    						bId = 98;
-    						bData = (maze.blockToMazeCoord(xx)%2 == 0 && maze.blockToMazeCoord(zz)%2 == 0)?(byte)1:(byte)0;
-    					}
+    				} else if (yy == 0) {
+    					bId = maze.configProps.blockTypes[4][zz-maze.mazeToBlockCoord(zCoord)][xx-maze.mazeToBlockCoord(xCoord)][0];
+    					bData = (byte)maze.configProps.blockTypes[4][zz-maze.mazeToBlockCoord(zCoord)][xx-maze.mazeToBlockCoord(xCoord)][1];
+    				} else if (yy == -Maze.MAZE_PASSAGE_DEPTH) {
+    					bId = maze.configProps.blockTypes[5][zz-maze.mazeToBlockCoord(zCoord)][xx-maze.mazeToBlockCoord(xCoord)][0];
+    					bData = (byte)maze.configProps.blockTypes[5][zz-maze.mazeToBlockCoord(zCoord)][xx-maze.mazeToBlockCoord(xCoord)][1];
+    				} else if (yy == -Maze.MAZE_PASSAGE_DEPTH+1) {
+    					bId = maze.configProps.blockTypes[6][zz-maze.mazeToBlockCoord(zCoord)][xx-maze.mazeToBlockCoord(xCoord)][0];
+	    				bData = (byte)maze.configProps.blockTypes[6][zz-maze.mazeToBlockCoord(zCoord)][xx-maze.mazeToBlockCoord(xCoord)][1];
+    				} else if (yy == Maze.MAZE_PASSAGE_HEIGHT+2) {
+						bId = maze.configProps.blockTypes[7][zz-maze.mazeToBlockCoord(zCoord)][xx-maze.mazeToBlockCoord(xCoord)][0];
+    					bData = (byte)maze.configProps.blockTypes[7][zz-maze.mazeToBlockCoord(zCoord)][xx-maze.mazeToBlockCoord(xCoord)][1];
     				}
     				world.getBlockAt(posX+xx, posY+Maze.MAZE_PASSAGE_DEPTH+yy, posZ+zz).setTypeId(bId);
     				world.getBlockAt(posX+xx, posY+Maze.MAZE_PASSAGE_DEPTH+yy, posZ+zz).setData(bData);

@@ -39,20 +39,13 @@ public class Maze {
 	public int mazeSize;
 	public int mazeX, mazeY, mazeZ;
 	public Zombie mazeBoss = null;
-	public String mazeBossName = "MazeBoss";
 	public String mazeBossHpStr = "";
 	public UUID mazeBossId = null;
 	public String mazeBossTargetPlayer = "";
 	public int mazeBossTargetTimer = 0;
 	public int mazeBossTpCooldown = 0;
-	public int mazeBossMaxHp = 0;
 	public double mazeBossHp = 0.0;
-	public int mazeBossStrength = 0;
-	public int playerMaxDeaths = 3;
-	public double mazeSpawnMobProb = 1.0/3.0;
-	public double mazeChestAppearProb = 0.1;
-	public double mazeEnderChestAppearProb = 0.2;
-	public double mazeGroundReappearProb = 0.1;
+	public MazeConfig configProps;
 	public int[][] maze;
 	public boolean[][] isBeingChanged;
 	public List<MazeCoords> blocksToRemove = new LinkedList<MazeCoords>();
@@ -60,17 +53,11 @@ public class Maze {
 	public HashMap<String, Boolean> playerInsideMaze = new HashMap<String, Boolean>();
 	public HashMap<String, PlayerProps> joinedPlayerProps = new HashMap<String, PlayerProps>();
 	public static HashMap<String, Boolean> playerInsideAMaze = new HashMap<String, Boolean>();
-	public double[] mazeChestWeighs;
-	public ItemStack[] mazeChestItems;
-	public double[] mazeBossDropWeighs;
-	public ItemStack[] mazeBossDropItems;
 	public String name = "";
 	public boolean updatingHp = false;
 	public boolean canBeEntered = true;
 	public boolean hasWaitArea = false;
 	public int waitX = 0, waitY = 0, waitZ = 0;
-	public int minPlayers = 5;
-	public int maxPlayers = 20;
 	public boolean fightStarted = false;
 	public int fightStartTimer = 0;
 	public LinkedList<int[]> joinSigns = new LinkedList<int[]>();
@@ -78,19 +65,9 @@ public class Maze {
 	public Player lastPlayer;
 	
 	public Maze() {
-		mazeBossName = MazePvP.theMazePvP.mazeBossName;
-		mazeBossHp = mazeBossMaxHp = MazePvP.theMazePvP.mazeBossMaxHp;
+		configProps = new MazeConfig();
+		mazeBossHp = configProps.bossMaxHp;
 		updateBossHpStr();
-		mazeBossStrength = MazePvP.theMazePvP.mazeBossStrength;
-		mazeGroundReappearProb = MazePvP.theMazePvP.mazeGroundReappearProb;
-		mazeChestAppearProb = MazePvP.theMazePvP.mazeChestAppearProb;
-		mazeEnderChestAppearProb = MazePvP.theMazePvP.mazeEnderChestAppearProb;
-		mazeSpawnMobProb = MazePvP.theMazePvP.mazeSpawnMobProb;
-		mazeChestWeighs = MazePvP.theMazePvP.mazeChestWeighs;
-		mazeChestItems = MazePvP.theMazePvP.mazeChestItems;
-		mazeBossDropWeighs = MazePvP.theMazePvP.mazeBossDropWeighs;
-		mazeBossDropItems = MazePvP.theMazePvP.mazeBossDropItems;
-		playerMaxDeaths = MazePvP.theMazePvP.playerMaxDeaths;
 	}
 	 
 	public int blockToMazeCoord(int blockCoord) {
@@ -149,7 +126,7 @@ public class Maze {
 	 	Point2D.Double bossLoc = getMazeBossNewLocation(worldObj);
 	 	mazeBoss = (Zombie)worldObj.spawnEntity(new Location(worldObj, bossLoc.x, mazeY+1, bossLoc.y), EntityType.ZOMBIE);
 	 	mazeBossId = mazeBoss.getUniqueId();
-	 	mazeBossHp = mazeBossMaxHp;
+	 	mazeBossHp = configProps.bossMaxHp;
 	 	updateBossHpStr();
 	 	worldObj.playEffect(new Location(worldObj, mazeBoss.getLocation().getX(), mazeBoss.getLocation().getY()+1, mazeBoss.getLocation().getZ()), Effect.MOBSPAWNER_FLAMES, 0);
 	 	ItemStack boots = new ItemStack(Material.LEATHER_BOOTS);
@@ -249,10 +226,10 @@ public class Maze {
 	}
 
 	public void updateBossHpStr() {
-		if (mazeBossMaxHp <= 0) return;
+		if (configProps.bossMaxHp <= 0) return;
 		if (updatingHp) return;
 		updatingHp = true;
-		double hpFraction = mazeBossHp/mazeBossMaxHp;
+		double hpFraction = mazeBossHp/configProps.bossMaxHp;
 		double barNum = MazePvP.BOSS_HEALTH_BARS*hpFraction;
 		if (hpFraction > 0.5) mazeBossHpStr = "§2";
 		else if (hpFraction > 0.25) mazeBossHpStr = "§6";
@@ -278,8 +255,16 @@ public class Maze {
 					for (int xxx = sx; xxx <= ex; xxx++) {
 						for (int zzz = sz; zzz <= ez; zzz++) {
 							for (int yyy = 1; yyy <= MAZE_PASSAGE_HEIGHT+1; yyy++) {
-			    				mazeWorld.getBlockAt(mazeX+xxx, mazeY+yyy, mazeZ+zzz).setTypeId(98);
-			    				mazeWorld.getBlockAt(mazeX+xxx, mazeY+yyy, mazeZ+zzz).setData((byte)3);
+								int bId, bData;
+								if (xx%2 == 0) {
+		    						bId = configProps.blockTypes[1][configProps.blockTypes[1].length-1-yyy-Maze.MAZE_PASSAGE_DEPTH][zzz-sz][0];
+			    					bData = (byte)configProps.blockTypes[1][configProps.blockTypes[1].length-1-yyy-Maze.MAZE_PASSAGE_DEPTH][zzz-sz][1];
+		    					} else {
+		    						bId = configProps.blockTypes[1][configProps.blockTypes[1].length-1-yyy-Maze.MAZE_PASSAGE_DEPTH][xxx-sx][0];
+			    					bData = (byte)configProps.blockTypes[1][configProps.blockTypes[1].length-1-yyy-Maze.MAZE_PASSAGE_DEPTH][xxx-sx][1];
+		    					}
+			    				mazeWorld.getBlockAt(mazeX+xxx, mazeY+yyy, mazeZ+zzz).setTypeId(bId);
+			    				mazeWorld.getBlockAt(mazeX+xxx, mazeY+yyy, mazeZ+zzz).setData((byte)bData);
 							}
 						}
 					}
@@ -307,6 +292,11 @@ public class Maze {
 				}
 			}
 		}
+	}
+
+	public void giveStartItemsToPlayer(Player player) {
+		for (int i = 0; i < configProps.startItems.length; i++)
+			player.getInventory().addItem(configProps.startItems[i].clone());
 	}
 
 	public void addSign(int x, int y, int z, int x2, int y2, int z2, List<int[]> signList) {
@@ -372,14 +362,14 @@ public class Maze {
 					if (str.charAt(i) == '>') {
 						insideSubt = false;
 						if (subtStr.equals("name")) subtStr = name;
-						else if (subtStr.equals("minP")) subtStr = Integer.toString(minPlayers);
-						else if (subtStr.equals("maxP")) subtStr = Integer.toString(maxPlayers);
+						else if (subtStr.equals("minP")) subtStr = Integer.toString(configProps.minPlayers);
+						else if (subtStr.equals("maxP")) subtStr = Integer.toString(configProps.maxPlayers);
 						else if (subtStr.equals("currentP")) {
 							if (fightStarted) subtStr = Integer.toString(getPlayersInGame().size());
 							else subtStr = Integer.toString(playerInsideMaze.size());
 						} else if (subtStr.equals("remainingP")) {
 							if (fightStarted) subtStr = "0";
-							else subtStr = Integer.toString(Math.max(0, minPlayers-playerInsideMaze.size()));
+							else subtStr = Integer.toString(Math.max(0, configProps.minPlayers-playerInsideMaze.size()));
 						}
 						else if (subtStr.equals("timeLeft")) subtStr = Integer.toString((fightStartTimer == 1) ? MazePvP.theMazePvP.fightStartDelay/20 : (MazePvP.theMazePvP.fightStartDelay-fightStartTimer)/20);
 						else if (subtStr.equals("state")) subtStr = fightStarted?MazePvP.theMazePvP.startedStateText:MazePvP.theMazePvP.waitingStateText;
@@ -388,7 +378,7 @@ public class Maze {
 							else {
 								PlayerProps props = joinedPlayerProps.get(player.getName());
 								if (props == null) subtStr = "X";
-								else subtStr = Integer.toString(playerMaxDeaths-props.deathCount);
+								else subtStr = Integer.toString(configProps.playerMaxDeaths-props.deathCount);
 							}
 						}
 						else subtStr = "<"+subtStr+">";
@@ -425,7 +415,7 @@ public class Maze {
     				for (int zz = sign[2]; zz <= sign[5]; zz++) {
     					Block block = mazeWorld.getBlockAt((sign[6] != 0)?(sign[3]-xx+sign[0]):xx, (sign[6] != 0)?(sign[4]-yy+sign[1]):yy,
     													   (sign[6] != 0)?(sign[5]-zz+sign[2]):zz);
-    					if (block.getType() == Material.WALL_SIGN || block.getType() == Material.SIGN_POST) {
+    					if (block != null && (block.getType() == Material.WALL_SIGN || block.getType() == Material.SIGN_POST)) {
     						Sign signState = (Sign)block.getState();
     						for (int i = 0; i < 4; i++) {
     							if (!strIt.hasNext()) break;
@@ -434,7 +424,11 @@ public class Maze {
     						}
     						signState.update();
 							if (!strIt.hasNext()) break outerLoop;
-    					} else {for (int i = 0; i < 4; i++) strIt.next();}
+    					} else {
+    						removeSign(sign, signList, false);
+    		    			it.remove();
+    		    			break outerLoop;
+    					}
     				}
     			}
     		}
@@ -459,7 +453,7 @@ public class Maze {
 		}
 		if (canBeEntered) {
 			MazePvP.cleanUpPlayer(player, canBeEntered);
-			MazePvP.theMazePvP.giveStartItemsToPlayer(player);
+			giveStartItemsToPlayer(player);
 		}
 	}
 
@@ -469,7 +463,7 @@ public class Maze {
 			Maze.playerInsideAMaze.remove(player.getName());
 			if (!fightStarted) {
 				sendWaitMessageToJoinedPlayers();
-				if (playerInsideMaze.size() < minPlayers) fightStartTimer = 0;
+				if (playerInsideMaze.size() < configProps.minPlayers) fightStartTimer = 0;
 			}
 		}
 		PlayerProps savedProps = joinedPlayerProps.get(player.getName());
@@ -509,7 +503,7 @@ public class Maze {
 			Map.Entry<String,Boolean> entry = it.next();
 			if (entry.getValue()) {
 				Player player = Bukkit.getPlayer(entry.getKey());
-				if (playerInsideMaze.size() < minPlayers) {
+				if (playerInsideMaze.size() < configProps.minPlayers) {
 					sendStringListToPlayer(player, MazePvP.theMazePvP.waitBroadcastText);
 				} else sendStringListToPlayer(player, MazePvP.theMazePvP.waitBroadcastFullText);
 			}
@@ -570,7 +564,8 @@ public class Maze {
 			if (!player.isDead()) {
 				player.teleport(new Location(mazeWorld, loc.x, mazeY+1, loc.y));
         		MazePvP.cleanUpPlayer(player, canBeEntered);
-				MazePvP.theMazePvP.giveStartItemsToPlayer(player);
+        		player.setFallDistance(0);
+				giveStartItemsToPlayer(player);
 			} 
 		}
 	}
@@ -590,7 +585,7 @@ public class Maze {
 		ArrayList<Player> players = new ArrayList<Player>();
 		while(it.hasNext()) {
 			Map.Entry<String,PlayerProps> entry = it.next();
-			if (entry.getValue().deathCount < playerMaxDeaths) {
+			if (entry.getValue().deathCount < configProps.playerMaxDeaths) {
 				players.add(Bukkit.getPlayer(entry.getKey()));
 			}
 		}
@@ -604,10 +599,14 @@ public class Maze {
     		for (zz = 1; zz <= mazeSize*2-1; zz += 2) {
     			if (!isBeingChanged[xx][zz] &&
     				mazeWorld.getBlockAt(mazeX+mazeToBlockCoord(xx), mazeY, mazeZ+mazeToBlockCoord(zz)).isEmpty()) {
-    				for (int xxx = mazeToBlockCoord(xx); xxx <= mazeToBlockCoord(xx)+Maze.MAZE_PASSAGE_WIDTH-1; xxx++) {
-    					for (int zzz = mazeToBlockCoord(zz); zzz <= mazeToBlockCoord(zz)+Maze.MAZE_PASSAGE_WIDTH-1; zzz++) {
-    						mazeWorld.getBlockAt(mazeX+xxx, mazeY, mazeZ+zzz).setTypeId(98);
-    						mazeWorld.getBlockAt(mazeX+xxx, mazeY, mazeZ+zzz).setData((byte) 0);
+					int xCoord = mazeToBlockCoord(xx);
+    				for (int xxx = xCoord; xxx <= mazeToBlockCoord(xx)+Maze.MAZE_PASSAGE_WIDTH-1; xxx++) {
+    					int zCoord = mazeToBlockCoord(zz);
+    					for (int zzz = zCoord; zzz <= mazeToBlockCoord(zz)+Maze.MAZE_PASSAGE_WIDTH-1; zzz++) {
+    						int bId = configProps.blockTypes[4][zzz-zCoord][xxx-xCoord][0];
+    						int bData = (byte)configProps.blockTypes[4][zzz-zCoord][xxx-xCoord][1];
+    						mazeWorld.getBlockAt(mazeX+xxx, mazeY, mazeZ+zzz).setTypeId(bId);
+    						mazeWorld.getBlockAt(mazeX+xxx, mazeY, mazeZ+zzz).setData((byte)bData);
 	        				if (MazePvP.theMazePvP.showHeads) mazeWorld.getBlockAt(mazeX+xxx, mazeY-Maze.MAZE_PASSAGE_DEPTH+2, mazeZ+zzz).setType(Material.AIR);
     					}
     				}
@@ -624,10 +623,10 @@ public class Maze {
 						Chest chest = ((Chest)mazeWorld.getBlockAt(mazeX+posX, mazeY+1, mazeZ+posZ).getState());
 						chest.getInventory().clear();
 					}
-					mazeWorld.getBlockAt(mazeX+posX, mazeY+1, mazeZ+posZ).setTypeId(98);
-					mazeWorld.getBlockAt(mazeX+posX, mazeY+1, mazeZ+posZ).setData((byte) 1);
-					mazeWorld.getBlockAt(mazeX+posX, mazeY+2, mazeZ+posZ).setTypeId(98);
-					mazeWorld.getBlockAt(mazeX+posX, mazeY+2, mazeZ+posZ).setData((byte) 1);
+					mazeWorld.getBlockAt(mazeX+posX, mazeY+1, mazeZ+posZ).setTypeId(configProps.blockTypes[2][6][0][0]);
+					mazeWorld.getBlockAt(mazeX+posX, mazeY+1, mazeZ+posZ).setData((byte)configProps.blockTypes[2][6][0][1]);
+					mazeWorld.getBlockAt(mazeX+posX, mazeY+2, mazeZ+posZ).setTypeId(configProps.blockTypes[2][5][0][0]);
+					mazeWorld.getBlockAt(mazeX+posX, mazeY+2, mazeZ+posZ).setData((byte) configProps.blockTypes[2][5][0][1]);
 				}
     		}
 		}

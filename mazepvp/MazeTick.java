@@ -51,7 +51,7 @@ public class MazeTick extends BukkitRunnable {
       		}
       		if (!maze.canBeEntered) {
       			if (!maze.fightStarted) {
-	      			if (maze.playerInsideMaze.size() >= maze.minPlayers) {
+	      			if (maze.playerInsideMaze.size() >= maze.configProps.minPlayers) {
 	      				maze.fightStartTimer++;
 	      				if (maze.fightStartTimer == MazePvP.theMazePvP.fightStartDelay) {
 	      					maze.fightStartTimer = 0;
@@ -73,12 +73,12 @@ public class MazeTick extends BukkitRunnable {
       			}
       		}
       		
-      		if (maze.mazeBoss != null && maze.mazeBossMaxHp > 0 && maze.mazeBossHp > 0) {
+      		if (maze.mazeBoss != null && maze.configProps.bossMaxHp > 0 && maze.mazeBossHp > 0) {
       			//maze.mazeBoss.setHealth(maze.mazeBoss.getMaxHealth());
       			if (!maze.isInsideMaze(maze.mazeBoss.getLocation())) maze.relocateMazeBoss(false);
       			if (!maze.mazeBossHpStr.equals(maze.mazeBoss.getCustomName())) {
-      				maze.mazeBoss.setCustomName(maze.mazeBossMaxHp > 0 ? maze.mazeBossHpStr : null);
-      				maze.mazeBoss.setCustomNameVisible(maze.mazeBossMaxHp > 0 ? true : false);
+      				maze.mazeBoss.setCustomName(maze.configProps.bossMaxHp > 0 ? maze.mazeBossHpStr : null);
+      				maze.mazeBoss.setCustomNameVisible(maze.configProps.bossMaxHp > 0 ? true : false);
       			}
       		}
 			Collection<LivingEntity> entities = maze.mazeWorld.getEntitiesByClass(LivingEntity.class);
@@ -109,6 +109,20 @@ public class MazeTick extends BukkitRunnable {
 						maze.playerJoin(player);
 					} else if (prevInside && !inside) {
 						maze.playerQuit(player);
+					}
+				}
+				if (!maze.canBeEntered && maze.fightStarted && maze.playerInsideMaze.containsKey(player.getName()) && maze.playerInsideMaze.get(player.getName())) {
+					if (!maze.isInsideMaze(player.getLocation())) {
+						PlayerProps props = maze.joinedPlayerProps.get(player.getName());
+						if (player != maze.lastPlayer && props.deathCount < maze.configProps.playerMaxDeaths) {
+							Point2D.Double loc = maze.getMazeBossNewLocation(maze.mazeWorld);
+							player.teleport(new Location(maze.mazeWorld, loc.x, maze.mazeY+1, loc.y));
+							player.setFallDistance(0);
+						} else {
+							player.teleport(props.prevLocation);
+							player.setFallDistance(0);
+							maze.playerQuit(player);
+						}
 					}
 				}
 			}
@@ -314,16 +328,16 @@ public class MazeTick extends BukkitRunnable {
 		        		    			}
 			            				if (chestIsEmpty || Math.random() < 0.1) {
 			            					chest.getInventory().clear();
-			            					maze.mazeWorld.getBlockAt(maze.mazeX+posX, maze.mazeY+1, maze.mazeZ+posZ).setTypeId(98);
-			            					maze.mazeWorld.getBlockAt(maze.mazeX+posX, maze.mazeY+1, maze.mazeZ+posZ).setData((byte) 1);
-			            					maze.mazeWorld.getBlockAt(maze.mazeX+posX, maze.mazeY+2, maze.mazeZ+posZ).setTypeId(98);
-			            					maze.mazeWorld.getBlockAt(maze.mazeX+posX, maze.mazeY+2, maze.mazeZ+posZ).setData((byte) 1);
+			            					maze.mazeWorld.getBlockAt(maze.mazeX+posX, maze.mazeY+1, maze.mazeZ+posZ).setTypeId(maze.configProps.blockTypes[2][6][0][0]);
+			            					maze.mazeWorld.getBlockAt(maze.mazeX+posX, maze.mazeY+1, maze.mazeZ+posZ).setData((byte)maze.configProps.blockTypes[2][6][0][1]);
+			            					maze.mazeWorld.getBlockAt(maze.mazeX+posX, maze.mazeY+2, maze.mazeZ+posZ).setTypeId(maze.configProps.blockTypes[2][5][0][0]);
+			            					maze.mazeWorld.getBlockAt(maze.mazeX+posX, maze.mazeY+2, maze.mazeZ+posZ).setData((byte)maze.configProps.blockTypes[2][5][0][1]);
 			            				}
 	        						} else {
-		            					maze.mazeWorld.getBlockAt(maze.mazeX+posX, maze.mazeY+1, maze.mazeZ+posZ).setTypeId(98);
-		            					maze.mazeWorld.getBlockAt(maze.mazeX+posX, maze.mazeY+1, maze.mazeZ+posZ).setData((byte) 1);
-		            					maze.mazeWorld.getBlockAt(maze.mazeX+posX, maze.mazeY+2, maze.mazeZ+posZ).setTypeId(98);
-		            					maze.mazeWorld.getBlockAt(maze.mazeX+posX, maze.mazeY+2, maze.mazeZ+posZ).setData((byte) 1);
+		            					maze.mazeWorld.getBlockAt(maze.mazeX+posX, maze.mazeY+1, maze.mazeZ+posZ).setTypeId(maze.configProps.blockTypes[2][6][0][0]);
+		            					maze.mazeWorld.getBlockAt(maze.mazeX+posX, maze.mazeY+1, maze.mazeZ+posZ).setData((byte)maze.configProps.blockTypes[2][6][0][1]);
+		            					maze.mazeWorld.getBlockAt(maze.mazeX+posX, maze.mazeY+2, maze.mazeZ+posZ).setTypeId(maze.configProps.blockTypes[2][5][0][0]);
+		            					maze.mazeWorld.getBlockAt(maze.mazeX+posX, maze.mazeY+2, maze.mazeZ+posZ).setData((byte)maze.configProps.blockTypes[2][5][0][1]);
 	        						}
 	        					}
 	            			}
@@ -331,12 +345,16 @@ public class MazeTick extends BukkitRunnable {
 	            	}
 	            	for (xx = 1; xx <= maze.mazeSize*2-1; xx += 2) {
 	            		for (zz = 1; zz <= maze.mazeSize*2-1; zz += 2) {
-	            			if (!maze.isBeingChanged[xx][zz] && !isLookedAt[xx][zz] && Math.random() < maze.mazeGroundReappearProb &&
+	            			if (!maze.isBeingChanged[xx][zz] && !isLookedAt[xx][zz] && Math.random() < maze.configProps.groundReappearProb &&
 	            				maze.mazeWorld.getBlockAt(maze.mazeX+maze.mazeToBlockCoord(xx), maze.mazeY, maze.mazeZ+maze.mazeToBlockCoord(zz)).isEmpty()) {
-	            				for (int xxx = maze.mazeToBlockCoord(xx); xxx <= maze.mazeToBlockCoord(xx)+Maze.MAZE_PASSAGE_WIDTH-1; xxx++) {
-	            					for (int zzz = maze.mazeToBlockCoord(zz); zzz <= maze.mazeToBlockCoord(zz)+Maze.MAZE_PASSAGE_WIDTH-1; zzz++) {
-	            						maze.mazeWorld.getBlockAt(maze.mazeX+xxx, maze.mazeY, maze.mazeZ+zzz).setTypeId(98);
-	            						maze.mazeWorld.getBlockAt(maze.mazeX+xxx, maze.mazeY, maze.mazeZ+zzz).setData((byte) 0);
+	            				int xCoord = maze.mazeToBlockCoord(xx);
+	            				for (int xxx = xCoord; xxx <= maze.mazeToBlockCoord(xx)+Maze.MAZE_PASSAGE_WIDTH-1; xxx++) {
+		            				int zCoord = maze.mazeToBlockCoord(zz);
+	            					for (int zzz = zCoord; zzz <= maze.mazeToBlockCoord(zz)+Maze.MAZE_PASSAGE_WIDTH-1; zzz++) {
+	            						int bId = maze.configProps.blockTypes[4][zzz-zCoord][xxx-xCoord][0];
+	            						int bData = (byte)maze.configProps.blockTypes[4][zzz-zCoord][xxx-xCoord][1];
+	            						maze.mazeWorld.getBlockAt(maze.mazeX+xxx, maze.mazeY, maze.mazeZ+zzz).setTypeId(bId);
+	            						maze.mazeWorld.getBlockAt(maze.mazeX+xxx, maze.mazeY, maze.mazeZ+zzz).setData((byte)bData);
 	  		        					if (MazePvP.theMazePvP.showHeads) maze.mazeWorld.getBlockAt(maze.mazeX+xxx, maze.mazeY-Maze.MAZE_PASSAGE_DEPTH+2, maze.mazeZ+zzz).setType(Material.AIR);
 	            					}
 	            				}
@@ -353,7 +371,7 @@ public class MazeTick extends BukkitRunnable {
 	            	changedNum = 0;
 	            	pChangedBlocks = new ArrayList<MazeCoords>();
 	            	while (true) {
-	            		boolean chestShouldAppear = (Math.random() < maze.mazeChestAppearProb+maze.mazeEnderChestAppearProb);
+	            		boolean chestShouldAppear = (Math.random() < maze.configProps.chestAppearProb+maze.configProps.enderChestAppearProb);
 	            		if (chestShouldAppear) {
 			            	for (xx = Math.max(2, playerMazeX[pp][0]-distance); xx <= Math.min(maze.mazeSize*2-2, playerMazeX[pp][0]+distance); xx += 2) {
 			            		for (zz = Math.max(2, playerMazeZ[pp][0]-distance); zz <= Math.min(maze.mazeSize*2-2, playerMazeZ[pp][0]+distance); zz += 2) {
@@ -429,7 +447,7 @@ public class MazeTick extends BukkitRunnable {
 	      				endY = Maze.MAZE_PASSAGE_HEIGHT+1;
 	      				if (coords.type == 20) {
 	      					if (maze.mazeWorld.getBlockAt(maze.mazeX+posX, maze.mazeY+2, maze.mazeZ+posZ) != null && !maze.mazeWorld.getBlockAt(maze.mazeX+posX, maze.mazeY+2, maze.mazeZ+posZ).isEmpty()) {
-	          					if (Math.random()*(maze.mazeChestAppearProb+maze.mazeEnderChestAppearProb) < maze.mazeEnderChestAppearProb) {
+	          					if (Math.random()*(maze.configProps.chestAppearProb+maze.configProps.enderChestAppearProb) < maze.configProps.enderChestAppearProb) {
 	              					maze.mazeWorld.getBlockAt(maze.mazeX+posX, maze.mazeY+1, maze.mazeZ+posZ).setType(Material.ENDER_CHEST); 
 	          						maze.mazeWorld.getBlockAt(maze.mazeX+posX, maze.mazeY+2, maze.mazeZ+posZ).setType(Material.AIR);
 	          					} else {
@@ -445,13 +463,13 @@ public class MazeTick extends BukkitRunnable {
 		    		    			for (j = 0; j < mazeItemNum; j++) {
 		    		    				double currentWeigh = 0.0;
 		    		    				double weighSum = 0.0;
-		    		    				for (i = 0; i < maze.mazeChestWeighs.length; i++) weighSum += maze.mazeChestWeighs[i];
+		    		    				for (i = 0; i < maze.configProps.chestWeighs.length; i++) weighSum += maze.configProps.chestWeighs[i];
 		    		    				double randNum = Math.random()*weighSum;
-		    		    				for (i = 0; i < maze.mazeChestWeighs.length; i++) {
-		    		    					currentWeigh += maze.mazeChestWeighs[i];
+		    		    				for (i = 0; i < maze.configProps.chestWeighs.length; i++) {
+		    		    					currentWeigh += maze.configProps.chestWeighs[i];
 		    		    					if (currentWeigh >= randNum) break;
 		    		    				}
-		    		    				chest.getInventory().addItem(maze.mazeChestItems[i].clone());
+		    		    				chest.getInventory().addItem(maze.configProps.chestItems[i].clone());
 		    		    			}
 	          					}
 	      					}
@@ -478,23 +496,34 @@ public class MazeTick extends BukkitRunnable {
 		        			else if (maze.maze[coords.x][coords.z] == 0) maze.maze[coords.x][coords.z] = 1;
 		        		}
 		        		boolean spawnMob = false;
-		        		if (coords.type == 10 && Math.random() < maze.mazeSpawnMobProb) spawnMob = true;
+		        		if (coords.type == 10 && Math.random() < maze.configProps.spawnMobProb) spawnMob = true;
 	        			for (xx = posX; xx <= endX; xx++) {
 		        			for (yy = posY; yy <= endY; yy++) {
 		        				for (zz = posZ; zz <= endZ; zz++) {
-		            				int bId = 98;
+		            				int bId = 0;
 		            				byte bData = 0;
 		        					if (coords.type == 1) {
-			        					if (maze.maze[coords.x][coords.z] == 1)
-			        						bId = 98;
-			        					else if (maze.maze[coords.x][coords.z] == 0)
+			        					if (maze.maze[coords.x][coords.z] == 1) {
+			        						if (coords.x%2 == 0) {
+			    	    						bId = maze.configProps.blockTypes[0][maze.configProps.blockTypes[0].length-1-yy-Maze.MAZE_PASSAGE_DEPTH][zz-posZ][0];
+			    		    					bData = (byte)maze.configProps.blockTypes[0][maze.configProps.blockTypes[0].length-1-yy-Maze.MAZE_PASSAGE_DEPTH][zz-posZ][1];
+			    	    					} else {
+			    	    						bId = maze.configProps.blockTypes[0][maze.configProps.blockTypes[0].length-1-yy-Maze.MAZE_PASSAGE_DEPTH][xx-posX][0];
+			    		    					bData = (byte)maze.configProps.blockTypes[0][maze.configProps.blockTypes[0].length-1-yy-Maze.MAZE_PASSAGE_DEPTH][xx-posX][1];
+			    	    					}
+			        					} else if (maze.maze[coords.x][coords.z] == 0) {
 			        						bId = 0;
+			        						bData = 0;
+			        					}
 		        					} else if (coords.type == 10) {
-			        					if (maze.mazeWorld.getBlockAt(maze.mazeX+xx, maze.mazeY+yy, maze.mazeZ+zz) == null || maze.mazeWorld.getBlockAt(maze.mazeX+xx, maze.mazeY+yy, maze.mazeZ+zz).isEmpty()) {
-			        						bId = 98;
+			        					if (spawnMob || maze.mazeWorld.getBlockAt(maze.mazeX+xx, maze.mazeY+yy, maze.mazeZ+zz) == null || maze.mazeWorld.getBlockAt(maze.mazeX+xx, maze.mazeY+yy, maze.mazeZ+zz).isEmpty()) {
+			        						bId = maze.configProps.blockTypes[4][zz-posZ][xx-posX][0];
+			        						bData = (byte)maze.configProps.blockTypes[4][zz-posZ][xx-posX][1];
 				            				if (MazePvP.theMazePvP.showHeads) maze.mazeWorld.getBlockAt(maze.mazeX+xx, maze.mazeY-Maze.MAZE_PASSAGE_DEPTH+2, maze.mazeZ+zz).setType(Material.AIR);
-			        					} else if (!spawnMob)
+			        					} else {
 			        						bId = 0;
+			        						bData = 0;
+			        					}
 			        				}
 		            				maze.mazeWorld.getBlockAt(maze.mazeX+xx, maze.mazeY+yy, maze.mazeZ+zz).setTypeId(bId);
 		            				maze.mazeWorld.getBlockAt(maze.mazeX+xx, maze.mazeY+yy, maze.mazeZ+zz).setData(bData);
@@ -649,8 +678,21 @@ public class MazeTick extends BukkitRunnable {
 	    	        		it.remove();
 	    	        		break;
 	  	        		} else {
-	  	        			maze.mazeWorld.getBlockAt(maze.mazeX+xx, maze.mazeY+yy, maze.mazeZ+zz).setTypeId(98);
-	  	        			maze.mazeWorld.getBlockAt(maze.mazeX+xx, maze.mazeY+yy, maze.mazeZ+zz).setData((byte) 0);
+	  	        			int bId = 0, bData = 0;
+	  	        			if (restoreFloor) {
+	  	        				bId = maze.configProps.blockTypes[4][zz-sz][xx-sx][0];
+        						bData = (byte)maze.configProps.blockTypes[4][zz-sz][xx-sx][1];
+	  	        			} else {
+	  	        				if (coords.x%2 == 0) {
+    	    						bId = maze.configProps.blockTypes[0][maze.configProps.blockTypes[0].length-1-yy-Maze.MAZE_PASSAGE_DEPTH][zz-sz][0];
+    		    					bData = (byte)maze.configProps.blockTypes[0][maze.configProps.blockTypes[0].length-1-yy-Maze.MAZE_PASSAGE_DEPTH][zz-sz][1];
+    	    					} else {
+    	    						bId = maze.configProps.blockTypes[0][maze.configProps.blockTypes[0].length-1-yy-Maze.MAZE_PASSAGE_DEPTH][xx-sx][0];
+    		    					bData = (byte)maze.configProps.blockTypes[0][maze.configProps.blockTypes[0].length-1-yy-Maze.MAZE_PASSAGE_DEPTH][xx-sx][1];
+    	    					}
+	  	        			}
+	  	        			maze.mazeWorld.getBlockAt(maze.mazeX+xx, maze.mazeY+yy, maze.mazeZ+zz).setTypeId(bId);
+	  	        			maze.mazeWorld.getBlockAt(maze.mazeX+xx, maze.mazeY+yy, maze.mazeZ+zz).setData((byte) bData);
 	  	        		}
 	  				}
 	      		}

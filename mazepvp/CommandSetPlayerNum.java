@@ -43,8 +43,8 @@ public class CommandSetPlayerNum implements CommandExecutor {
         	sender.sendMessage("At least one player must be allowed");
 			return true;
         }
-        maze.minPlayers = minNum;
-        maze.maxPlayers = maxNum;
+        maze.configProps.minPlayers = minNum;
+        maze.configProps.maxPlayers = maxNum;
         maze.updateSigns();
         sender.sendMessage("Player numbers for \""+maze.name+"\" changed");
     	return true;

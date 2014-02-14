@@ -66,7 +66,8 @@ public final class EventListeners implements Listener {
 			Iterator<Maze> mit = MazePvP.theMazePvP.mazes.iterator();
 			while (mit.hasNext()) {
 				Maze maze = mit.next();
-				if (block.getX() >= maze.mazeX && block.getX() <= maze.mazeX+maze.mazeSize*(1+Maze.MAZE_PASSAGE_WIDTH)
+				if (block.getType() != Material.TNT
+				&& block.getX() >= maze.mazeX && block.getX() <= maze.mazeX+maze.mazeSize*(1+Maze.MAZE_PASSAGE_WIDTH)
 	  	      	&&  block.getZ() >= maze.mazeZ && block.getZ() <= maze.mazeZ+maze.mazeSize*(1+Maze.MAZE_PASSAGE_WIDTH)
 	  	      	&&  block.getY() >= maze.mazeY-Maze.MAZE_PASSAGE_DEPTH && block.getY() <= maze.mazeY+Maze.MAZE_PASSAGE_HEIGHT+2) {
 					it.remove();
@@ -272,16 +273,18 @@ public final class EventListeners implements Listener {
 				maze.mazeBoss.getEquipment().setHelmetDropChance(0);
 				maze.mazeBoss.getEquipment().setItemInHandDropChance(0);
 				event.getDrops().clear();
-				double currentWeigh = 0.0;
-				double weighSum = 0.0;
-				int i;
-				for (i = 0; i < maze.mazeBossDropWeighs.length; i++) weighSum += maze.mazeBossDropWeighs[i];
-				double randNum = Math.random()*weighSum;
-				for (i = 0; i < maze.mazeBossDropWeighs.length; i++) {
-					currentWeigh += maze.mazeBossDropWeighs[i];
-					if (currentWeigh >= randNum) break;
+				if (maze.configProps.bossDropItems.length > 0) {
+					double currentWeigh = 0.0;
+					double weighSum = 0.0;
+					int i;
+					for (i = 0; i < maze.configProps.bossDropWeighs.length; i++) weighSum += maze.configProps.bossDropWeighs[i];
+					double randNum = Math.random()*weighSum;
+					for (i = 0; i < maze.configProps.bossDropWeighs.length; i++) {
+						currentWeigh += maze.configProps.bossDropWeighs[i];
+						if (currentWeigh >= randNum) break;
+					}
+					event.getDrops().add(maze.configProps.bossDropItems[i].clone());
 				}
-				event.getDrops().add(maze.mazeBossDropItems[i].clone());
 				maze.mazeBoss.setCustomName(null);
 				maze.mazeBoss.setCustomNameVisible(false);
 				maze.mazeBoss = null;
@@ -318,7 +321,7 @@ public final class EventListeners implements Listener {
 					PlayerProps props = maze.joinedPlayerProps.get(player.getName());
 					if (props != null) {
 						props.deathCount++;
-						if (maze.lastPlayer == null && props.deathCount >= maze.playerMaxDeaths) {
+						if (maze.lastPlayer == null && props.deathCount >= maze.configProps.playerMaxDeaths) {
 							List<Player> players = maze.getPlayersInGame();
 							if (players.size() == 1) {
 								Player lastPlayer = players.get(0);
@@ -342,14 +345,14 @@ public final class EventListeners implements Listener {
 		while (mit.hasNext()) {
 			Maze maze = mit.next();
 			if (maze.mazeBoss != null && event.getEntity() instanceof Player) {
-    			maze.mazeBoss.setCustomName(maze.mazeBossName);
+    			maze.mazeBoss.setCustomName(maze.configProps.bossName);
     			maze.mazeBoss.setCustomNameVisible(false);
 			}
 	    	if (maze.mazeBoss == event.getDamager() && event.getEntity() instanceof LivingEntity) {
 	    		if (maze.mazeBossTpCooldown > 0) {
 	    			event.setCancelled(true);
 	    		} else {
-	    			event.setDamage(maze.mazeBossStrength == 0 ? ((LivingEntity)event.getEntity()).getHealth()*10 : maze.mazeBossStrength);
+	    			event.setDamage(maze.configProps.bossStrength == 0 ? ((LivingEntity)event.getEntity()).getHealth()*10 : maze.configProps.bossStrength);
 	    		}
 	    	}
 	    	if (maze.mazeBoss == event.getEntity()) {
@@ -370,7 +373,7 @@ public final class EventListeners implements Listener {
 	    	if (maze.mazeBoss == event.getEntity()) {
 	    		maze.mazeBossHp = Math.max(0.0,  maze.mazeBossHp-event.getDamage());
 	    		maze.updateBossHpStr();
-	    		if (maze.mazeBossHp <= 0.0 && maze.mazeBossMaxHp > 0) {
+	    		if (maze.mazeBossHp <= 0.0 && maze.configProps.bossMaxHp > 0) {
 	    			maze.mazeBoss.setHealth(0);
 	    		} else {
 	    			event.setDamage(0);
@@ -450,7 +453,7 @@ public final class EventListeners implements Listener {
 						} else {
 							if (maze.fightStarted) {
 								maze.sendStringListToPlayer(event.getPlayer(), MazePvP.theMazePvP.fightAlreadyStartedText);
-							} else if (maze.maxPlayers <= maze.playerInsideMaze.size()) {
+							} else if (maze.configProps.maxPlayers <= maze.playerInsideMaze.size()) {
 								maze.sendStringListToPlayer(event.getPlayer(), MazePvP.theMazePvP.mazeFullText);
 							} else if (Maze.playerInsideAMaze.containsKey(pName) && Maze.playerInsideAMaze.get(pName)) {
 								maze.sendStringListToPlayer(event.getPlayer(), MazePvP.theMazePvP.joinedOtherText);
@@ -486,13 +489,13 @@ public final class EventListeners implements Listener {
 				if (maze.canBeEntered || !maze.fightStarted) continue;
 				PlayerProps props = maze.joinedPlayerProps.get(player.getName());
 				if (props != null) {
-					if (event.getPlayer() != maze.lastPlayer && props.deathCount < maze.playerMaxDeaths) {
+					if (event.getPlayer() != maze.lastPlayer && props.deathCount < maze.configProps.playerMaxDeaths) {
 						Point2D.Double loc = maze.getMazeBossNewLocation(maze.mazeWorld);
 						MazePvP.cleanUpPlayer(player, props.deathCount != 0);
-						MazePvP.theMazePvP.giveStartItemsToPlayer(player);
+						maze.giveStartItemsToPlayer(player);
 						event.setRespawnLocation(new Location(maze.mazeWorld, loc.x, maze.mazeY+1, loc.y));
 					 	maze.mazeWorld.playEffect(event.getRespawnLocation(), Effect.MOBSPAWNER_FLAMES, 0);
-						if (props.deathCount+1 < maze.playerMaxDeaths) maze.sendStringListToPlayer(player, MazePvP.theMazePvP.fightRespawnText);
+						if (props.deathCount+1 < maze.configProps.playerMaxDeaths) maze.sendStringListToPlayer(player, MazePvP.theMazePvP.fightRespawnText);
 						else maze.sendStringListToPlayer(player, MazePvP.theMazePvP.lastRespawnText);
 					} else {
 						event.setRespawnLocation(props.prevLocation);

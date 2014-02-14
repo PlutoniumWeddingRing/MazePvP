@@ -38,6 +38,8 @@ public class CommandDeleteMaze implements CommandExecutor {
         }
         File mazeFile = new File(world.getWorldFolder(), mazeName+".maze");
         mazeFile.delete();
+        mazeFile = new File(world.getWorldFolder(), mazeName+".yml");
+        mazeFile.delete();
         main.mazes.remove(maze);
         Collection<LivingEntity> entities = world.getEntitiesByClass(LivingEntity.class);
         Iterator<LivingEntity> it = entities.iterator();
