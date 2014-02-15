@@ -79,14 +79,15 @@ public final class EventListeners implements Listener {
 
 	@EventHandler
     public void projHitListener(ProjectileHitEvent event) {
+		if (!(event.getEntity().getShooter() instanceof LivingEntity)) return;
 		if (!(event.getEntity() instanceof Egg || event.getEntity() instanceof Snowball || event.getEntity() instanceof EnderPearl)) return;
 		Iterator<Maze> it = MazePvP.theMazePvP.mazes.iterator();
 		while (it.hasNext()) {
 			Maze maze = it.next();
 			World world = event.getEntity().getWorld();
-			if (event.getEntity() instanceof EnderPearl && event.getEntity().getShooter() != null && maze.isInsideMaze(event.getEntity().getShooter().getLocation())) {
+			if (event.getEntity() instanceof EnderPearl && event.getEntity().getShooter() != null && maze.isInsideMaze(((LivingEntity)event.getEntity().getShooter()).getLocation())) {
 	      		Point2D.Double loc = maze.getMazeBossNewLocation(world);
-	      		LivingEntity thrower = event.getEntity().getShooter();
+	      		LivingEntity thrower = (LivingEntity)event.getEntity().getShooter();
         		for (int j = 0; j <= 8; j++) {
         			world.playEffect(thrower.getLocation(), Effect.SMOKE, j);
         			if (j != 4) {
