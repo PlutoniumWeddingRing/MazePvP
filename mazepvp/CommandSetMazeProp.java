@@ -15,6 +15,7 @@ public class CommandSetMazeProp implements CommandExecutor {
 		this.main = main;
 	}
  
+	@SuppressWarnings("deprecation")
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
         if (args.length != 2 && args.length != 3) {
         	return false;
@@ -115,9 +116,112 @@ public class CommandSetMazeProp implements CommandExecutor {
     	        		strPlace++;
     	        	}
     	        }
+    	        if (maze != null) {
+	        		for (int xx = 0; xx < maze.mazeSize*2+1; xx++) {
+	        			for (int zz = 0; zz < maze.mazeSize*2+1; zz++) {
+	        				int sx, ex, sy, ey, sz, ez;
+	        				int blockType;
+	        				if (place == 0 && ((xx%2 == 0 && zz%2 != 0) || (xx%2 != 0 && zz%2 == 0)) && xx > 0 && zz > 0 && xx < maze.mazeSize*2 && zz < maze.mazeSize*2) {
+	        					sy = -Maze.MAZE_PASSAGE_DEPTH+maze.mazeY;
+	        					ey = Maze.MAZE_PASSAGE_HEIGHT+2+maze.mazeY;
+	        					if (xx%2 == 0) {
+	        						sz = maze.mazeToBlockCoord(zz)+maze.mazeZ;
+	        						ez = sz+Maze.MAZE_PASSAGE_WIDTH-1;
+	        						sx = ex = maze.mazeToBlockCoord(xx)+maze.mazeX;
+	        						blockType = 1;
+	        					} else {
+	        						sx = maze.mazeToBlockCoord(xx)+maze.mazeX;
+	        						ex = sx+Maze.MAZE_PASSAGE_WIDTH-1;
+	        						sz = ez = maze.mazeToBlockCoord(zz)+maze.mazeZ;
+	        						blockType = 2;
+	        					}
+	        				} else if (place == 1 && ((xx%2 == 0 && zz%2 != 0) || (xx%2 != 0 && zz%2 == 0)) && (xx == 0 || zz == 0 || xx == maze.mazeSize*2 || zz == maze.mazeSize*2)) {
+	        					sy = -Maze.MAZE_PASSAGE_DEPTH+maze.mazeY;
+	        					ey = Maze.MAZE_PASSAGE_HEIGHT+2+maze.mazeY;
+	        					if (xx%2 == 0) {
+	        						sz = maze.mazeToBlockCoord(zz)+maze.mazeZ;
+	        						ez = sz+Maze.MAZE_PASSAGE_WIDTH-1;
+	        						sx = ex = maze.mazeToBlockCoord(xx)+maze.mazeX;
+	        						blockType = 1;
+	        					} else {
+	        						sx = maze.mazeToBlockCoord(xx)+maze.mazeX;
+	        						ex = sx+Maze.MAZE_PASSAGE_WIDTH-1;
+	        						sz = ez = maze.mazeToBlockCoord(zz)+maze.mazeZ;
+	        						blockType = 2;
+	        					}
+	        				} else if (place == 2 && xx%2 == 0 && zz%2 == 0 && xx > 0 && zz > 0 && xx < maze.mazeSize*2 && zz < maze.mazeSize*2) {
+	        					sy = -Maze.MAZE_PASSAGE_DEPTH+maze.mazeY;
+	        					ey = Maze.MAZE_PASSAGE_HEIGHT+2+maze.mazeY;
+        						sx = ex = maze.mazeToBlockCoord(xx)+maze.mazeX;
+        						sz = ez = maze.mazeToBlockCoord(zz)+maze.mazeZ;
+        						blockType = 1;
+	        				} else if (place == 3 && xx%2 == 0 && zz%2 == 0 && (xx == 0 || zz == 0 || xx == maze.mazeSize*2 || zz == maze.mazeSize*2)) {
+	        					sy = -Maze.MAZE_PASSAGE_DEPTH+maze.mazeY;
+	        					ey = Maze.MAZE_PASSAGE_HEIGHT+2+maze.mazeY;
+        						sx = ex = maze.mazeToBlockCoord(xx)+maze.mazeX;
+        						sz = ez = maze.mazeToBlockCoord(zz)+maze.mazeZ;
+        						blockType = 1;
+	        				} else if (place == 4 && xx%2 != 0 && zz%2 != 0) {
+	        					sy = maze.mazeY;
+	        					ey = maze.mazeY;
+        						sx = maze.mazeToBlockCoord(xx)+maze.mazeX;
+        						ex = sx+Maze.MAZE_PASSAGE_WIDTH-1;
+        						sz = maze.mazeToBlockCoord(zz)+maze.mazeZ;
+        						ez = sz+Maze.MAZE_PASSAGE_WIDTH-1;
+        						blockType = 0;
+	        				} else if (place == 5 && xx%2 != 0 && zz%2 != 0) {
+	        					sy = -Maze.MAZE_PASSAGE_DEPTH+maze.mazeY;
+	        					ey = -Maze.MAZE_PASSAGE_DEPTH+maze.mazeY;
+        						sx = maze.mazeToBlockCoord(xx)+maze.mazeX;
+        						ex = sx+Maze.MAZE_PASSAGE_WIDTH-1;
+        						sz = maze.mazeToBlockCoord(zz)+maze.mazeZ;
+        						ez = sz+Maze.MAZE_PASSAGE_WIDTH-1;
+        						blockType = 0;
+	        				} else if (place == 6 && xx%2 != 0 && zz%2 != 0) {
+	        					sy = -Maze.MAZE_PASSAGE_DEPTH+1+maze.mazeY;
+	        					ey = -Maze.MAZE_PASSAGE_DEPTH+1+maze.mazeY;
+        						sx = maze.mazeToBlockCoord(xx)+maze.mazeX;
+        						ex = sx+Maze.MAZE_PASSAGE_WIDTH-1;
+        						sz = maze.mazeToBlockCoord(zz)+maze.mazeZ;
+        						ez = sz+Maze.MAZE_PASSAGE_WIDTH-1;
+        						blockType = 0;
+	        				} else if (place == 7 && xx%2 != 0 && zz%2 != 0) {
+	        					sy = Maze.MAZE_PASSAGE_HEIGHT+2+maze.mazeY;
+	        					ey = Maze.MAZE_PASSAGE_HEIGHT+2+maze.mazeY;
+        						sx = maze.mazeToBlockCoord(xx)+maze.mazeX;
+        						ex = sx+Maze.MAZE_PASSAGE_WIDTH-1;
+        						sz = maze.mazeToBlockCoord(zz)+maze.mazeZ;
+        						ez = sz+Maze.MAZE_PASSAGE_WIDTH-1;
+        						blockType = 0;
+	        				} else continue;
+	        				for (int xxx = sx; xxx <= ex; xxx++) {
+	        					for (int yyy = sy; yyy <= ey; yyy++) {
+	        						if (blockType != 0 && yyy-maze.mazeY >= 1 && yyy-maze.mazeY <= Maze.MAZE_PASSAGE_HEIGHT+1 && maze.maze[xx][zz] != 1) continue;
+	        						for (int zzz = sz; zzz <= ez; zzz++) {
+	        							if (yyy-maze.mazeY == 0 && (maze.mazeWorld.getBlockAt(xxx, yyy, zzz) == null || maze.mazeWorld.getBlockAt(xxx, yyy, zzz).isEmpty())) continue;
+	        							int bId = 0, bData = 0;
+	        							if (blockType == 0) {
+	        								bId = maze.configProps.blockTypes[place][zzz-sz][xxx-sx][0];
+	        		    					bData = (byte)maze.configProps.blockTypes[place][zzz-sz][xxx-sx][1];
+	        							} else if (blockType == 1) {
+	        								bId = maze.configProps.blockTypes[place][maze.configProps.blockTypes[place].length-1-(yyy-sy)][zzz-sz][0];
+	        		    					bData = (byte)maze.configProps.blockTypes[place][maze.configProps.blockTypes[place].length-1-(yyy-sy)][zzz-sz][1];
+	        							} else if (blockType == 2) {
+	        								bId = maze.configProps.blockTypes[place][maze.configProps.blockTypes[place].length-1-(yyy-sy)][xxx-sx][0];
+	        		    					bData = (byte)maze.configProps.blockTypes[place][maze.configProps.blockTypes[place].length-1-(yyy-sy)][xxx-sx][1];
+	        							}
+	        							maze.mazeWorld.getBlockAt(xxx, yyy, zzz).setTypeId(bId);
+	        	  	        			maze.mazeWorld.getBlockAt(xxx, yyy, zzz).setData((byte) bData);
+	        						}
+	        					}
+	        				}
+	        			}
+	        		}
+    	        }
             	sender.sendMessage("Property "+propName+" set");
     		} catch (Exception e) {
             	sender.sendMessage("Property "+propName+" not found");
+            	e.printStackTrace();
     			return true;
     		}
     	} else {
