@@ -267,28 +267,35 @@ public final class EventListeners implements Listener {
 		Iterator<Maze> mit = MazePvP.theMazePvP.mazes.iterator();
 		while (mit.hasNext()) {
 			Maze maze = mit.next();
-			if (maze.boss.entity == event.getEntity()) {
-				maze.boss.entity.getEquipment().setBootsDropChance(0);
-				maze.boss.entity.getEquipment().setLeggingsDropChance(0);
-				maze.boss.entity.getEquipment().setChestplateDropChance(0);
-				maze.boss.entity.getEquipment().setHelmetDropChance(0);
-				maze.boss.entity.getEquipment().setItemInHandDropChance(0);
-				event.getDrops().clear();
-				if (maze.configProps.bossDropItems.length > 0) {
-					double currentWeigh = 0.0;
-					double weighSum = 0.0;
-					int i;
-					for (i = 0; i < maze.configProps.bossDropWeighs.length; i++) weighSum += maze.configProps.bossDropWeighs[i];
-					double randNum = Math.random()*weighSum;
-					for (i = 0; i < maze.configProps.bossDropWeighs.length; i++) {
-						currentWeigh += maze.configProps.bossDropWeighs[i];
-						if (currentWeigh >= randNum) break;
+			boolean isBoss = false;
+			Iterator<Boss> bit = maze.bosses.iterator();
+			while (bit.hasNext()) {
+				Boss boss = bit.next();
+				if (boss.entity == event.getEntity()) {
+					isBoss = true;
+					boss.entity.getEquipment().setBootsDropChance(0);
+					boss.entity.getEquipment().setLeggingsDropChance(0);
+					boss.entity.getEquipment().setChestplateDropChance(0);
+					boss.entity.getEquipment().setHelmetDropChance(0);
+					boss.entity.getEquipment().setItemInHandDropChance(0);
+					event.getDrops().clear();
+					if (maze.configProps.bossDropItems.length > 0) {
+						double currentWeigh = 0.0;
+						double weighSum = 0.0;
+						int i;
+						for (i = 0; i < maze.configProps.bossDropWeighs.length; i++) weighSum += maze.configProps.bossDropWeighs[i];
+						double randNum = Math.random()*weighSum;
+						for (i = 0; i < maze.configProps.bossDropWeighs.length; i++) {
+							currentWeigh += maze.configProps.bossDropWeighs[i];
+							if (currentWeigh >= randNum) break;
+						}
+						event.getDrops().add(maze.configProps.bossDropItems[i].clone());
 					}
-					event.getDrops().add(maze.configProps.bossDropItems[i].clone());
+					boss.entity.setCustomName(null);
+					boss.entity.setCustomNameVisible(false);
+					boss.entity = null;
+					break;
 				}
-				maze.boss.entity.setCustomName(null);
-				maze.boss.entity.setCustomNameVisible(false);
-				maze.boss.entity = null;
 			}
 			if (MazePvP.theMazePvP.showHeads && event.getEntity() instanceof Player || event.getEntity() instanceof Spider || event.getEntity() instanceof Zombie || event.getEntity() instanceof Skeleton || event.getEntity() instanceof Creeper) {
 				if (maze.isInsideMaze(event.getEntity().getLocation())) {
@@ -301,7 +308,7 @@ public final class EventListeners implements Listener {
 						event.getEntity().getWorld().getBlockAt(x, maze.mazeY-Maze.MAZE_PASSAGE_DEPTH+2, z).setTypeIdAndData(144, (byte)1, true);
 						Skull skull = (Skull)(event.getEntity().getWorld().getBlockAt(x, maze.mazeY-Maze.MAZE_PASSAGE_DEPTH+2, z).getState());
 						if (event.getEntity() instanceof Skeleton) skull.setSkullType(SkullType.SKELETON);
-						else if (event.getEntity() == maze.boss.entity) skull.setSkullType(SkullType.WITHER);
+						else if (isBoss) skull.setSkullType(SkullType.WITHER);
 						else if (event.getEntity() instanceof Zombie) skull.setSkullType(SkullType.ZOMBIE);
 						else if (event.getEntity() instanceof Player) {
 							skull.setSkullType(SkullType.PLAYER);
@@ -345,21 +352,29 @@ public final class EventListeners implements Listener {
 		Iterator<Maze> mit = MazePvP.theMazePvP.mazes.iterator();
 		while (mit.hasNext()) {
 			Maze maze = mit.next();
-			if (maze.boss.entity != null && event.getEntity() instanceof Player) {
-    			maze.boss.entity.setCustomName(maze.configProps.bossName);
-    			maze.boss.entity.setCustomNameVisible(false);
+			Boss damagerBoss = null;
+			Boss damagedBoss = null;
+			Iterator<Boss> bit = maze.bosses.iterator();
+			while (bit.hasNext()) {
+				Boss boss = bit.next();
+				if (event.getDamager() == boss.entity) damagerBoss = boss;
+				if (event.getEntity() == boss.entity) damagedBoss = boss;
+				if (boss.entity != null && event.getEntity() instanceof Player) {
+	    			boss.entity.setCustomName(maze.configProps.bossName);
+	    			boss.entity.setCustomNameVisible(false);
+				}
 			}
-	    	if (maze.boss.entity == event.getDamager() && event.getEntity() instanceof LivingEntity) {
-	    		if (maze.boss.tpCooldown > 0) {
+	    	if (damagerBoss != null && event.getEntity() instanceof LivingEntity) {
+	    		if (damagerBoss.tpCooldown > 0) {
 	    			event.setCancelled(true);
 	    		} else {
 	    			event.setDamage(maze.configProps.bossStrength == 0 ? ((LivingEntity)event.getEntity()).getHealth()*10 : maze.configProps.bossStrength);
 	    		}
 	    	}
-	    	if (maze.boss.entity == event.getEntity()) {
+	    	if (damagedBoss != null) {
 	    		if (event.getDamager() instanceof Player) {
-		    		maze.boss.targetPlayer = ((Player)event.getDamager()).getName();
-		    		maze.boss.targetTimer = Math.min(MazePvP.BOSS_TIMER_MAX, maze.boss.targetTimer+20);
+	    			damagedBoss.targetPlayer = ((Player)event.getDamager()).getName();
+	    			damagedBoss.targetTimer = Math.min(MazePvP.BOSS_TIMER_MAX, damagedBoss.targetTimer+20);
 	    		}
 	    	}
 		}
@@ -371,18 +386,23 @@ public final class EventListeners implements Listener {
 		Iterator<Maze> mit = MazePvP.theMazePvP.mazes.iterator();
 		while (mit.hasNext()) {
 			Maze maze = mit.next();
-	    	if (maze.boss.entity == event.getEntity()) {
-	    		maze.boss.hp = Math.max(0.0,  maze.boss.hp-event.getDamage());
-	    		maze.updateBossHpStr();
-	    		if (maze.boss.hp <= 0.0 && maze.configProps.bossMaxHp > 0) {
-	    			maze.boss.entity.setHealth(0);
-	    		} else {
-	    			event.setDamage(0);
-	    		}
-	    		if (event.getCause() == DamageCause.SUFFOCATION) {
-	    			maze.relocateMazeBoss(false);
-	    		}
-	    	}
+			Iterator<Boss> bit = maze.bosses.iterator();
+			while (bit.hasNext()) {
+				Boss boss = bit.next();
+		    	if (boss.entity == event.getEntity()) {
+		    		boss.hp = Math.max(0.0,  boss.hp-event.getDamage());
+		    		maze.updateBossHpStr(boss);
+		    		if (boss.hp <= 0.0 && maze.configProps.bossMaxHp > 0) {
+		    			boss.entity.setHealth(0);
+		    		} else {
+		    			event.setDamage(0);
+		    		}
+		    		if (event.getCause() == DamageCause.SUFFOCATION) {
+		    			maze.relocateMazeBoss(false, boss);
+		    		}
+		    		break;
+		    	}
+			}
 		}
 	}
 	

@@ -39,7 +39,7 @@ public class Maze {
 	public World mazeWorld;
 	public int mazeSize;
 	public int mazeX, mazeY, mazeZ;
-	public Boss boss = new Boss();
+	public ArrayList<Boss>bosses;
 	public MazeConfig configProps;
 	public int[][] maze;
 	public boolean[][] isBeingChanged;
@@ -60,9 +60,15 @@ public class Maze {
 	public Player lastPlayer;
 	
 	public Maze() {
+		bosses = new ArrayList<Boss>();
+		bosses.add(new Boss());
 		configProps = new MazeConfig();
-		boss.hp = configProps.bossMaxHp;
-		updateBossHpStr();
+		Iterator<Boss>it = bosses.iterator();
+		while (it.hasNext()) {
+			Boss boss = it.next();
+			boss.hp = configProps.bossMaxHp;
+			updateBossHpStr(boss);
+		}
 	}
 	 
 	public int blockToMazeCoord(int blockCoord) {
@@ -89,16 +95,16 @@ public class Maze {
 	 	return new Point2D.Double(mazeX+bossX+MAZE_PASSAGE_WIDTH*0.5, mazeZ+bossZ+MAZE_PASSAGE_WIDTH*0.5);
 	 }
 	 
-	public void relocateMazeBoss(boolean coolDown) {
+	public void relocateMazeBoss(boolean coolDown, Boss boss) {
 	 	World worldObj = boss.entity.getWorld();
-		relocateMazeBoss(coolDown, getMazeBossNewLocation(worldObj));
+		relocateMazeBoss(coolDown, boss, getMazeBossNewLocation(worldObj));
 	}
 	
-	public void relocateMazeBoss(boolean coolDown, Point2D.Double bossLoc) {
-		relocateMazeBoss(coolDown, bossLoc, boss.entity.getLocation().getYaw(), boss.entity.getLocation().getPitch());
+	public void relocateMazeBoss(boolean coolDown, Boss boss, Point2D.Double bossLoc) {
+		relocateMazeBoss(coolDown, boss, bossLoc, boss.entity.getLocation().getYaw(), boss.entity.getLocation().getPitch());
 	}
 
-	public void relocateMazeBoss(boolean coolDown, Point2D.Double bossLoc, float yaw, float pitch) {
+	public void relocateMazeBoss(boolean coolDown, Boss boss, Point2D.Double bossLoc, float yaw, float pitch) {
 		int j;
 	 	World worldObj = boss.entity.getWorld();
 		for (j = 0; j <= 8; j++) {
@@ -117,11 +123,11 @@ public class Maze {
 		if (coolDown) boss.tpCooldown = 20;
 	}
 	
-	public void makeNewMazeBoss() {
-		makeNewMazeBoss(null);
+	public void makeNewMazeBoss(Boss boss) {
+		makeNewMazeBoss(boss, null);
 	}
 	 
-	public void makeNewMazeBoss(Point2D.Double loc) {
+	public void makeNewMazeBoss(Boss boss, Point2D.Double loc) {
 	 	if (boss.entity != null) return;
 	 	Point2D.Double bossLoc;
 	 	if (loc == null) {
@@ -143,11 +149,13 @@ public class Maze {
 					switchEn.remove();
 					final Point2D.Double constLoc = bossLoc;
 					final Maze constMaze = this;
+					final Boss constBoss = boss;
 					new BukkitRunnable() {
 					    Maze maze = constMaze;
 					    Point2D.Double loc = constLoc;
+					    Boss boss = constBoss;
 					    public void run() {
-					        maze.makeNewMazeBoss(loc);
+					        maze.makeNewMazeBoss(boss, loc);
 					    }
 					}.runTaskLater(MazePvP.theMazePvP, 5L);
 					return;
@@ -157,7 +165,7 @@ public class Maze {
 	 	boss.entity = (Zombie)mazeWorld.spawnEntity(new Location(mazeWorld, bossLoc.x, mazeY+1, bossLoc.y), EntityType.ZOMBIE);
 	 	boss.id = boss.entity.getUniqueId();
 	 	boss.hp = configProps.bossMaxHp;
-	 	updateBossHpStr();
+	 	updateBossHpStr(boss);
 	 	mazeWorld.playEffect(new Location(mazeWorld, boss.entity.getLocation().getX(), boss.entity.getLocation().getY()+1, boss.entity.getLocation().getZ()), Effect.MOBSPAWNER_FLAMES, 0);
 	 	ItemStack boots = new ItemStack(Material.LEATHER_BOOTS);
 	 	LeatherArmorMeta meta = (LeatherArmorMeta) boots.getItemMeta();
@@ -255,7 +263,7 @@ public class Maze {
 		   &&  location.getY() >= mazeY-Maze.MAZE_PASSAGE_DEPTH && location.getY() <= mazeY+Maze.MAZE_PASSAGE_HEIGHT+1;
 	}
 
-	public void updateBossHpStr() {
+	public void updateBossHpStr(Boss boss) {
 		if (configProps.bossMaxHp <= 0) return;
 		if (updatingHp) return;
 		updatingHp = true;
@@ -667,7 +675,8 @@ public class Maze {
         	Entity en = it.next();
         	if (!(en instanceof Player) && isInsideMaze(en.getLocation())) en.remove();
         }
-        boss.entity = null;
+        Iterator<Boss> bit = bosses.iterator();
+        while (bit.hasNext()) bit.next().entity = null;
 	}
 
 }

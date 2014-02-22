@@ -121,8 +121,8 @@ public final class MazePvP extends JavaPlugin {
             	nameWriter.printf("%s\n", new Object[]{maze.name});
             	File mazeFile = new File(world.getWorldFolder(), maze.name+".maze");
             	PrintWriter var1 = new PrintWriter(new FileWriter(mazeFile, false));
-            	var1.printf("%d %d %d %d %f %d %d %d %d %d\n", new Object[] {maze.mazeX, maze.mazeY, maze.mazeZ, maze.mazeSize, maze.boss.hp, maze.canBeEntered?1:0, maze.hasWaitArea?1:0, maze.waitX, maze.waitY, maze.waitZ});
-                var1.printf("%s\n", new Object[]{(maze.boss.id==null)?"":maze.boss.id.toString()});
+            	var1.printf("%d %d %d %d %f %d %d %d %d %d\n", new Object[] {maze.mazeX, maze.mazeY, maze.mazeZ, maze.mazeSize, maze.bosses.get(0).hp, maze.canBeEntered?1:0, maze.hasWaitArea?1:0, maze.waitX, maze.waitY, maze.waitZ});
+                var1.printf("%s\n", new Object[]{(maze.bosses.get(0).id==null)?"":maze.bosses.get(0).toString()});
             	for (int i = 0; i < maze.mazeSize*2+1; i++) {
             		for (int j = 0; j < maze.mazeSize*2+1; j++) {
             			if (j == maze.mazeSize*2) var1.printf("%d\n", new Object[] {maze.maze[i][j]});
@@ -313,7 +313,7 @@ public final class MazePvP extends JavaPlugin {
 	                maze.mazeY = Integer.parseInt(var3[1]);
 	                maze.mazeZ = Integer.parseInt(var3[2]);
 	                maze.mazeSize = Integer.parseInt(var3[3]);
-	                maze.boss.hp = (var3.length >= 5) ? Double.parseDouble(var3[4]) : 0;
+	                maze.bosses.get(0).hp = (var3.length >= 5) ? Double.parseDouble(var3[4]) : 0;
 	                maze.canBeEntered = (var3.length >= 6) ? (Integer.parseInt(var3[5]) != 0) : true;
 	        		if (var3.length >= 7) maze.hasWaitArea = Integer.parseInt(var3[6]) != 0;
 	        		if (var3.length >= 8) maze.waitX = Integer.parseInt(var3[7]);
@@ -325,8 +325,8 @@ public final class MazePvP extends JavaPlugin {
                 		pNumFromPrevPlace = true;
                 	}
 	                if ((var2 = var1.readLine()) != null) {
-	                	if (var2.equals("")) maze.boss.id = null;
-	                	else maze.boss.id = UUID.fromString(var2);
+	                	if (var2.equals("")) maze.bosses.get(0).id = null;
+	                	else maze.bosses.get(0).id = UUID.fromString(var2);
 	                } else {
 	                	var1.close();
 	                	throw new Exception("Malformed input");
@@ -383,8 +383,8 @@ public final class MazePvP extends JavaPlugin {
 	    			Iterator<Zombie> iter = entities.iterator();
 	    			while (iter.hasNext()) {
 	    				Zombie en = iter.next();
-	    				if (en.getUniqueId().equals(maze.boss.id)) {
-	    					maze.boss.entity = en;
+	    				if (en.getUniqueId().equals(maze.bosses.get(0).id)) {
+	    					maze.bosses.get(0).entity = en;
 	    					break;
 	    				}
 	    			}

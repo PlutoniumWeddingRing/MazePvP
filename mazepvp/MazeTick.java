@@ -41,11 +41,15 @@ public class MazeTick extends BukkitRunnable {
     			Iterator<Zombie> iter = entities.iterator();
     			while (iter.hasNext()) {
     				Zombie en = iter.next();
-    				if (en.getUniqueId().equals(maze.boss.id)) {
-    					break;
-    				}
-    				if (!iter.hasNext()) {
-    					maze.boss.entity= null;
+    				Iterator<Boss> bit = maze.bosses.iterator();
+    				while (bit.hasNext()) {
+    					Boss boss = bit.next();
+	    				if (en.getUniqueId().equals(boss.id)) {
+	    					break;
+	    				}
+	    				if (!iter.hasNext()) {
+	    					boss.entity= null;
+	    				}
     				}
     			}
       		}
@@ -72,24 +76,32 @@ public class MazeTick extends BukkitRunnable {
       				}
       			}
       		}
-      		
-      		if (maze.boss.entity!= null) {
-      			if (!maze.isInsideMaze(maze.boss.entity.getLocation())) maze.relocateMazeBoss(false);
-      			if (maze.configProps.bossMaxHp > 0 && maze.boss.hp > 0) {
-	      			if (!maze.boss.hpStr.equals(maze.boss.entity.getCustomName())) {
-	      				maze.boss.entity.setCustomName(maze.configProps.bossMaxHp > 0 ? maze.boss.hpStr : null);
-	      				maze.boss.entity.setCustomNameVisible(maze.configProps.bossMaxHp > 0 ? true : false);
+
+			Iterator<Boss> bit = maze.bosses.iterator();
+			while (bit.hasNext()) {
+				Boss boss = bit.next();
+	      		if (boss.entity!= null) {
+	      			if (!maze.isInsideMaze(boss.entity.getLocation())) maze.relocateMazeBoss(false, boss);
+	      			if (maze.configProps.bossMaxHp > 0 && boss.hp > 0) {
+		      			if (!boss.hpStr.equals(boss.entity.getCustomName())) {
+		      				boss.entity.setCustomName(maze.configProps.bossMaxHp > 0 ? boss.hpStr : null);
+		      				boss.entity.setCustomNameVisible(maze.configProps.bossMaxHp > 0 ? true : false);
+		      			}
 	      			}
-      			}
-      		}
+	      		}
+			}
 			Collection<LivingEntity> entities = maze.mazeWorld.getEntitiesByClass(LivingEntity.class);
 			Iterator<LivingEntity> iter = entities.iterator();
 			while (iter.hasNext()) {
 				LivingEntity en = iter.next();
 				if (en.getHealth() > 0 && maze.isInsideMaze(en.getLocation())) {
 					if (en.getLocation().getY() <= maze.mazeY-Maze.MAZE_PASSAGE_DEPTH+2.5 && en.getLocation().getY() >= maze.mazeY-Maze.MAZE_PASSAGE_DEPTH+1) {
-						if (maze.boss.entity== en) maze.relocateMazeBoss(false);
-						else en.damage(en.getHealth()+10);
+						bit = maze.bosses.iterator();
+						while (bit.hasNext()) {
+							Boss boss = bit.next();
+							if (boss.entity== en) maze.relocateMazeBoss(false, boss);
+							else if (!bit.hasNext()) en.damage(en.getHealth()+10);
+						}
 					}
 				}
 			}
@@ -127,28 +139,31 @@ public class MazeTick extends BukkitRunnable {
 					}
 				}
 			}
-			
-			if (maze.boss.targetTimer > 0) {
-				maze.boss.targetTimer--;
-				if (maze.boss.targetTimer == 0) {
-					maze.boss.targetPlayer = "";
+			bit = maze.bosses.iterator();
+			while (bit.hasNext()) {
+				Boss boss = bit.next();
+				if (boss.targetTimer > 0) {
+					boss.targetTimer--;
+					if (boss.targetTimer == 0) {
+						boss.targetPlayer = "";
+					}
 				}
+				boss.tpCooldown = Math.max(0, boss.tpCooldown-1);
+	    		if (boss.entity!= null && Math.random() < 0.02*boss.targetTimer/(double)MazePvP.BOSS_TIMER_MAX) {
+	    			boss.targetTimer = MazePvP.BOSS_TIMER_MAX/3;
+	    			Player player = Bukkit.getPlayer(boss.targetPlayer);
+	    			if (player != null) {
+	    				Location ploc = player.getLocation();
+	    				Location mloc = boss.entity.getLocation();
+	    				double angle = Math.atan2(mloc.getX()-ploc.getX(), mloc.getZ()-ploc.getZ());
+	    				angle +=  Math.PI;
+	    				maze.relocateMazeBoss(true, boss, new Point2D.Double(ploc.getX() + 1.0*Math.sin(angle), ploc.getZ() + 1.0*Math.cos(angle)), ploc.getYaw(), mloc.getPitch());
+	    			} else {
+	    				boss.targetPlayer = "";
+	    				boss.targetTimer = 0;
+	    			}
+	    		}
 			}
-			maze.boss.tpCooldown = Math.max(0, maze.boss.tpCooldown-1);
-    		if (maze.boss.entity!= null && Math.random() < 0.02*maze.boss.targetTimer/(double)MazePvP.BOSS_TIMER_MAX) {
-    			maze.boss.targetTimer = MazePvP.BOSS_TIMER_MAX/3;
-    			Player player = Bukkit.getPlayer(maze.boss.targetPlayer);
-    			if (player != null) {
-    				Location ploc = player.getLocation();
-    				Location mloc = maze.boss.entity.getLocation();
-    				double angle = Math.atan2(mloc.getX()-ploc.getX(), mloc.getZ()-ploc.getZ());
-    				angle +=  Math.PI;
-    				maze.relocateMazeBoss(true, new Point2D.Double(ploc.getX() + 1.0*Math.sin(angle), ploc.getZ() + 1.0*Math.cos(angle)), ploc.getYaw(), mloc.getPitch());
-    			} else {
-    				maze.boss.targetPlayer = "";
-    				maze.boss.targetTimer = 0;
-    			}
-    		}
 			
 	      	if (main.wallChangeTimer >= Maze.WALL_CHANGE_SPEED) {
 	      		boolean isLookedAt[][] = new boolean[maze.mazeSize*2+1][];
@@ -548,10 +563,14 @@ public class MazeTick extends BukkitRunnable {
 		        	}
 	        	}
 	        	if (updateBoss) {
-	        		if (maze.boss.entity== null) maze.makeNewMazeBoss();
-	        		if (Math.random() < 0.05) {
-	        			maze.relocateMazeBoss(false);
-	        		}
+	        		bit = maze.bosses.iterator();
+	    			while (bit.hasNext()) {
+	    				Boss boss = bit.next();
+		        		if (boss.entity == null) maze.makeNewMazeBoss(boss);
+		        		else if (Math.random() < 0.05) {
+		        			maze.relocateMazeBoss(false, boss);
+		        		}
+	    			}
 	        	}
 	        	//main.saveMazeProps(maze);
 	      	}
