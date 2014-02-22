@@ -53,7 +53,7 @@ public class CommandSetMazeProp implements CommandExecutor {
         			if (maze != null) maze.updateSigns();
         		} else if (propName.equals("boss.hp")) {
         			configProps.bossMaxHp = value;
-        			if (maze != null) maze.mazeBossHp = value;
+        			if (maze != null) maze.boss.hp = value;
         			if (maze != null) maze.updateBossHpStr();
         		} else if (propName.equals("boss.attack")) configProps.bossStrength = value;
         	} catch (NumberFormatException e) {

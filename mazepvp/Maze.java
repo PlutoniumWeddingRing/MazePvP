@@ -8,7 +8,6 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Color;
@@ -40,13 +39,7 @@ public class Maze {
 	public World mazeWorld;
 	public int mazeSize;
 	public int mazeX, mazeY, mazeZ;
-	public Zombie mazeBoss = null;
-	public String mazeBossHpStr = "";
-	public UUID mazeBossId = null;
-	public String mazeBossTargetPlayer = "";
-	public int mazeBossTargetTimer = 0;
-	public int mazeBossTpCooldown = 0;
-	public double mazeBossHp = 0.0;
+	public Boss boss = new Boss();
 	public MazeConfig configProps;
 	public int[][] maze;
 	public boolean[][] isBeingChanged;
@@ -68,7 +61,7 @@ public class Maze {
 	
 	public Maze() {
 		configProps = new MazeConfig();
-		mazeBossHp = configProps.bossMaxHp;
+		boss.hp = configProps.bossMaxHp;
 		updateBossHpStr();
 	}
 	 
@@ -97,31 +90,31 @@ public class Maze {
 	 }
 	 
 	public void relocateMazeBoss(boolean coolDown) {
-	 	World worldObj = mazeBoss.getWorld();
+	 	World worldObj = boss.entity.getWorld();
 		relocateMazeBoss(coolDown, getMazeBossNewLocation(worldObj));
 	}
 	
 	public void relocateMazeBoss(boolean coolDown, Point2D.Double bossLoc) {
-		relocateMazeBoss(coolDown, bossLoc, mazeBoss.getLocation().getYaw(), mazeBoss.getLocation().getPitch());
+		relocateMazeBoss(coolDown, bossLoc, boss.entity.getLocation().getYaw(), boss.entity.getLocation().getPitch());
 	}
 
 	public void relocateMazeBoss(boolean coolDown, Point2D.Double bossLoc, float yaw, float pitch) {
 		int j;
-	 	World worldObj = mazeBoss.getWorld();
+	 	World worldObj = boss.entity.getWorld();
 		for (j = 0; j <= 8; j++) {
-			worldObj.playEffect(mazeBoss.getLocation(), Effect.SMOKE, j);
+			worldObj.playEffect(boss.entity.getLocation(), Effect.SMOKE, j);
 			if (j != 4) {
-				worldObj.playEffect(new Location(worldObj, mazeBoss.getLocation().getX(), mazeBoss.getLocation().getY()+1, mazeBoss.getLocation().getZ()), Effect.SMOKE, j);
+				worldObj.playEffect(new Location(worldObj, boss.entity.getLocation().getX(), boss.entity.getLocation().getY()+1, boss.entity.getLocation().getZ()), Effect.SMOKE, j);
 			}
 		}
-		mazeBoss.teleport(new Location(worldObj, bossLoc.x, mazeY+1, bossLoc.y, yaw, pitch));
+		boss.entity.teleport(new Location(worldObj, bossLoc.x, mazeY+1, bossLoc.y, yaw, pitch));
 		for (j = 0; j <= 8; j++) {
-			worldObj.playEffect(mazeBoss.getLocation(), Effect.SMOKE, j);
+			worldObj.playEffect(boss.entity.getLocation(), Effect.SMOKE, j);
 			if (j != 4) {
-				worldObj.playEffect(new Location(worldObj, mazeBoss.getLocation().getX(), mazeBoss.getLocation().getY()+1, mazeBoss.getLocation().getZ()), Effect.SMOKE, j);
+				worldObj.playEffect(new Location(worldObj, boss.entity.getLocation().getX(), boss.entity.getLocation().getY()+1, boss.entity.getLocation().getZ()), Effect.SMOKE, j);
 			}
 		}
-		if (coolDown) mazeBossTpCooldown = 20;
+		if (coolDown) boss.tpCooldown = 20;
 	}
 	
 	public void makeNewMazeBoss() {
@@ -160,11 +153,11 @@ public class Maze {
 				}
 		 	}
 	 	} else bossLoc = loc;
-	 	mazeBoss = (Zombie)mazeWorld.spawnEntity(new Location(mazeWorld, bossLoc.x, mazeY+1, bossLoc.y), EntityType.ZOMBIE);
-	 	mazeBossId = mazeBoss.getUniqueId();
-	 	mazeBossHp = configProps.bossMaxHp;
+	 	boss.entity = (Zombie)mazeWorld.spawnEntity(new Location(mazeWorld, bossLoc.x, mazeY+1, bossLoc.y), EntityType.ZOMBIE);
+	 	boss.id = boss.entity.getUniqueId();
+	 	boss.hp = configProps.bossMaxHp;
 	 	updateBossHpStr();
-	 	mazeWorld.playEffect(new Location(mazeWorld, mazeBoss.getLocation().getX(), mazeBoss.getLocation().getY()+1, mazeBoss.getLocation().getZ()), Effect.MOBSPAWNER_FLAMES, 0);
+	 	mazeWorld.playEffect(new Location(mazeWorld, boss.entity.getLocation().getX(), boss.entity.getLocation().getY()+1, boss.entity.getLocation().getZ()), Effect.MOBSPAWNER_FLAMES, 0);
 	 	ItemStack boots = new ItemStack(Material.LEATHER_BOOTS);
 	 	LeatherArmorMeta meta = (LeatherArmorMeta) boots.getItemMeta();
 	 	meta.setColor(Color.fromRGB(0, 0, 0));
@@ -177,7 +170,7 @@ public class Maze {
 	 	meta = (LeatherArmorMeta) plate.getItemMeta();
 	 	meta.setColor(Color.fromRGB(0, 0, 0));
 	 	plate.setItemMeta(meta);
-	 	EntityEquipment ee = mazeBoss.getEquipment();
+	 	EntityEquipment ee = boss.entity.getEquipment();
 	 	ee.setHelmet(new ItemStack(Material.SKULL_ITEM, 1, (short)1));
 	 	ee.setBoots(boots);
 	 	ee.setLeggings(legs);
@@ -265,15 +258,15 @@ public class Maze {
 		if (configProps.bossMaxHp <= 0) return;
 		if (updatingHp) return;
 		updatingHp = true;
-		double hpFraction = mazeBossHp/configProps.bossMaxHp;
+		double hpFraction = boss.hp/configProps.bossMaxHp;
 		double barNum = MazePvP.BOSS_HEALTH_BARS*hpFraction;
-		if (hpFraction > 0.5) mazeBossHpStr = "§2";
-		else if (hpFraction > 0.25) mazeBossHpStr = "§6";
-		else mazeBossHpStr = "§4";
+		if (hpFraction > 0.5) boss.hpStr = "§2";
+		else if (hpFraction > 0.25) boss.hpStr = "§6";
+		else boss.hpStr = "§4";
 		for (int i = 0; i < MazePvP.BOSS_HEALTH_BARS; i++) {
-			if (barNum-i > 0.75) mazeBossHpStr += "█";
-			else if (barNum-i > 0.25 || i == 0) mazeBossHpStr += "▌";
-			else mazeBossHpStr += " ";
+			if (barNum-i > 0.75) boss.hpStr += "█";
+			else if (barNum-i > 0.25 || i == 0) boss.hpStr += "▌";
+			else boss.hpStr += " ";
 		}
 		updatingHp = false;
 	}
@@ -673,7 +666,7 @@ public class Maze {
         	Entity en = it.next();
         	if (!(en instanceof Player) && isInsideMaze(en.getLocation())) en.remove();
         }
-        mazeBoss = null;
+        boss.entity = null;
 	}
 
 }
