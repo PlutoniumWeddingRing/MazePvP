@@ -81,6 +81,8 @@ public final class MazePvP extends JavaPlugin {
 		getCommand("mpremoveitem").setExecutor(new CommandRemoveItem(this));
 		saveDefaultConfig();
 		loadConfiguration();
+    	MazePvP.writeConfigToYml(rootConfig, getConfig());
+    	saveConfig();
 		Iterator<World> wit = Bukkit.getServer().getWorlds().iterator();
 		while (wit.hasNext()) {
 			loadMazeProps(wit.next());
