@@ -554,6 +554,9 @@ public final class MazePvP extends JavaPlugin {
 	
 	@SuppressWarnings("deprecation")
 	public static void writeConfigToYml(MazeConfig config, Configuration ymlConf) {
+		if (config == MazePvP.theMazePvP.rootConfig) ymlConf.set("showHeadsOnSpikes", MazePvP.theMazePvP.showHeads);
+		if (config == MazePvP.theMazePvP.rootConfig) ymlConf.set("replaceMobsWithBoss", MazePvP.theMazePvP.replaceBoss);
+		if (config == MazePvP.theMazePvP.rootConfig) ymlConf.set("fightStartDelay", MazePvP.theMazePvP.fightStartDelay/20);
 		ymlConf.set("playerLives", config.playerMaxDeaths);
         ymlConf.set("playerNum.min", config.minPlayers);
         ymlConf.set("playerNum.max", config.maxPlayers);
@@ -567,6 +570,26 @@ public final class MazePvP extends JavaPlugin {
             ymlConf.set("boss.drops.item"+(i+1)+".amount", config.bossDropItems[i].getAmount());
             ymlConf.set("boss.drops.item"+(i+1)+".weigh", config.bossDropWeighs[i]);
         }
+		if (config == MazePvP.theMazePvP.rootConfig) {
+			ymlConf.set("texts.startedState", MazePvP.theMazePvP.startedStateText);
+			ymlConf.set("texts.waitingState", MazePvP.theMazePvP.waitingStateText);
+			ymlConf.set("texts.joinSign", MazePvP.theMazePvP.joinSignText);
+			ymlConf.set("texts.leaveSign", MazePvP.theMazePvP.leaveSignText);
+			ymlConf.set("texts.joinBroadcast", MazePvP.theMazePvP.waitBroadcastText);
+			ymlConf.set("texts.joinBroadcastWhenFull", MazePvP.theMazePvP.waitBroadcastFullText);
+			ymlConf.set("texts.countdown", MazePvP.theMazePvP.countdownText);
+			ymlConf.set("texts.fightStarted", MazePvP.theMazePvP.fightStartedText);
+			ymlConf.set("texts.fightRespawn", MazePvP.theMazePvP.fightRespawnText);
+			ymlConf.set("texts.fightRespawnLastLife", MazePvP.theMazePvP.lastRespawnText);
+			ymlConf.set("texts.fightPlayerOut", MazePvP.theMazePvP.playerOutText);
+			ymlConf.set("texts.fightWin", MazePvP.theMazePvP.winText);
+			ymlConf.set("texts.fightStopped", MazePvP.theMazePvP.fightStoppedText);
+			ymlConf.set("texts.onJoin", MazePvP.theMazePvP.joinMazeText);
+			ymlConf.set("texts.onLeave", MazePvP.theMazePvP.leaveMazeText);
+			ymlConf.set("texts.onJoinAfterFightStarted", MazePvP.theMazePvP.fightAlreadyStartedText);
+			ymlConf.set("texts.onJoinWhenMazeFull", MazePvP.theMazePvP.mazeFullText);
+			ymlConf.set("texts.onJoinWhenAlreadyJoinedOtherMaze", MazePvP.theMazePvP.joinedOtherText);
+		}
         ymlConf.set("probabilities.groundReappear", config.groundReappearProb);
         ymlConf.set("probabilities.chestAppear", config.chestAppearProb);
         ymlConf.set("probabilities.enderChestAppear", config.enderChestAppearProb);
