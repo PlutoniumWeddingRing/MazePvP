@@ -548,7 +548,7 @@ public class MazeTick extends BukkitRunnable {
 		        	}
 	        	}
 	        	if (updateBoss) {
-	        		if (maze.mazeBoss == null) maze.makeNewMazeBoss(maze.mazeWorld);
+	        		if (maze.mazeBoss == null) maze.makeNewMazeBoss();
 	        		if (Math.random() < 0.05) {
 	        			maze.relocateMazeBoss(false);
 	        		}

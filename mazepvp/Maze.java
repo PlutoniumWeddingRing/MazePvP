@@ -21,11 +21,13 @@ import org.bukkit.block.Chest;
 import org.bukkit.block.Sign;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Monster;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Zombie;
 import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
+import org.bukkit.scheduler.BukkitRunnable;
 
 public class Maze {
 	public static final int MAZE_PASSAGE_WIDTH = 4;
@@ -121,14 +123,48 @@ public class Maze {
 		}
 		if (coolDown) mazeBossTpCooldown = 20;
 	}
+	
+	public void makeNewMazeBoss() {
+		makeNewMazeBoss(null);
+	}
 	 
-	public void makeNewMazeBoss(World worldObj) {
-	 	Point2D.Double bossLoc = getMazeBossNewLocation(worldObj);
-	 	mazeBoss = (Zombie)worldObj.spawnEntity(new Location(worldObj, bossLoc.x, mazeY+1, bossLoc.y), EntityType.ZOMBIE);
+	public void makeNewMazeBoss(Point2D.Double loc) {
+	 	Point2D.Double bossLoc;
+	 	if (loc == null) {
+	 		bossLoc = getMazeBossNewLocation(mazeWorld);
+		 	if (MazePvP.theMazePvP.replaceBoss) {
+		 		Monster switchEn = null;
+		 		int switchNum = 1;
+		 		Collection<Monster> entities = mazeWorld.getEntitiesByClass(Monster.class);
+				Iterator<Monster> iter = entities.iterator();
+				while (iter.hasNext()) {
+					Monster en = iter.next();
+					if (!en.isDead() && isInsideMaze(en.getLocation())) {
+						if (Math.random() < 1.0/switchNum) switchEn = en;
+						switchNum++;
+					}
+				}
+				if (switchEn != null) {
+					bossLoc = new Point2D.Double(switchEn.getLocation().getX(), switchEn.getLocation().getZ());
+					switchEn.remove();
+					final Point2D.Double constLoc = bossLoc;
+					final Maze constMaze = this;
+					new BukkitRunnable() {
+					    Maze maze = constMaze;
+					    Point2D.Double loc = constLoc;
+					    public void run() {
+					        maze.makeNewMazeBoss(loc);
+					    }
+					}.runTaskLater(MazePvP.theMazePvP, 5L);
+					return;
+				}
+		 	}
+	 	} else bossLoc = loc;
+	 	mazeBoss = (Zombie)mazeWorld.spawnEntity(new Location(mazeWorld, bossLoc.x, mazeY+1, bossLoc.y), EntityType.ZOMBIE);
 	 	mazeBossId = mazeBoss.getUniqueId();
 	 	mazeBossHp = configProps.bossMaxHp;
 	 	updateBossHpStr();
-	 	worldObj.playEffect(new Location(worldObj, mazeBoss.getLocation().getX(), mazeBoss.getLocation().getY()+1, mazeBoss.getLocation().getZ()), Effect.MOBSPAWNER_FLAMES, 0);
+	 	mazeWorld.playEffect(new Location(mazeWorld, mazeBoss.getLocation().getX(), mazeBoss.getLocation().getY()+1, mazeBoss.getLocation().getZ()), Effect.MOBSPAWNER_FLAMES, 0);
 	 	ItemStack boots = new ItemStack(Material.LEATHER_BOOTS);
 	 	LeatherArmorMeta meta = (LeatherArmorMeta) boots.getItemMeta();
 	 	meta.setColor(Color.fromRGB(0, 0, 0));

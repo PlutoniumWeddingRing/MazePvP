@@ -36,6 +36,7 @@ public final class MazePvP extends JavaPlugin {
 	public int wallChangeTimer = 0;
 	public int mazeBossRestoreTimer = 0;
 	public boolean showHeads = true;
+	public boolean replaceBoss = true;
 	public int fightStartDelay = 5*20;
 	public List<String> joinSignText;
 	public List<String> leaveSignText;
@@ -162,6 +163,7 @@ public final class MazePvP extends JavaPlugin {
 		Configuration config = getConfig();
 		rootConfig = new MazeConfig(false);
 		showHeads = config.getBoolean("showHeadsOnSpikes");
+		replaceBoss = config.getBoolean("replaceMobsWithBoss");
 		fightStartDelay = config.getInt("fightStartDelay")*20;
 		MazePvP.loadConfigFromYml(rootConfig, getConfig(), getConfig(), false, true);
 		rootConfig.minPlayers = config.getInt("playerNum.min");

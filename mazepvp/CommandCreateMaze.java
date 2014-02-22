@@ -199,7 +199,7 @@ public class CommandCreateMaze implements CommandExecutor {
     	maze.mazeX = posX;
     	maze.mazeY = posY+Maze.MAZE_PASSAGE_DEPTH;
     	maze.mazeZ = posZ;
-    	maze.makeNewMazeBoss(world);
+    	maze.makeNewMazeBoss();
     	main.mazes.add(maze);
 		sender.sendMessage("Maze "+mazeName+" created");
     	return true;
