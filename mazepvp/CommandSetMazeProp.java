@@ -221,7 +221,6 @@ public class CommandSetMazeProp implements CommandExecutor {
             	sender.sendMessage("Property "+propName+" set");
     		} catch (Exception e) {
             	sender.sendMessage("Property "+propName+" not found");
-            	e.printStackTrace();
     			return true;
     		}
     	} else {
