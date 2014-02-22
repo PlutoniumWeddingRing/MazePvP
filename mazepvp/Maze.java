@@ -122,6 +122,7 @@ public class Maze {
 	}
 	 
 	public void makeNewMazeBoss(Point2D.Double loc) {
+	 	if (boss.entity != null) return;
 	 	Point2D.Double bossLoc;
 	 	if (loc == null) {
 	 		bossLoc = getMazeBossNewLocation(mazeWorld);
