@@ -38,17 +38,18 @@ public class MazeTick extends BukkitRunnable {
       		
       		if (main.mazeBossRestoreTimer >= Maze.BOSS_RESTORE_SPEED) {
         		Collection<Zombie> entities = maze.mazeWorld.getEntitiesByClass(Zombie.class);
-    			Iterator<Zombie> iter = entities.iterator();
-    			while (iter.hasNext()) {
-    				Zombie en = iter.next();
-    				Iterator<Boss> bit = maze.bosses.iterator();
-    				while (bit.hasNext()) {
-    					Boss boss = bit.next();
+				Iterator<Boss> bit = maze.bosses.iterator();
+				while (bit.hasNext()) {
+					Boss boss = bit.next();
+	    			Iterator<Zombie> iter = entities.iterator();
+	    			while (iter.hasNext()) {
+	    				Zombie en = iter.next();
 	    				if (en.getUniqueId().equals(boss.id)) {
 	    					break;
 	    				}
 	    				if (!iter.hasNext()) {
-	    					boss.entity= null;
+	    					boss.entity = null;
+	    					if (maze.name.equals("MAZE")) System.out.println("BOSS SET TO NULL");
 	    				}
     				}
     			}
