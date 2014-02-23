@@ -49,7 +49,6 @@ public class MazeTick extends BukkitRunnable {
 	    				}
 	    				if (!iter.hasNext()) {
 	    					boss.entity = null;
-	    					if (maze.name.equals("MAZE")) System.out.println("BOSS SET TO NULL");
 	    				}
     				}
     			}
