@@ -78,17 +78,20 @@ public class MazeTick extends BukkitRunnable {
       		}
 
 			Iterator<Boss> bit = maze.bosses.iterator();
+			int place = 0;
 			while (bit.hasNext()) {
 				Boss boss = bit.next();
 	      		if (boss.entity!= null) {
 	      			if (!maze.isInsideMaze(boss.entity.getLocation())) maze.relocateMazeBoss(false, boss);
-	      			if (maze.configProps.bossMaxHp > 0 && boss.hp > 0) {
+	      			int maxHp = maze.configProps.bosses.get(place).maxHp;
+	      			if (maxHp > 0 && boss.hp > 0) {
 		      			if (!boss.hpStr.equals(boss.entity.getCustomName())) {
-		      				boss.entity.setCustomName(maze.configProps.bossMaxHp > 0 ? boss.hpStr : null);
-		      				boss.entity.setCustomNameVisible(maze.configProps.bossMaxHp > 0 ? true : false);
+		      				boss.entity.setCustomName(maxHp > 0 ? boss.hpStr : null);
+		      				boss.entity.setCustomNameVisible(maxHp > 0 ? true : false);
 		      			}
 	      			}
 	      		}
+	      		place++;
 			}
 			Collection<LivingEntity> entities = maze.mazeWorld.getEntitiesByClass(LivingEntity.class);
 			Iterator<LivingEntity> iter = entities.iterator();
@@ -564,12 +567,14 @@ public class MazeTick extends BukkitRunnable {
 	        	}
 	        	if (updateBoss) {
 	        		bit = maze.bosses.iterator();
+	        		place = 0;
 	    			while (bit.hasNext()) {
 	    				Boss boss = bit.next();
-		        		if (boss.entity == null) maze.makeNewMazeBoss(boss);
+		        		if (boss.entity == null) maze.makeNewMazeBoss(place);
 		        		else if (Math.random() < 0.05) {
 		        			maze.relocateMazeBoss(false, boss);
 		        		}
+		        		place++;
 	    			}
 	        	}
 	        	//main.saveMazeProps(maze);

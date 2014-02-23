@@ -122,7 +122,7 @@ public final class MazePvP extends JavaPlugin {
             	File mazeFile = new File(world.getWorldFolder(), maze.name+".maze");
             	PrintWriter var1 = new PrintWriter(new FileWriter(mazeFile, false));
             	var1.printf("%d %d %d %d %f %d %d %d %d %d\n", new Object[] {maze.mazeX, maze.mazeY, maze.mazeZ, maze.mazeSize, maze.bosses.get(0).hp, maze.canBeEntered?1:0, maze.hasWaitArea?1:0, maze.waitX, maze.waitY, maze.waitZ});
-                var1.printf("%s\n", new Object[]{(maze.bosses.get(0).id==null)?"":maze.bosses.get(0).toString()});
+                var1.printf("%s\n", new Object[]{(maze.bosses.get(0).id==null)?"":maze.bosses.get(0).id.toString()});
             	for (int i = 0; i < maze.mazeSize*2+1; i++) {
             		for (int j = 0; j < maze.mazeSize*2+1; j++) {
             			if (j == maze.mazeSize*2) var1.printf("%d\n", new Object[] {maze.maze[i][j]});
@@ -165,13 +165,23 @@ public final class MazePvP extends JavaPlugin {
 		showHeads = config.getBoolean("showHeadsOnSpikes");
 		replaceBoss = config.getBoolean("replaceMobsWithBoss");
 		fightStartDelay = config.getInt("fightStartDelay")*20;
-		MazePvP.loadConfigFromYml(rootConfig, getConfig(), getConfig(), false, true);
+		MazePvP.loadConfigFromYml(rootConfig, getConfig(), getConfig(), true);
 		rootConfig.minPlayers = config.getInt("playerNum.min");
 		rootConfig.maxPlayers = config.getInt("playerNum.max");
 		rootConfig.playerMaxDeaths = config.getInt("playerLives");
-		rootConfig.bossName = config.getString("boss.name");
-		rootConfig.bossMaxHp = config.getInt("boss.hp");
-		rootConfig.bossStrength = config.getInt("boss.attack");
+		rootConfig.bosses = new ArrayList<BossConfig>();
+		if (config.isString("boss.name") && config.isInt("boss.hp") && config.isInt("boss.attack")) {
+			BossConfig bossProps = new BossConfig();
+			loadBossProps(bossProps, config, -1);
+			rootConfig.bosses.add(bossProps);
+		} else {
+			int bossNum = config.getInt("bosses.bossCount");
+			for (int i = 0; i < bossNum; i++) {
+				BossConfig bossProps = new BossConfig(); 
+				loadBossProps(bossProps, config, i);
+				rootConfig.bosses.add(bossProps);
+			}
+		}
 		rootConfig.groundReappearProb = config.getDouble("probabilities.groundReappear");
 		rootConfig.chestAppearProb = config.getDouble("probabilities.chestAppear");
 		rootConfig.enderChestAppearProb = config.getDouble("probabilities.enderChestAppear");
@@ -200,33 +210,6 @@ public final class MazePvP extends JavaPlugin {
 			if (tempChestItems[i] != null) {
 				rootConfig.chestItems[place] = tempChestItems[i];
 				rootConfig.chestWeighs[place] = tempChestWeighs[i];
-				place++;
-			}
-		}
-		
-		itemCount = config.getInt("boss.drops.itemCount");
-		
-		ItemStack tempBossItems[] = new ItemStack[itemCount];
-		double tempBossWeighs[] = new double[itemCount];
-		int bossItemNum = 0;
-		for (int i = 0; i < itemCount; i++) {
-			int id = config.getInt("boss.drops.item"+(i+1)+".id");
-			int amount = config.getInt("boss.drops.item"+(i+1)+".amount");
-			double weigh = config.getDouble("boss.drops.item"+(i+1)+".weigh");
-			if (id == 0) tempBossItems[i] = null;
-			else {
-				tempBossItems[i] = new ItemStack(id, amount);
-				tempBossWeighs[i] = weigh;
-				bossItemNum++;
-			}
-		}
-		rootConfig.bossDropWeighs = new double[bossItemNum];
-		rootConfig.bossDropItems = new ItemStack[bossItemNum];
-		place = 0;
-		for (int i = 0; i < itemCount; i++) {
-			if (tempBossItems[i] != null) {
-				rootConfig.bossDropItems[place] = tempBossItems[i];
-				rootConfig.bossDropWeighs[place] = tempBossWeighs[i];
 				place++;
 			}
 		}
@@ -273,6 +256,41 @@ public final class MazePvP extends JavaPlugin {
 		waitingStateText = config.getString("texts.waitingState");
    }
 
+	@SuppressWarnings("deprecation")
+	public static void loadBossProps(BossConfig bossProps, Configuration config, int bossNum) {
+		String propStr = "boss.";
+		if (bossNum >= 0) propStr = "bosses.boss"+(bossNum+1)+".";
+		bossProps.name = config.getString(propStr+"name");
+		bossProps.maxHp = config.getInt(propStr+"hp");
+		bossProps.strength = config.getInt(propStr+"attack");
+		
+		int itemCount = config.getInt(propStr+"drops.itemCount");
+		ItemStack tempBossItems[] = new ItemStack[itemCount];
+		double tempBossWeighs[] = new double[itemCount];
+		int bossItemNum = 0;
+		for (int i = 0; i < itemCount; i++) {
+			int id = config.getInt(propStr+"drops.item"+(i+1)+".id");
+			int amount = config.getInt(propStr+"drops.item"+(i+1)+".amount");
+			double weigh = config.getDouble(propStr+"drops.item"+(i+1)+".weigh");
+			if (id == 0) tempBossItems[i] = null;
+			else {
+				tempBossItems[i] = new ItemStack(id, amount);
+				tempBossWeighs[i] = weigh;
+				bossItemNum++;
+			}
+		}
+		bossProps.dropWeighs = new double[bossItemNum];
+		bossProps.dropItems = new ItemStack[bossItemNum];
+		int place = 0;
+		for (int i = 0; i < itemCount; i++) {
+			if (tempBossItems[i] != null) {
+				bossProps.dropItems[place] = tempBossItems[i];
+				bossProps.dropWeighs[place] = tempBossWeighs[i];
+				place++;
+			}
+		}
+	}
+
 	public void loadMazeProps(World world) {
 		try
         {
@@ -302,7 +320,11 @@ public final class MazePvP extends JavaPlugin {
 	            String[] var3;
             	Maze maze = new Maze();
             	maze.name = str;
-            	boolean pNumFromPrevPlace = false;
+	            
+	            YamlConfiguration config = YamlConfiguration.loadConfiguration(new File(world.getWorldFolder(), maze.name+".yml"));
+	            MazePvP.loadConfigFromYml(maze.configProps, config, getConfig(), false);
+	            maze.loadBossesFromConfig();
+            	
 	            if ((var2 = var1.readLine()) != null) {
 	            	var3 = var2.split("\\s");
 	                if (var3.length < 4 || var3.length > 12) {
@@ -320,10 +342,7 @@ public final class MazePvP extends JavaPlugin {
 	        		if (var3.length >= 9) maze.waitY = Integer.parseInt(var3[8]);
 	        		if (var3.length >= 10) maze.waitZ = Integer.parseInt(var3[9]);
                 	if (var3.length >= 11) maze.configProps.minPlayers = Integer.parseInt(var3[10]);
-                	if (var3.length >= 12) {
-                		maze.configProps.maxPlayers = Integer.parseInt(var3[11]);
-                		pNumFromPrevPlace = true;
-                	}
+                	if (var3.length >= 12) maze.configProps.maxPlayers = Integer.parseInt(var3[11]);
 	                if ((var2 = var1.readLine()) != null) {
 	                	if (var2.equals("")) maze.bosses.get(0).id = null;
 	                	else maze.bosses.get(0).id = UUID.fromString(var2);
@@ -393,9 +412,6 @@ public final class MazePvP extends JavaPlugin {
 	            	throw new Exception("Malformed input");
 	            }
 	            var1.close();
-	            
-	            YamlConfiguration config = YamlConfiguration.loadConfiguration(new File(world.getWorldFolder(), maze.name+".yml"));
-	            MazePvP.loadConfigFromYml(maze.configProps, config, getConfig(), pNumFromPrevPlace, false);
 	    		
 	            maze.updateSigns();
 	            mazes.add(maze);
@@ -534,17 +550,18 @@ public final class MazePvP extends JavaPlugin {
 	}
 
 	public static void copyConfigValues(MazeConfig src, MazeConfig dest) {
-		dest.bossName = src.bossName;
-		dest.bossMaxHp = src.bossMaxHp;
-		dest.bossStrength = src.bossStrength;
+		dest.bosses = new ArrayList<BossConfig>();
+		Iterator<BossConfig> it = src.bosses.iterator();
+		while (it.hasNext()) {
+			BossConfig boss = it.next();
+			dest.bosses.add(boss.clone());
+		}
 		dest.groundReappearProb = src.groundReappearProb;
 		dest.chestAppearProb = src.chestAppearProb;
 		dest.enderChestAppearProb = src.enderChestAppearProb;
 		dest.spawnMobProb = src.spawnMobProb;
 		dest.chestWeighs = src.chestWeighs.clone();
 		dest.chestItems = MazePvP.cloneISArray(src.chestItems.clone());
-		dest.bossDropWeighs = src.bossDropWeighs.clone();
-		dest.bossDropItems = MazePvP.cloneISArray(src.bossDropItems);
 		dest.playerMaxDeaths = src.playerMaxDeaths;
 		dest.startItems = MazePvP.cloneISArray(src.startItems.clone());
 		dest.minPlayers = src.minPlayers;
@@ -560,15 +577,23 @@ public final class MazePvP extends JavaPlugin {
 		ymlConf.set("playerLives", config.playerMaxDeaths);
         ymlConf.set("playerNum.min", config.minPlayers);
         ymlConf.set("playerNum.max", config.maxPlayers);
-        ymlConf.set("boss.name", config.bossName);
-        ymlConf.set("boss.hp", config.bossMaxHp);
-        ymlConf.set("boss.attack", config.bossStrength);
-        int itemNum = config.bossDropItems.length;
-        ymlConf.set("boss.drops.itemCount", itemNum);
-        for (int i = 0; i < itemNum; i++) {
-            ymlConf.set("boss.drops.item"+(i+1)+".id", config.bossDropItems[i].getTypeId());
-            ymlConf.set("boss.drops.item"+(i+1)+".amount", config.bossDropItems[i].getAmount());
-            ymlConf.set("boss.drops.item"+(i+1)+".weigh", config.bossDropWeighs[i]);
+        Iterator<BossConfig> bit = config.bosses.iterator();
+        int bossNum = 0;
+        ymlConf.set("bosses.bossCount", config.bosses.size());
+        while (bit.hasNext()) {
+        	String propStr = "bosses.boss"+(bossNum+1)+".";
+        	BossConfig bossProps = bit.next();
+            ymlConf.set(propStr+"name", bossProps.name);
+            ymlConf.set(propStr+"hp", bossProps.maxHp);
+            ymlConf.set(propStr+"attack", bossProps.strength);
+            int itemNum = bossProps.dropItems.length;
+            ymlConf.set(propStr+"drops.itemCount", itemNum);
+            for (int i = 0; i < itemNum; i++) {
+                ymlConf.set(propStr+"drops.item"+(i+1)+".id", bossProps.dropItems[i].getTypeId());
+                ymlConf.set(propStr+"drops.item"+(i+1)+".amount", bossProps.dropItems[i].getAmount());
+                ymlConf.set(propStr+"drops.item"+(i+1)+".weigh", bossProps.dropWeighs[i]);
+            }
+        	bossNum++;
         }
 		if (config == MazePvP.theMazePvP.rootConfig) {
 			ymlConf.set("texts.startedState", MazePvP.theMazePvP.startedStateText);
@@ -594,7 +619,7 @@ public final class MazePvP extends JavaPlugin {
         ymlConf.set("probabilities.chestAppear", config.chestAppearProb);
         ymlConf.set("probabilities.enderChestAppear", config.enderChestAppearProb);
         ymlConf.set("probabilities.mobAppear", config.spawnMobProb);
-        itemNum = config.chestItems.length;
+        int itemNum = config.chestItems.length;
         ymlConf.set("chestItems.itemCount", itemNum);
         for (int i = 0; i < itemNum; i++) {
             ymlConf.set("chestItems.item"+(i+1)+".id", config.chestItems[i].getTypeId());
@@ -625,15 +650,23 @@ public final class MazePvP extends JavaPlugin {
 	
 
 	@SuppressWarnings("deprecation")
-	public static void loadConfigFromYml(MazeConfig config, Configuration ymlConf, Configuration rootConf, boolean pNumFromPrevPlace, boolean rootProps) {
+	public static void loadConfigFromYml(MazeConfig config, Configuration ymlConf, Configuration rootConf, boolean rootProps) {
 		config.playerMaxDeaths = MazeConfig.getInt(ymlConf, rootConf, rootProps, "playerLives"); 
-        if (!pNumFromPrevPlace) {
-        	config.minPlayers = MazeConfig.getInt(ymlConf, rootConf, rootProps, "playerNum.min");
-        	config.maxPlayers = MazeConfig.getInt(ymlConf, rootConf, rootProps, "playerNum.max");
+        config.minPlayers = MazeConfig.getInt(ymlConf, rootConf, rootProps, "playerNum.min");
+        config.maxPlayers = MazeConfig.getInt(ymlConf, rootConf, rootProps, "playerNum.max");
+		config.bosses = new ArrayList<BossConfig>();
+		if (ymlConf.isString("boss.name") && ymlConf.isInt("boss.hp") && ymlConf.isInt("boss.attack")) {
+			BossConfig bossProps = new BossConfig();
+			loadBossProps(bossProps, ymlConf, -1);
+			config.bosses.add(bossProps);
+		} else {
+			int bossNum = ymlConf.getInt("bosses.bossCount");
+			for (int i = 0; i < bossNum; i++) {
+				BossConfig bossProps = new BossConfig(); 
+				loadBossProps(bossProps, ymlConf, i);
+				config.bosses.add(bossProps);
+			}
 		}
-        config.bossName = MazeConfig.getString(ymlConf, rootConf, rootProps, "boss.name");
-        config.bossMaxHp = MazeConfig.getInt(ymlConf, rootConf, rootProps, "boss.hp");
-        config.bossStrength = MazeConfig.getInt(ymlConf, rootConf, rootProps, "boss.attack");
         config.groundReappearProb = MazeConfig.getDouble(ymlConf, rootConf, rootProps, "probabilities.groundReappear");
         config.chestAppearProb = MazeConfig.getDouble(ymlConf, rootConf, rootProps, "probabilities.chestAppear");
         config.enderChestAppearProb = MazeConfig.getDouble(ymlConf, rootConf, rootProps, "probabilities.enderChestAppear");
@@ -662,33 +695,6 @@ public final class MazePvP extends JavaPlugin {
 			if (tempChestItems[i] != null) {
 				config.chestItems[place] = tempChestItems[i];
 				config.chestWeighs[place] = tempChestWeighs[i];
-				place++;
-			}
-		}
-		
-		itemCount = MazeConfig.getInt(ymlConf, rootConf, rootProps, "boss.drops.itemCount");
-		
-		ItemStack tempBossItems[] = new ItemStack[itemCount];
-		double tempBossWeighs[] = new double[itemCount];
-		int bossItemNum = 0;
-		for (int i = 0; i < itemCount; i++) {
-			int id = MazeConfig.getInt(ymlConf, rootConf, rootProps, "boss.drops.item"+(i+1)+".id");
-			int amount = MazeConfig.getInt(ymlConf, rootConf, rootProps, "boss.drops.item"+(i+1)+".amount");
-			double weigh = MazeConfig.getDouble(ymlConf, rootConf, rootProps, "boss.drops.item"+(i+1)+".weigh");
-			if (id == 0) tempBossItems[i] = null;
-			else {
-				tempBossItems[i] = new ItemStack(id, amount);
-				tempBossWeighs[i] = weigh;
-				bossItemNum++;
-			}
-		}
-		config.bossDropWeighs = new double[bossItemNum];
-		config.bossDropItems = new ItemStack[bossItemNum];
-		place = 0;
-		for (int i = 0; i < itemCount; i++) {
-			if (tempBossItems[i] != null) {
-				config.bossDropItems[place] = tempBossItems[i];
-				config.bossDropWeighs[place] = tempBossWeighs[i];
 				place++;
 			}
 		}

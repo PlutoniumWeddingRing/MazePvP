@@ -132,12 +132,12 @@ public class CommandRemoveItem implements CommandExecutor {
 			items = configProps.chestItems;
 			itemWeighs = configProps.chestWeighs;
 		} else if (propName.equals("boss.drops")) {
-			items = configProps.bossDropItems;
-			itemWeighs = configProps.bossDropWeighs;
+			items = configProps.bosses.get(0).dropItems;
+			itemWeighs = configProps.bosses.get(0).dropWeighs;
 		}
 		if (propName.equals("startItems"))items = configProps.startItems;
 		else if (propName.equals("chestItems")) items = configProps.chestItems;
-		else if (propName.equals("boss.drops")) items = configProps.bossDropItems;
+		else if (propName.equals("boss.drops")) items = configProps.bosses.get(0).dropItems;
 		if (removeIndex < 0) {
 			for (int i = 0; i < items.length; i++) {
 				if (items[i].getTypeId() == itemId && items[i].getAmount() == itemAmount) {
@@ -174,8 +174,8 @@ public class CommandRemoveItem implements CommandExecutor {
 			configProps.chestItems = newItems;
 			configProps.chestWeighs = newItemWeighs;
 		} else if (propName.equals("boss.drops")) {
-			configProps.bossDropItems = newItems;
-			configProps.bossDropWeighs = newItemWeighs;
+			configProps.bosses.get(0).dropItems = newItems;
+			configProps.bosses.get(0).dropWeighs = newItemWeighs;
 		}
         if (maze == null) {
         	FileConfiguration config = new YamlConfiguration();

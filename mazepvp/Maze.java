@@ -60,15 +60,7 @@ public class Maze {
 	public Player lastPlayer;
 	
 	public Maze() {
-		bosses = new ArrayList<Boss>();
-		bosses.add(new Boss());
 		configProps = new MazeConfig();
-		Iterator<Boss>it = bosses.iterator();
-		while (it.hasNext()) {
-			Boss boss = it.next();
-			boss.hp = configProps.bossMaxHp;
-			updateBossHpStr(boss);
-		}
 	}
 	 
 	public int blockToMazeCoord(int blockCoord) {
@@ -123,11 +115,12 @@ public class Maze {
 		if (coolDown) boss.tpCooldown = 20;
 	}
 	
-	public void makeNewMazeBoss(Boss boss) {
-		makeNewMazeBoss(boss, null);
+	public void makeNewMazeBoss(int place) {
+		makeNewMazeBoss(place, null);
 	}
 	 
-	public void makeNewMazeBoss(Boss boss, Point2D.Double loc) {
+	public void makeNewMazeBoss(int place, Point2D.Double loc) {
+		Boss boss = bosses.get(place);
 	 	if (boss.entity != null) return;
 	 	Point2D.Double bossLoc;
 	 	if (loc == null) {
@@ -149,13 +142,13 @@ public class Maze {
 					switchEn.remove();
 					final Point2D.Double constLoc = bossLoc;
 					final Maze constMaze = this;
-					final Boss constBoss = boss;
+					final int constPlace = place;
 					new BukkitRunnable() {
 					    Maze maze = constMaze;
 					    Point2D.Double loc = constLoc;
-					    Boss boss = constBoss;
+					    int place = constPlace;
 					    public void run() {
-					        maze.makeNewMazeBoss(boss, loc);
+					        maze.makeNewMazeBoss(place, loc);
 					    }
 					}.runTaskLater(MazePvP.theMazePvP, 5L);
 					return;
@@ -164,8 +157,8 @@ public class Maze {
 	 	} else bossLoc = loc;
 	 	boss.entity = (Zombie)mazeWorld.spawnEntity(new Location(mazeWorld, bossLoc.x, mazeY+1, bossLoc.y), EntityType.ZOMBIE);
 	 	boss.id = boss.entity.getUniqueId();
-	 	boss.hp = configProps.bossMaxHp;
-	 	updateBossHpStr(boss);
+	 	boss.hp = configProps.bosses.get(place).maxHp;
+	 	updateBossHpStr(place);
 	 	mazeWorld.playEffect(new Location(mazeWorld, boss.entity.getLocation().getX(), boss.entity.getLocation().getY()+1, boss.entity.getLocation().getZ()), Effect.MOBSPAWNER_FLAMES, 0);
 	 	ItemStack boots = new ItemStack(Material.LEATHER_BOOTS);
 	 	LeatherArmorMeta meta = (LeatherArmorMeta) boots.getItemMeta();
@@ -263,11 +256,13 @@ public class Maze {
 		   &&  location.getY() >= mazeY-Maze.MAZE_PASSAGE_DEPTH && location.getY() <= mazeY+Maze.MAZE_PASSAGE_HEIGHT+1;
 	}
 
-	public void updateBossHpStr(Boss boss) {
-		if (configProps.bossMaxHp <= 0) return;
+	public void updateBossHpStr(int place) {
+		Boss boss = bosses.get(place);
+		int maxHp = configProps.bosses.get(place).maxHp;
+		if (maxHp <= 0) return;
 		if (updatingHp) return;
 		updatingHp = true;
-		double hpFraction = boss.hp/configProps.bossMaxHp;
+		double hpFraction = boss.hp/maxHp;
 		double barNum = MazePvP.BOSS_HEALTH_BARS*hpFraction;
 		if (hpFraction > 0.5) boss.hpStr = "§2";
 		else if (hpFraction > 0.25) boss.hpStr = "§6";
@@ -677,6 +672,20 @@ public class Maze {
         }
         Iterator<Boss> bit = bosses.iterator();
         while (bit.hasNext()) bit.next().entity = null;
+	}
+
+	public void loadBossesFromConfig() {
+		bosses = new ArrayList<Boss>();
+		Iterator<BossConfig> bcit = configProps.bosses.iterator();
+        int place = 0;
+        while (bcit.hasNext()) {
+        	BossConfig bossProps = bcit.next();
+        	Boss boss = new Boss();
+			boss.hp = bossProps.maxHp;
+			bosses.add(boss);
+			updateBossHpStr(place);
+			place++;
+        }
 	}
 
 }

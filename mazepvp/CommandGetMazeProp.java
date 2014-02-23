@@ -43,13 +43,13 @@ public class CommandGetMazeProp implements CommandExecutor {
 		if (propName.equals("playerLives")) printStr = Integer.toString(configProps.playerMaxDeaths);
 		else if (propName.equals("playerNum.min")) printStr = Integer.toString(configProps.minPlayers);
 		else if (propName.equals("playerNum.max")) printStr = Integer.toString(configProps.maxPlayers);
-		else if (propName.equals("boss.attack")) printStr = Integer.toString(configProps.bossStrength);
-		else if (propName.equals("boss.hp")) printStr = Integer.toString(configProps.bossMaxHp);
+		else if (propName.equals("boss.attack")) printStr = Integer.toString(configProps.bosses.get(0).strength);
+		else if (propName.equals("boss.hp")) printStr = Integer.toString(configProps.bosses.get(0).maxHp);
 		else if (propName.equals("probabilities.groundReappear")) printStr = Double.toString(configProps.groundReappearProb);
      	else if (propName.equals("probabilities.chestAppear")) printStr = Double.toString(configProps.chestAppearProb);
         else if (propName.equals("probabilities.enderChestAppear")) printStr = Double.toString(configProps.enderChestAppearProb);
         else if (propName.equals("probabilities.mobAppear")) printStr = Double.toString(configProps.spawnMobProb);
-        else if (propName.equals("boss.name")) printStr = configProps.bossName;
+        else if (propName.equals("boss.name")) printStr = configProps.bosses.get(0).name;
         else if (MazePvP.propHasItemValue(propName)) {
         	String itemPropName = MazePvP.getItemValue(propName);
     		boolean needWeigh = CommandAddItem.isWeighedProp(itemPropName);
@@ -61,8 +61,8 @@ public class CommandGetMazeProp implements CommandExecutor {
     			items = configProps.chestItems;
     			itemWeighs = configProps.chestWeighs;
     		} else if (itemPropName.equals("boss.drops")) {
-    			items = configProps.bossDropItems;
-    			itemWeighs = configProps.bossDropWeighs;
+    			items = configProps.bosses.get(0).dropItems;
+    			itemWeighs = configProps.bosses.get(0).dropWeighs;
     		}
         	if (propName.contains(".item")) {
         		String[] parts = propName.split("\\.item");

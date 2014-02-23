@@ -52,10 +52,10 @@ public class CommandSetMazeProp implements CommandExecutor {
         			configProps.maxPlayers = value;
         			if (maze != null) maze.updateSigns();
         		} else if (propName.equals("boss.hp")) {
-        			configProps.bossMaxHp = value;
+        			configProps.bosses.get(0).maxHp = value;
         			if (maze != null) maze.bosses.get(0).hp = value;
-        			if (maze != null) maze.updateBossHpStr(maze.bosses.get(0));
-        		} else if (propName.equals("boss.attack")) configProps.bossStrength = value;
+        			if (maze != null) maze.updateBossHpStr(0);
+        		} else if (propName.equals("boss.attack")) configProps.bosses.get(0).strength = value;
         	} catch (NumberFormatException e) {
             	sender.sendMessage("The value for "+propName+" must be an integer");
     			return true;
@@ -73,7 +73,7 @@ public class CommandSetMazeProp implements CommandExecutor {
         	}
         } else if (MazePvP.propHasStringValue(propName)) {
         	String value = propValue;
-        	if (propName.equals("boss.name")) configProps.bossName = value;
+        	if (propName.equals("boss.name")) configProps.bosses.get(0).name = value;
         } else if (MazePvP.propHasItemValue(propName)) {
         	sender.sendMessage("You can't set that value directly");
         	sender.sendMessage("Use the command /mpadditem or /mpremoveitem instead");

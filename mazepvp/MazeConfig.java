@@ -1,5 +1,6 @@
 package mazepvp;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.bukkit.configuration.Configuration;
@@ -18,11 +19,7 @@ public class MazeConfig
 	public int playerMaxDeaths = 3;
 	public int minPlayers = 5;
 	public int maxPlayers = 20;
-	public String bossName = "boss";
-	public int bossMaxHp = 0;
-	public int bossStrength = 0;
-	public double[] bossDropWeighs;
-	public ItemStack[] bossDropItems;
+	public ArrayList<BossConfig> bosses = null;
 	public double spawnMobProb = 1.0/3.0;
 	public double chestAppearProb = 0.1;
 	public double enderChestAppearProb = 0.2;

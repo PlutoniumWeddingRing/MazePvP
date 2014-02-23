@@ -279,17 +279,17 @@ public final class EventListeners implements Listener {
 					boss.entity.getEquipment().setHelmetDropChance(0);
 					boss.entity.getEquipment().setItemInHandDropChance(0);
 					event.getDrops().clear();
-					if (maze.configProps.bossDropItems.length > 0) {
+					if (maze.configProps.bosses.get(0).dropItems.length > 0) {
 						double currentWeigh = 0.0;
 						double weighSum = 0.0;
 						int i;
-						for (i = 0; i < maze.configProps.bossDropWeighs.length; i++) weighSum += maze.configProps.bossDropWeighs[i];
+						for (i = 0; i < maze.configProps.bosses.get(0).dropWeighs.length; i++) weighSum += maze.configProps.bosses.get(0).dropWeighs[i];
 						double randNum = Math.random()*weighSum;
-						for (i = 0; i < maze.configProps.bossDropWeighs.length; i++) {
-							currentWeigh += maze.configProps.bossDropWeighs[i];
+						for (i = 0; i < maze.configProps.bosses.get(0).dropWeighs.length; i++) {
+							currentWeigh += maze.configProps.bosses.get(0).dropWeighs[i];
 							if (currentWeigh >= randNum) break;
 						}
-						event.getDrops().add(maze.configProps.bossDropItems[i].clone());
+						event.getDrops().add(maze.configProps.bosses.get(0).dropItems[i].clone());
 					}
 					boss.entity.setCustomName(null);
 					boss.entity.setCustomNameVisible(false);
@@ -360,7 +360,7 @@ public final class EventListeners implements Listener {
 				if (event.getDamager() == boss.entity) damagerBoss = boss;
 				if (event.getEntity() == boss.entity) damagedBoss = boss;
 				if (boss.entity != null && event.getEntity() instanceof Player) {
-	    			boss.entity.setCustomName(maze.configProps.bossName);
+	    			boss.entity.setCustomName(maze.configProps.bosses.get(0).name);
 	    			boss.entity.setCustomNameVisible(false);
 				}
 			}
@@ -368,7 +368,7 @@ public final class EventListeners implements Listener {
 	    		if (damagerBoss.tpCooldown > 0) {
 	    			event.setCancelled(true);
 	    		} else {
-	    			event.setDamage(maze.configProps.bossStrength == 0 ? ((LivingEntity)event.getEntity()).getHealth()*10 : maze.configProps.bossStrength);
+	    			event.setDamage(maze.configProps.bosses.get(0).strength == 0 ? ((LivingEntity)event.getEntity()).getHealth()*10 : maze.configProps.bosses.get(0).strength);
 	    		}
 	    	}
 	    	if (damagedBoss != null) {
@@ -387,12 +387,13 @@ public final class EventListeners implements Listener {
 		while (mit.hasNext()) {
 			Maze maze = mit.next();
 			Iterator<Boss> bit = maze.bosses.iterator();
+			int place = 0;
 			while (bit.hasNext()) {
 				Boss boss = bit.next();
 		    	if (boss.entity == event.getEntity()) {
 		    		boss.hp = Math.max(0.0,  boss.hp-event.getDamage());
-		    		maze.updateBossHpStr(boss);
-		    		if (boss.hp <= 0.0 && maze.configProps.bossMaxHp > 0) {
+		    		maze.updateBossHpStr(place);
+		    		if (boss.hp <= 0.0 && maze.configProps.bosses.get(0).maxHp > 0) {
 		    			boss.entity.setHealth(0);
 		    		} else {
 		    			event.setDamage(0);
@@ -402,6 +403,7 @@ public final class EventListeners implements Listener {
 		    		}
 		    		break;
 		    	}
+		    	place++;
 			}
 		}
 	}

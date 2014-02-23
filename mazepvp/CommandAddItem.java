@@ -141,8 +141,8 @@ public class CommandAddItem implements CommandExecutor {
 			items = configProps.chestItems;
 			itemWeighs = configProps.chestWeighs;
 		} else if (propName.equals("boss.drops")) {
-			items = configProps.bossDropItems;
-			itemWeighs = configProps.bossDropWeighs;
+			items = configProps.bosses.get(0).dropItems;
+			itemWeighs = configProps.bosses.get(0).dropWeighs;
 		}
 		ItemStack[] newItems = new ItemStack[items.length+1];
 		double[] newItemWeighs = null;
@@ -159,8 +159,8 @@ public class CommandAddItem implements CommandExecutor {
 			configProps.chestItems = newItems;
 			configProps.chestWeighs = newItemWeighs;
 		} else if (propName.equals("boss.drops")) {
-			configProps.bossDropItems = newItems;
-			configProps.bossDropWeighs = newItemWeighs;
+			configProps.bosses.get(0).dropItems = newItems;
+			configProps.bosses.get(0).dropWeighs = newItemWeighs;
 		}
         if (maze == null) {
         	FileConfiguration config = new YamlConfiguration();
