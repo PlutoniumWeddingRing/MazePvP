@@ -40,54 +40,47 @@ public class CommandGetMazeProp implements CommandExecutor {
 			configProps = MazePvP.theMazePvP.rootConfig;
 		}
 		String printStr = "";
+		int bNum = -1;
 		if (propName.equals("playerLives")) printStr = Integer.toString(configProps.playerMaxDeaths);
 		else if (propName.equals("playerNum.min")) printStr = Integer.toString(configProps.minPlayers);
 		else if (propName.equals("playerNum.max")) printStr = Integer.toString(configProps.maxPlayers);
-		else if (propName.equals("boss.attack")) printStr = Integer.toString(configProps.bosses.get(0).strength);
-		else if (propName.equals("boss.hp")) printStr = Integer.toString(configProps.bosses.get(0).maxHp);
-		else if (propName.equals("probabilities.groundReappear")) printStr = Double.toString(configProps.groundReappearProb);
+		else if (propName.matches("^boss.*")) {
+			String propEnd = "";
+			if (propName.matches(".*\\.attack$")) propEnd = "attack";
+			else if (propName.matches(".*\\.hp$")) propEnd = "hp";
+			else if (propName.matches(".*\\.name$")) propEnd = "name";
+			else if (propName.matches(".*\\.drops.*")) propEnd = "";
+			else {
+				sender.sendMessage("Property "+propName+" not found");
+				return true;
+			}
+			String modPropName = propName;
+			if (propName.matches(".*\\.drops.*")) {;
+				String[] splitProps = propName.split("drops");
+				if (splitProps.length > 0) modPropName = splitProps[0];
+				else propEnd = "drops";
+			}
+			String numStr = modPropName.replaceAll("^boss", "").replaceAll("\\."+propEnd+"$", "");
+			try {
+				bNum = Integer.parseInt(numStr);
+			} catch (NumberFormatException e) {
+				sender.sendMessage("Property "+propName+" not found");
+        		return true;
+			}
+			if (configProps.bosses.size() < bNum) {
+				if (configProps.bosses.size() == 1) sender.sendMessage("There's only 1 boss");
+				else sender.sendMessage("There are only "+configProps.bosses.size()+" bosses");
+				return true;
+			}
+			bNum--;
+			if (propEnd.equals("attack")) printStr = Integer.toString(configProps.bosses.get(bNum).strength);
+			else if (propEnd.equals("hp")) printStr = Integer.toString(configProps.bosses.get(bNum).maxHp);
+			else if (propEnd.equals("name")) printStr = configProps.bosses.get(bNum).name;
+		} else if (propName.equals("probabilities.groundReappear")) printStr = Double.toString(configProps.groundReappearProb);
      	else if (propName.equals("probabilities.chestAppear")) printStr = Double.toString(configProps.chestAppearProb);
         else if (propName.equals("probabilities.enderChestAppear")) printStr = Double.toString(configProps.enderChestAppearProb);
         else if (propName.equals("probabilities.mobAppear")) printStr = Double.toString(configProps.spawnMobProb);
-        else if (propName.equals("boss.name")) printStr = configProps.bosses.get(0).name;
-        else if (MazePvP.propHasItemValue(propName)) {
-        	String itemPropName = MazePvP.getItemValue(propName);
-    		boolean needWeigh = CommandAddItem.isWeighedProp(itemPropName);
-    		ItemStack[] items = null;
-    		double[] itemWeighs = null;
-    		if (itemPropName.equals("startItems")) {
-    			items = configProps.startItems;
-    		} else if (itemPropName.equals("chestItems")) {
-    			items = configProps.chestItems;
-    			itemWeighs = configProps.chestWeighs;
-    		} else if (itemPropName.equals("boss.drops")) {
-    			items = configProps.bosses.get(0).dropItems;
-    			itemWeighs = configProps.bosses.get(0).dropWeighs;
-    		}
-        	if (propName.contains(".item")) {
-        		String[] parts = propName.split("\\.item");
-        		if (parts.length == 2) {
-        			try {
-        				int itemPlace = Integer.parseInt(parts[1])-1;
-        				if (itemPlace >= 0 && itemPlace < items.length) {
-        					sender.sendMessage(propName+".id is "+items[itemPlace].getTypeId());
-        					sender.sendMessage(propName+".amount is "+items[itemPlace].getAmount());
-        					if (needWeigh) sender.sendMessage(propName+".weigh is "+itemWeighs[itemPlace]);
-            				return true;
-        				} else {
-        					sender.sendMessage(propName+" is not set");
-            				return true;
-        				}
-        			} catch (Exception e) {}
-        		}
-        	}
-        	for (int i = 0; i < items.length; i++) {
-				sender.sendMessage(itemPropName+".item"+(i+1)+".id is "+items[i].getTypeId());
-				sender.sendMessage(itemPropName+".item"+(i+1)+".amount is "+items[i].getAmount());
-				if (needWeigh) sender.sendMessage(itemPropName+".item"+(i+1)+".weigh is "+itemWeighs[i]);
-        	}
-			return true;
-        } else {
+        else if (!MazePvP.propHasItemValue(propName)) {
         	if (propName.startsWith("blocks.")) {
         		try {
         			String[] parts = propName.split("\\.");
@@ -111,6 +104,45 @@ public class CommandGetMazeProp implements CommandExecutor {
         	sender.sendMessage("Property "+propName+" not found");
 			return true;
         }
+		if (MazePvP.propHasItemValue(propName)) {
+        	String itemPropName = MazePvP.getItemValue(propName, bNum);
+    		boolean needWeigh = CommandAddItem.isWeighedProp(itemPropName);
+    		ItemStack[] items = null;
+    		double[] itemWeighs = null;
+    		if (itemPropName.equals("startItems")) {
+    			items = configProps.startItems;
+    		} else if (itemPropName.equals("chestItems")) {
+    			items = configProps.chestItems;
+    			itemWeighs = configProps.chestWeighs;
+    		} else if (itemPropName.matches("boss[0-9]+\\.drops")) {
+    			items = configProps.bosses.get(bNum).dropItems;
+    			itemWeighs = configProps.bosses.get(bNum).dropWeighs;
+    		}
+        	if (propName.contains(".item")) {
+        		String[] parts = propName.split("\\.item");
+        		if (parts.length == 2) {
+        			try {
+        				int itemPlace = Integer.parseInt(parts[1])-1;
+        				if (itemPlace >= 0 && itemPlace < items.length) {
+        					sender.sendMessage(propName+".id is "+items[itemPlace].getTypeId());
+        					sender.sendMessage(propName+".amount is "+items[itemPlace].getAmount());
+        					if (needWeigh) sender.sendMessage(propName+".weigh is "+itemWeighs[itemPlace]);
+            				return true;
+        				} else {
+        					sender.sendMessage(propName+" is not set");
+            				return true;
+        				}
+        			} catch (Exception e) {}
+        		}
+        	} else {
+	        	for (int i = 0; i < items.length; i++) {
+					sender.sendMessage(itemPropName+".item"+(i+1)+".id is "+items[i].getTypeId());
+					sender.sendMessage(itemPropName+".item"+(i+1)+".amount is "+items[i].getAmount());
+					if (needWeigh) sender.sendMessage(itemPropName+".item"+(i+1)+".weigh is "+itemWeighs[i]);
+	        	}
+        	}
+			return true;
+		}
         sender.sendMessage(propName+" is "+printStr);
     	return true;
 	}

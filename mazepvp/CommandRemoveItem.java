@@ -50,16 +50,7 @@ public class CommandRemoveItem implements CommandExecutor {
         			propName = parts[0];
         			removeIndex = Integer.parseInt(parts[1])-1;
         		} catch (Exception e) {
-	    			sender.sendMessage(propName+" is not a valid item property");
-	        		sender.sendMessage("Valid item properties are:");
-	        		for (int i = 0; i < CommandAddItem.weighlessItemProps.length; i++) {
-	        			sender.sendMessage(CommandAddItem.weighlessItemProps[i]);
-	        			sender.sendMessage(CommandAddItem.weighlessItemProps[i]+".item<num>");
-	        		}
-	        		for (int i = 0; i < CommandAddItem.weighedItemProps.length; i++) {
-	        			sender.sendMessage(CommandAddItem.weighedItemProps[i]);
-	        			sender.sendMessage(CommandAddItem.weighedItemProps[i]+".item<num>");
-	        		}
+	        		CommandAddItem.sendInvalidItemMsg(sender, propName, true);
 					return true;
         		}
         	}
@@ -79,16 +70,7 @@ public class CommandRemoveItem implements CommandExecutor {
         			propName = parts[0];
         			removeIndex = Integer.parseInt(parts[1])-1;
         		} catch (Exception e) {
-	    			sender.sendMessage(propName+" is not a valid item property");
-	        		sender.sendMessage("Valid item properties are:");
-	        		for (int i = 0; i < CommandAddItem.weighlessItemProps.length; i++) {
-	        			sender.sendMessage(CommandAddItem.weighlessItemProps[i]);
-	        			sender.sendMessage(CommandAddItem.weighlessItemProps[i]+".item<num>");
-	        		}
-	        		for (int i = 0; i < CommandAddItem.weighedItemProps.length; i++) {
-	        			sender.sendMessage(CommandAddItem.weighedItemProps[i]);
-	        			sender.sendMessage(CommandAddItem.weighedItemProps[i]+".item<num>");
-	        		}
+	        		CommandAddItem.sendInvalidItemMsg(sender, propName, true);
 					return true;
         		}
         	}
@@ -126,18 +108,29 @@ public class CommandRemoveItem implements CommandExecutor {
 		boolean needWeigh = CommandAddItem.isWeighedProp(propName);
 		ItemStack[] items = null;
 		double[] itemWeighs = null;
+		int bNum = -1;
 		if (propName.equals("startItems")) {
 			items = configProps.startItems;
 		} else if (propName.equals("chestItems")) {
 			items = configProps.chestItems;
 			itemWeighs = configProps.chestWeighs;
-		} else if (propName.equals("boss.drops")) {
-			items = configProps.bosses.get(0).dropItems;
-			itemWeighs = configProps.bosses.get(0).dropWeighs;
+		} else if (propName.matches("boss[0-9]+\\.drops")) {
+			String numStr = propName.replaceAll("^boss", "").replaceAll("\\.drops$", "");
+			try {
+				bNum = Integer.parseInt(numStr);
+			} catch (NumberFormatException e) {
+				CommandAddItem.sendInvalidItemMsg(sender, propName, false);
+        		return true;
+			}
+			if (configProps.bosses.size() < bNum) {
+				if (configProps.bosses.size() == 1) sender.sendMessage("There's only 1 boss");
+				else sender.sendMessage("There are only "+configProps.bosses.size()+" bosses");
+				return true;
+			}
+			bNum--;
+			items = configProps.bosses.get(bNum).dropItems;
+			itemWeighs = configProps.bosses.get(bNum).dropWeighs;
 		}
-		if (propName.equals("startItems"))items = configProps.startItems;
-		else if (propName.equals("chestItems")) items = configProps.chestItems;
-		else if (propName.equals("boss.drops")) items = configProps.bosses.get(0).dropItems;
 		if (removeIndex < 0) {
 			for (int i = 0; i < items.length; i++) {
 				if (items[i].getTypeId() == itemId && items[i].getAmount() == itemAmount) {
@@ -173,9 +166,9 @@ public class CommandRemoveItem implements CommandExecutor {
 		} else if (propName.equals("chestItems")) {
 			configProps.chestItems = newItems;
 			configProps.chestWeighs = newItemWeighs;
-		} else if (propName.equals("boss.drops")) {
-			configProps.bosses.get(0).dropItems = newItems;
-			configProps.bosses.get(0).dropWeighs = newItemWeighs;
+		} else if (propName.matches("boss[0-9]+\\.drops")) {
+			configProps.bosses.get(bNum).dropItems = newItems;
+			configProps.bosses.get(bNum).dropWeighs = newItemWeighs;
 		}
         if (maze == null) {
         	FileConfiguration config = new YamlConfiguration();

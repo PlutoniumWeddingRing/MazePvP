@@ -51,11 +51,35 @@ public class CommandSetMazeProp implements CommandExecutor {
         		} else if (propName.equals("playerNum.max")) {
         			configProps.maxPlayers = value;
         			if (maze != null) maze.updateSigns();
-        		} else if (propName.equals("boss.hp")) {
-        			configProps.bosses.get(0).maxHp = value;
-        			if (maze != null) maze.bosses.get(0).hp = value;
-        			if (maze != null) maze.updateBossHpStr(0);
-        		} else if (propName.equals("boss.attack")) configProps.bosses.get(0).strength = value;
+        		} else if (propName.matches("^boss.*") && !propName.matches("boss[0-9]+\\.drops.*")) {
+        			String propEnd = "";
+        			if (propName.matches(".*\\.attack$")) propEnd = "attack";
+        			else if (propName.matches(".*\\.hp$")) propEnd = "hp";
+        			else if (propName.matches(".*\\.name$")) propEnd = "name";
+        			else {
+        				sender.sendMessage("Property "+propName+" not found");
+        				return true;
+        			}
+        			String numStr = propName.replaceAll("^boss", "").replaceAll("\\."+propEnd+"$", "");
+        			int bNum = -1;
+        			try {
+        				bNum = Integer.parseInt(numStr);
+        			} catch (NumberFormatException e) {
+        				sender.sendMessage("Property "+propName+" not found");
+        				return true;
+        			}
+        			if (configProps.bosses.size() < bNum) {
+        				if (configProps.bosses.size() == 1) sender.sendMessage("There's only 1 boss");
+        				else sender.sendMessage("There are only "+configProps.bosses.size()+" bosses");
+        				return true;
+        			}
+        			bNum--;
+        			if (propEnd.equals("hp")) {
+            			configProps.bosses.get(bNum).maxHp = value;
+            			if (maze != null) maze.bosses.get(bNum).hp = value;
+            			if (maze != null) maze.updateBossHpStr(bNum);
+            		} else if (propEnd.equals("attack")) configProps.bosses.get(bNum).strength = value;
+        		}
         	} catch (NumberFormatException e) {
             	sender.sendMessage("The value for "+propName+" must be an integer");
     			return true;
@@ -73,7 +97,23 @@ public class CommandSetMazeProp implements CommandExecutor {
         	}
         } else if (MazePvP.propHasStringValue(propName)) {
         	String value = propValue;
-        	if (propName.equals("boss.name")) configProps.bosses.get(0).name = value;
+        	if (propName.matches("boss[0-9]*\\.name")) {
+    			String numStr = propName.replaceAll("^boss", "").replaceAll("\\.name$", "");
+    			int bNum = -1;
+    			try {
+    				bNum = Integer.parseInt(numStr);
+    			} catch (NumberFormatException e) {
+    				sender.sendMessage("Property "+propName+" not found");
+    				return true;
+    			}
+    			if (configProps.bosses.size() < bNum) {
+    				if (configProps.bosses.size() == 1) sender.sendMessage("There's only 1 boss");
+    				else sender.sendMessage("There are only "+configProps.bosses.size()+" bosses");
+    				return true;
+    			}
+    			bNum--;
+        		configProps.bosses.get(bNum).name = value;
+        	}
         } else if (MazePvP.propHasItemValue(propName)) {
         	sender.sendMessage("You can't set that value directly");
         	sender.sendMessage("Use the command /mpadditem or /mpremoveitem instead");

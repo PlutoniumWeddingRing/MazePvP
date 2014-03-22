@@ -269,6 +269,7 @@ public final class EventListeners implements Listener {
 			Maze maze = mit.next();
 			boolean isBoss = false;
 			Iterator<Boss> bit = maze.bosses.iterator();
+			int bPlace = 0;
 			while (bit.hasNext()) {
 				Boss boss = bit.next();
 				if (boss.entity == event.getEntity()) {
@@ -279,23 +280,25 @@ public final class EventListeners implements Listener {
 					boss.entity.getEquipment().setHelmetDropChance(0);
 					boss.entity.getEquipment().setItemInHandDropChance(0);
 					event.getDrops().clear();
-					if (maze.configProps.bosses.get(0).dropItems.length > 0) {
+					BossConfig bConfig = maze.configProps.bosses.get(bPlace);
+					if (bConfig.dropItems.length > 0) {
 						double currentWeigh = 0.0;
 						double weighSum = 0.0;
 						int i;
-						for (i = 0; i < maze.configProps.bosses.get(0).dropWeighs.length; i++) weighSum += maze.configProps.bosses.get(0).dropWeighs[i];
+						for (i = 0; i < bConfig.dropWeighs.length; i++) weighSum += bConfig.dropWeighs[i];
 						double randNum = Math.random()*weighSum;
-						for (i = 0; i < maze.configProps.bosses.get(0).dropWeighs.length; i++) {
-							currentWeigh += maze.configProps.bosses.get(0).dropWeighs[i];
+						for (i = 0; i < bConfig.dropWeighs.length; i++) {
+							currentWeigh += bConfig.dropWeighs[i];
 							if (currentWeigh >= randNum) break;
 						}
-						event.getDrops().add(maze.configProps.bosses.get(0).dropItems[i].clone());
+						event.getDrops().add(bConfig.dropItems[i].clone());
 					}
 					boss.entity.setCustomName(null);
 					boss.entity.setCustomNameVisible(false);
 					boss.entity = null;
 					break;
 				}
+				bPlace++;
 			}
 			if (MazePvP.theMazePvP.showHeads && event.getEntity() instanceof Player || event.getEntity() instanceof Spider || event.getEntity() instanceof Zombie || event.getEntity() instanceof Skeleton || event.getEntity() instanceof Creeper) {
 				if (maze.isInsideMaze(event.getEntity().getLocation())) {
@@ -355,20 +358,27 @@ public final class EventListeners implements Listener {
 			Boss damagerBoss = null;
 			Boss damagedBoss = null;
 			Iterator<Boss> bit = maze.bosses.iterator();
+			int bPlace = 0, damagerBPlace = 0;
 			while (bit.hasNext()) {
 				Boss boss = bit.next();
-				if (event.getDamager() == boss.entity) damagerBoss = boss;
-				if (event.getEntity() == boss.entity) damagedBoss = boss;
+				if (event.getDamager() == boss.entity) {
+					damagerBoss = boss;
+					damagerBPlace = bPlace;
+				}
+				if (event.getEntity() == boss.entity) {
+					damagedBoss = boss;
+				}
 				if (boss.entity != null && event.getEntity() instanceof Player) {
-	    			boss.entity.setCustomName(maze.configProps.bosses.get(0).name);
+	    			boss.entity.setCustomName(maze.configProps.bosses.get(bPlace).name);
 	    			boss.entity.setCustomNameVisible(false);
 				}
+				bPlace++;
 			}
 	    	if (damagerBoss != null && event.getEntity() instanceof LivingEntity) {
 	    		if (damagerBoss.tpCooldown > 0) {
 	    			event.setCancelled(true);
 	    		} else {
-	    			event.setDamage(maze.configProps.bosses.get(0).strength == 0 ? ((LivingEntity)event.getEntity()).getHealth()*10 : maze.configProps.bosses.get(0).strength);
+	    			event.setDamage(maze.configProps.bosses.get(damagerBPlace).strength == 0 ? ((LivingEntity)event.getEntity()).getHealth()*10 : maze.configProps.bosses.get(damagerBPlace).strength);
 	    		}
 	    	}
 	    	if (damagedBoss != null) {
@@ -387,13 +397,13 @@ public final class EventListeners implements Listener {
 		while (mit.hasNext()) {
 			Maze maze = mit.next();
 			Iterator<Boss> bit = maze.bosses.iterator();
-			int place = 0;
+			int bPlace = 0;
 			while (bit.hasNext()) {
 				Boss boss = bit.next();
 		    	if (boss.entity == event.getEntity()) {
 		    		boss.hp = Math.max(0.0,  boss.hp-event.getDamage());
-		    		maze.updateBossHpStr(place);
-		    		if (boss.hp <= 0.0 && maze.configProps.bosses.get(0).maxHp > 0) {
+		    		maze.updateBossHpStr(bPlace);
+		    		if (boss.hp <= 0.0 && maze.configProps.bosses.get(bPlace).maxHp > 0) {
 		    			boss.entity.setHealth(0);
 		    		} else {
 		    			event.setDamage(0);
@@ -403,7 +413,7 @@ public final class EventListeners implements Listener {
 		    		}
 		    		break;
 		    	}
-		    	place++;
+		    	bPlace++;
 			}
 		}
 	}

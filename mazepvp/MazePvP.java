@@ -428,7 +428,7 @@ public final class MazePvP extends JavaPlugin {
 		    					boss.entity = en;
 		    					break;
 		    				}
-		    			}	
+		    			}
 	        		}
 	            } else {
 	            	var1.close();
@@ -547,8 +547,8 @@ public final class MazePvP extends JavaPlugin {
 	}
 
 	public static boolean propHasIntValue(String prop) {
-		return (prop.equals("playerLives") || prop.equals("playerNum.min") || prop.equals("playerNum.max") || prop.equals("boss.hp")
-			 || prop.equals("boss.attack"));
+		return (prop.equals("playerLives") || prop.equals("playerNum.min") || prop.equals("playerNum.max") || prop.matches("boss[0-9]*\\.hp")
+			 || prop.matches("boss[0-9]*\\.attack"));
 	}
 
 	public static boolean propHasDoubleValue(String prop) {
@@ -558,17 +558,17 @@ public final class MazePvP extends JavaPlugin {
 	}
 
 	public static boolean propHasStringValue(String prop) {
-		return (prop.equals("boss.name"));
+		return (prop.matches("boss[0-9]*\\.name"));
 	}
 
 	public static boolean propHasItemValue(String prop) {
-		return (prop.startsWith("chestItems") || prop.startsWith("startItems") || prop.startsWith("boss.drops"));
+		return (prop.startsWith("chestItems") || prop.startsWith("startItems") || prop.matches("boss[0-9]+\\.drops.*"));
 	}
 
-	public static String getItemValue(String prop) {
+	public static String getItemValue(String prop, int bNum) {
 		if (prop.startsWith("chestItems")) return "chestItems";
 		if (prop.startsWith("startItems")) return "startItems";
-		if (prop.startsWith("boss.drops")) return "boss.drops";
+		if (prop.matches("boss[0-9]+\\.drops.*")) return "boss"+bNum+".drops";
 		return null;
 	}
 

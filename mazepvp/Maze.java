@@ -132,7 +132,7 @@ public class Maze {
 				Iterator<Monster> iter = entities.iterator();
 				while (iter.hasNext()) {
 					Monster en = iter.next();
-					if (!en.isDead() && isInsideMaze(en.getLocation())) {
+					if (!en.isDead() && isInsideMaze(en.getLocation()) && !isBoss(en)) {
 						if (Math.random() < 1.0/switchNum) switchEn = en;
 						switchNum++;
 					}
@@ -179,7 +179,17 @@ public class Maze {
 	 	ee.setChestplate(plate);
 	 }
 	 
-	 public void setToLookedAt(boolean[][] isLookedAt, int x, int z, boolean matters) {
+	 public boolean isBoss(Monster en) {
+		if (!(en instanceof Zombie)) return false;
+		Iterator<Boss> it = bosses.iterator();
+		while (it.hasNext()) {
+			Boss boss = it.next();
+			if (boss.entity == en) return true;
+		}
+		return false;
+	}
+
+	public void setToLookedAt(boolean[][] isLookedAt, int x, int z, boolean matters) {
 	 	if (x%2 == 1 && z%2 == 1 && !matters) return;
 	 	isLookedAt[x][z] = true;
 	 }
