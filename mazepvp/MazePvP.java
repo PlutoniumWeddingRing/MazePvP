@@ -80,6 +80,9 @@ public final class MazePvP extends JavaPlugin {
 		getCommand("mpget").setExecutor(new CommandGetMazeProp(this));
 		getCommand("mpadditem").setExecutor(new CommandAddItem(this));
 		getCommand("mpremoveitem").setExecutor(new CommandRemoveItem(this));
+		getCommand("mpaddboss").setExecutor(new CommandAddBoss(this));
+		getCommand("mpcopyboss").setExecutor(new CommandCopyBoss(this));
+		getCommand("mpremoveboss").setExecutor(new CommandRemoveBoss(this));
 		saveDefaultConfig();
 		loadConfiguration();
     	MazePvP.writeConfigToYml(rootConfig, getConfig());

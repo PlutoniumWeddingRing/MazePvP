@@ -1,5 +1,6 @@
 package mazepvp;
 
+import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 
 
@@ -13,6 +14,14 @@ public class BossConfig
 	
 	public BossConfig() {
 		
+	}
+	
+	public void loadDefaultValues() {
+		name = "boss";
+		maxHp = 0;
+		strength = 0;
+		dropWeighs = new double[]{2.0, 1.0};
+		dropItems = new ItemStack[]{new ItemStack(Material.ENDER_PEARL, 4), new ItemStack(Material.ENDER_PEARL, 2)};
 	}
 	
 	public BossConfig clone() {

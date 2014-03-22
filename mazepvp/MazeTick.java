@@ -99,11 +99,14 @@ public class MazeTick extends BukkitRunnable {
 				LivingEntity en = iter.next();
 				if (en.getHealth() > 0 && maze.isInsideMaze(en.getLocation())) {
 					if (en.getLocation().getY() <= maze.mazeY-Maze.MAZE_PASSAGE_DEPTH+2.5 && en.getLocation().getY() >= maze.mazeY-Maze.MAZE_PASSAGE_DEPTH+1) {
-						bit = maze.bosses.iterator();
-						while (bit.hasNext()) {
-							Boss boss = bit.next();
-							if (boss.entity== en) maze.relocateMazeBoss(false, boss);
-							else if (!bit.hasNext()) en.damage(en.getHealth()+10);
+						if (maze.bosses.isEmpty()) en.damage(en.getHealth()+10);
+						else {
+							bit = maze.bosses.iterator();
+							while (bit.hasNext()) {
+								Boss boss = bit.next();
+								if (boss.entity== en) maze.relocateMazeBoss(false, boss);
+								else if (!bit.hasNext()) en.damage(en.getHealth()+10);
+							}
 						}
 					}
 				}
@@ -114,7 +117,7 @@ public class MazeTick extends BukkitRunnable {
 			while (pit.hasNext()) {
 				Player player = pit.next();
 				if (player.getHealth() > 0 && maze.isInsideMaze(player.getLocation())) {
-					if (player.getLocation().getY() <= maze.mazeY-Maze.MAZE_PASSAGE_DEPTH+2 && player.getLocation().getY() >= maze.mazeY-Maze.MAZE_PASSAGE_DEPTH+1) {
+					if (player.getLocation().getY() <= maze.mazeY-Maze.MAZE_PASSAGE_DEPTH+2.5 && player.getLocation().getY() >= maze.mazeY-Maze.MAZE_PASSAGE_DEPTH+1) {
 						player.damage(player.getHealth()+10);
 					}
 				}
