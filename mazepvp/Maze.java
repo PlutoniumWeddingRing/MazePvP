@@ -155,6 +155,8 @@ public class Maze {
 				}
 		 	}
 	 	} else bossLoc = loc;
+	 	boss.targetPlayer = "";
+	 	boss.targetTimer = 0;
 	 	boss.entity = (Zombie)mazeWorld.spawnEntity(new Location(mazeWorld, bossLoc.x, mazeY+1, bossLoc.y), EntityType.ZOMBIE);
 	 	boss.id = boss.entity.getUniqueId();
 	 	boss.hp = configProps.bosses.get(place).maxHp;
