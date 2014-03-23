@@ -62,7 +62,7 @@ public class CommandRemoveBoss implements CommandExecutor {
         	MazePvP.writeConfigToYml(configProps, config);
         	MazePvP.theMazePvP.saveConfig();
         }
-        sender.sendMessage("Removed "+name);
+        sender.sendMessage("Removed "+name+" from "+((maze==null)?"default config":maze.name));
     	return true;
 	}
 }

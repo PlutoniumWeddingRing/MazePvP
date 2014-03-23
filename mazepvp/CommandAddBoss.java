@@ -49,7 +49,7 @@ public class CommandAddBoss implements CommandExecutor {
         	MazePvP.writeConfigToYml(configProps, config);
         	MazePvP.theMazePvP.saveConfig();
         }
-        sender.sendMessage("Added new boss to boss"+configProps.bosses.size());
+        sender.sendMessage("Added new boss to "+((maze==null)?"default config":maze.name));
     	return true;
 	}
 }
