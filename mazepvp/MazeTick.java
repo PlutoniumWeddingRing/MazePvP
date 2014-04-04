@@ -63,6 +63,7 @@ public class MazeTick extends BukkitRunnable {
 	      					maze.startFight();
 	      					maze.updateSigns();
 	      					maze.sendStartMessageToJoinedPlayers();
+	      					maze.executeCommands(maze.configProps.fightStartedCommand, null);
 	      				} else if (maze.fightStartTimer == 1 || maze.fightStartTimer%20 == 0) maze.sendTimeMessageToJoinedPlayers();
 	      			}
       			}
@@ -71,7 +72,9 @@ public class MazeTick extends BukkitRunnable {
       				if (maze.fightStartTimer >= Maze.FIGHT_STOP_SPEED) {
       					maze.fightStartTimer = 0;
 						if (maze.lastPlayer != null && !maze.lastPlayer.isDead()) {
+							Player temp = maze.lastPlayer;
 	      					maze.playerQuit(maze.lastPlayer);
+	      					maze.executeCommands(maze.configProps.fightWinCommand, temp);
 						}
       				}
       			}

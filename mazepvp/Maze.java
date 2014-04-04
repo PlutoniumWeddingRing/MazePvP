@@ -394,8 +394,12 @@ public class Maze {
     		restoreEntrances();
 		}
 	}
-
+	
 	public String parseText(String str, Player player) {
+		return parseText(str, player, null);
+	}
+
+	public String parseText(String str, Player player, Player otherPlayer) {
 		String newStr = "";
 		String subtStr = "";
 		boolean escaping = false;
@@ -425,8 +429,13 @@ public class Maze {
 								if (props == null) subtStr = "X";
 								else subtStr = Integer.toString(configProps.playerMaxDeaths-props.deathCount);
 							}
-						}
-						else subtStr = "<"+subtStr+">";
+						} else if (subtStr.equals("player")) {
+							if (player == null) subtStr = "[]";
+							else subtStr = player.getName();
+						} else if (subtStr.equals("allPlayers") || subtStr.equals("otherPlayers")) {
+							if (otherPlayer == null) subtStr = "[]";
+							else subtStr = otherPlayer.getName();
+						} else subtStr = "<"+subtStr+">";
 						newStr += subtStr;
 					} else subtStr += str.charAt(i);
 					continue;
@@ -443,6 +452,32 @@ public class Maze {
 		}
 		if (insideSubt) newStr += "<"+subtStr;
 		return newStr;
+	}
+	
+	public boolean textContainsTag(String str, String tag) {
+		String subtStr = "";
+		boolean escaping = false;
+		boolean insideSubt = false;
+		for (int i = 0; i < str.length(); i++) {
+			if (escaping) escaping = false;
+			else {
+				if (insideSubt) {
+					if (str.charAt(i) == '>') {
+						insideSubt = false;
+						if (subtStr.equals(tag)) return true;
+					} else subtStr += str.charAt(i);
+					continue;
+				} else if (str.charAt(i) == '\\') {
+					escaping = true;
+					continue;
+				} else if (str.charAt(i) == '<') {
+					insideSubt = true;
+					subtStr = "";
+					continue;
+				}
+			}
+		}
+		return false;
 	}
 	
 	public void updateSigns() {
@@ -531,7 +566,10 @@ public class Maze {
 						lastPlayer = lPlayer;
 					}
 				}
-			} else sendPlayerOutMessageToPlayers();
+			} else {
+				sendPlayerOutMessageToPlayers();
+				executeCommands(configProps.fightPlayerOutCommand, player);
+			}
 		}
 		if (!canBeEntered && fightStarted && joinedPlayerProps.isEmpty()) {
 			lastPlayer = null;
@@ -698,6 +736,27 @@ public class Maze {
 			updateBossHpStr(place);
 			place++;
         }
+	}
+
+	public void executeCommands(List<String> commands, Player player) {
+		Iterator<String> it = commands.iterator();
+		while (it.hasNext()) {
+			String cmd = it.next();
+			boolean otherPlayers = textContainsTag(cmd, "otherPlayers");
+			boolean allPlayers = textContainsTag(cmd, "allPlayers");
+			if (allPlayers || otherPlayers) {
+				Iterator<Player> pit = mazeWorld.getPlayers().iterator();
+				while (pit.hasNext()) {
+					Player currentPlayer = pit.next();
+					if (isInsideMaze(currentPlayer.getLocation())) {
+						if (allPlayers || (otherPlayers && currentPlayer != player)) {
+							Bukkit.getServer().dispatchCommand(
+									Bukkit.getServer().getConsoleSender(), parseText(cmd, player, currentPlayer));
+						}
+					}
+				}
+			} else Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(), parseText(cmd, player));
+		}
 	}
 
 }

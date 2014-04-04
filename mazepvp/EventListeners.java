@@ -39,6 +39,7 @@ import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
 import org.bukkit.event.world.WorldLoadEvent;
 import org.bukkit.event.world.WorldSaveEvent;
 import org.bukkit.event.world.WorldUnloadEvent;
+import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.BlockIterator;
 
 public final class EventListeners implements Listener {
@@ -333,6 +334,7 @@ public final class EventListeners implements Listener {
 					if (props != null) {
 						props.deathCount++;
 						if (maze.lastPlayer == null && props.deathCount >= maze.configProps.playerMaxDeaths) {
+	      					maze.executeCommands(maze.configProps.fightPlayerOutCommand, player);
 							List<Player> players = maze.getPlayersInGame();
 							if (players.size() == 1) {
 								Player lastPlayer = players.get(0);
@@ -341,7 +343,9 @@ public final class EventListeners implements Listener {
 									maze.fightStartTimer = 0;
 									maze.lastPlayer = lastPlayer;
 								}
-							} else maze.sendPlayerOutMessageToPlayers();
+							} else {
+								maze.sendPlayerOutMessageToPlayers();
+							}
 						}
 					}
 					new ForceRespawnRunnable(player.getName()).runTaskLater(MazePvP.theMazePvP, 60L);
@@ -530,6 +534,17 @@ public final class EventListeners implements Listener {
 					 	maze.mazeWorld.playEffect(event.getRespawnLocation(), Effect.MOBSPAWNER_FLAMES, 0);
 						if (props.deathCount+1 < maze.configProps.playerMaxDeaths) maze.sendStringListToPlayer(player, MazePvP.theMazePvP.fightRespawnText);
 						else maze.sendStringListToPlayer(player, MazePvP.theMazePvP.lastRespawnText);
+						
+						final Player constPlayer = player;
+						final Maze constMaze = maze;
+						new BukkitRunnable() {
+						    Maze maze = constMaze;
+						    Player player = constPlayer;
+						    public void run() {
+						    	maze.executeCommands(maze.configProps.fightRespawnCommand, player);
+						    }
+						}.runTaskLater(MazePvP.theMazePvP, 5L);
+						
 					} else {
 						event.setRespawnLocation(props.prevLocation);
 						maze.playerQuit(player);

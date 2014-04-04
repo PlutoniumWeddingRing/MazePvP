@@ -582,6 +582,10 @@ public final class MazePvP extends JavaPlugin {
 			BossConfig boss = it.next();
 			dest.bosses.add(boss.clone());
 		}
+		dest.fightStartedCommand = new ArrayList<String>(src.fightStartedCommand);
+		dest.fightRespawnCommand = new ArrayList<String>(src.fightRespawnCommand);
+		dest.fightPlayerOutCommand = new ArrayList<String>(src.fightPlayerOutCommand);
+		dest.fightWinCommand = new ArrayList<String>(src.fightWinCommand);
 		dest.groundReappearProb = src.groundReappearProb;
 		dest.chestAppearProb = src.chestAppearProb;
 		dest.enderChestAppearProb = src.enderChestAppearProb;
@@ -621,6 +625,10 @@ public final class MazePvP extends JavaPlugin {
             }
         	bossNum++;
         }
+		ymlConf.set("commands.fightStarted", config.fightStartedCommand);
+		ymlConf.set("commands.fightRespawn", config.fightRespawnCommand);
+		ymlConf.set("commands.fightPlayerOut", config.fightPlayerOutCommand);
+        ymlConf.set("commands.fightWin", config.fightWinCommand);
 		if (config == MazePvP.theMazePvP.rootConfig) {
 			ymlConf.set("texts.startedState", MazePvP.theMazePvP.startedStateText);
 			ymlConf.set("texts.waitingState", MazePvP.theMazePvP.waitingStateText);
@@ -693,6 +701,10 @@ public final class MazePvP extends JavaPlugin {
 				config.bosses.add(bossProps);
 			}
 		}
+		config.fightStartedCommand = MazeConfig.getStringList(ymlConf, rootConf, rootProps, "commands.fightStarted");
+		config.fightRespawnCommand = MazeConfig.getStringList(ymlConf, rootConf, rootProps, "commands.fightRespawn");
+		config.fightPlayerOutCommand = MazeConfig.getStringList(ymlConf, rootConf, rootProps, "commands.fightPlayerOut");
+        config.fightWinCommand = MazeConfig.getStringList(ymlConf, rootConf, rootProps, "commands.fightWin");
         config.groundReappearProb = MazeConfig.getDouble(ymlConf, rootConf, rootProps, "probabilities.groundReappear");
         config.chestAppearProb = MazeConfig.getDouble(ymlConf, rootConf, rootProps, "probabilities.chestAppear");
         config.enderChestAppearProb = MazeConfig.getDouble(ymlConf, rootConf, rootProps, "probabilities.enderChestAppear");
@@ -789,6 +801,11 @@ public final class MazePvP extends JavaPlugin {
 	        	}
 	        }
 		}
+	}
+
+	public static boolean propIsCommand(String propName) {
+		return (propName.equals("commands.fightStarted") || propName.equals("commands.fightRespawn")
+			 || propName.equals("commands.fightPlayerOut") || propName.equals("commands.fightWin"));
 	}
 
 }

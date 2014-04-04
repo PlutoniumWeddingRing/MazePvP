@@ -1,5 +1,8 @@
 package mazepvp;
 
+import java.util.Iterator;
+import java.util.List;
+
 import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -80,6 +83,19 @@ public class CommandGetMazeProp implements CommandExecutor {
      	else if (propName.equals("probabilities.chestAppear")) printStr = Double.toString(configProps.chestAppearProb);
         else if (propName.equals("probabilities.enderChestAppear")) printStr = Double.toString(configProps.enderChestAppearProb);
         else if (propName.equals("probabilities.mobAppear")) printStr = Double.toString(configProps.spawnMobProb);
+        else if (MazePvP.propIsCommand(propName)) {
+        	List<String> commands = configProps.getCommandProp(propName);
+        	if (commands.isEmpty()) {
+        		sender.sendMessage(propName+" is cleared");
+        		return true;
+        	}
+        	printStr = "";
+        	Iterator<String> it = commands.iterator();
+        	while (it.hasNext()) {
+        		printStr += it.next();
+        		if (it.hasNext()) printStr += "\n";
+        	}
+        }
         else if (!MazePvP.propHasItemValue(propName)) {
         	if (propName.startsWith("blocks.")) {
         		try {
@@ -143,7 +159,11 @@ public class CommandGetMazeProp implements CommandExecutor {
         	}
 			return true;
 		}
-        sender.sendMessage(propName+" is "+printStr);
+		if (printStr.contains("\n")) {
+			sender.sendMessage(propName+" is:");
+			String[] lines = printStr.split("\n");
+			for (int i = 0; i < lines.length; i++) sender.sendMessage(lines[i]);
+		} else sender.sendMessage(propName+" is "+printStr);
     	return true;
 	}
 }

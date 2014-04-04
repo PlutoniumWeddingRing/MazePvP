@@ -1,5 +1,7 @@
 package mazepvp;
 
+import java.util.List;
+
 import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -17,6 +19,17 @@ public class CommandSetMazeProp implements CommandExecutor {
  
 	@SuppressWarnings("deprecation")
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
+		if (args.length >= 3 && MazePvP.propIsCommand(args[1])) {
+			String[] newArgs = new String[3];
+			for (int i = 0; i < 3; i++) newArgs[i] = args[i];
+			for (int i = 3; i < args.length; i++) newArgs[2] += " "+args[i];
+			args = newArgs;
+		} else if (args.length >= 2 && MazePvP.propIsCommand(args[0])) {
+			String[] newArgs = new String[2];
+			for (int i = 0; i < 2; i++) newArgs[i] = args[i];
+			for (int i = 2; i < args.length; i++) newArgs[1] += " "+args[i];
+			args = newArgs;
+		}
         if (args.length != 2 && args.length != 3) {
         	return false;
         }
@@ -97,7 +110,7 @@ public class CommandSetMazeProp implements CommandExecutor {
         	}
         } else if (MazePvP.propHasStringValue(propName)) {
         	String value = propValue;
-        	if (propName.matches("boss[0-9]*\\.name")) {
+            if (propName.matches("boss[0-9]*\\.name")) {
     			String numStr = propName.replaceAll("^boss", "").replaceAll("\\.name$", "");
     			int bNum = -1;
     			try {
@@ -114,6 +127,26 @@ public class CommandSetMazeProp implements CommandExecutor {
     			bNum--;
         		configProps.bosses.get(bNum).name = value;
         	}
+        } else if (MazePvP.propIsCommand(propName)) {
+            List<String> commands = configProps.getCommandProp(propName);
+        	if (propValue.startsWith("[")) {
+        		commands.clear();
+        		sender.sendMessage("Property "+propName+" cleared");
+        	} else {
+        		sender.sendMessage("Property "+propName+" set to:");
+        		String[] lines = propValue.split(";");
+        		commands.clear();
+        		for (int i = 0; i < lines.length; i++) {
+        			commands.add(lines[i]);
+            		sender.sendMessage(lines[i]);
+        		}
+        	}
+            if (maze == null) {
+            	FileConfiguration config = MazePvP.theMazePvP.getConfig();
+            	MazePvP.writeConfigToYml(configProps, config);
+            	MazePvP.theMazePvP.saveConfig();
+            }
+        	return true;
         } else if (MazePvP.propHasItemValue(propName)) {
         	sender.sendMessage("You can't set that value directly");
         	sender.sendMessage("Use the command /mpadditem or /mpremoveitem instead");

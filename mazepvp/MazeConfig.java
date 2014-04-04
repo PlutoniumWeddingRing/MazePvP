@@ -28,6 +28,10 @@ public class MazeConfig
 	public double[] chestWeighs;
 	public ItemStack[] chestItems;
 	public int[][][][] blockTypes;
+	public  List<String> fightStartedCommand;
+	public  List<String> fightRespawnCommand;
+	public  List<String> fightPlayerOutCommand;
+	public  List<String> fightWinCommand;
 	
 	public MazeConfig() {
 		this(true);
@@ -79,5 +83,13 @@ public class MazeConfig
 			}
 		}
 		return clone;
+	}
+
+	public List<String> getCommandProp(String propName) {
+		if (propName.equals("commands.fightStarted")) return fightStartedCommand;
+		else if (propName.equals("commands.fightRespawn")) return fightRespawnCommand;
+		else if (propName.equals("commands.fightPlayerOut")) return fightPlayerOutCommand;
+		else if (propName.equals("commands.fightWin")) return fightWinCommand;
+		return null;
 	}
 }
