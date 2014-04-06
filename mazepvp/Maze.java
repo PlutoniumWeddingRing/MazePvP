@@ -516,10 +516,10 @@ public class Maze {
 	}
 
 	public void playerJoin(Player player) {
-		playerInsideMaze.put(player.getName(), true);
-		if (canBeEntered || !canBeEntered && !fightStarted && hasWaitArea) {
+		if (canBeEntered || (!canBeEntered && !fightStarted)) playerInsideMaze.put(player.getName(), true);
+		if (canBeEntered || (!canBeEntered && hasWaitArea) || fightStarted) {
 			joinedPlayerProps.put(player.getName(), new PlayerProps(player.getLocation(), MazePvP.cloneItems(player.getInventory().getContents()),
-					MazePvP.getClonedArmor(player.getEquipment()), MazePvP.cloneItems(player.getEnderChest().getContents())));
+					MazePvP.getClonedArmor(player.getEquipment()), MazePvP.cloneItems(player.getEnderChest().getContents()), fightStarted));
 		}
 		if (!canBeEntered) {
 			Maze.playerInsideAMaze.put(player.getName(), true);
@@ -529,6 +529,14 @@ public class Maze {
 					int telepY = MazePvP.getSafeY(waitX, waitY, waitZ, mazeWorld);
 					player.teleport(new Location(mazeWorld, waitX+0.5, telepY, waitZ+0.5));
 				}
+			} else {
+				Point2D.Double loc = getMazeBossNewLocation(mazeWorld);
+				if (!player.isDead()) {
+					player.teleport(new Location(mazeWorld, loc.x, mazeY+1, loc.y));
+	        		MazePvP.cleanUpPlayer(player, canBeEntered);
+	        		player.setFallDistance(0);
+					giveStartItemsToPlayer(player);
+				} 
 			}
 		}
 		if (canBeEntered) {
@@ -538,10 +546,14 @@ public class Maze {
 	}
 
 	public void playerQuit(Player player) {
-		playerInsideMaze.remove(player.getName());
+		boolean wasSpectating = true;
+		if (playerInsideMaze.containsKey(player.getName()) && playerInsideMaze.get(player.getName())) {
+			wasSpectating = false;
+			playerInsideMaze.remove(player.getName());
+		}
 		if (!canBeEntered) {
 			Maze.playerInsideAMaze.remove(player.getName());
-			if (!fightStarted) {
+			if (!fightStarted && !wasSpectating) {
 				sendWaitMessageToJoinedPlayers();
 				if (playerInsideMaze.size() < configProps.minPlayers) fightStartTimer = 0;
 			}
@@ -555,7 +567,7 @@ public class Maze {
 			if (!canBeEntered) player.getEnderChest().setContents(savedProps.savedEnderChest);
 		}
 		joinedPlayerProps.remove(player.getName());
-		if (!canBeEntered && fightStarted) {
+		if (!canBeEntered && fightStarted && !wasSpectating) {
 			List<Player> players = getPlayersInGame();
 			if (players.size() == 1) {
 				if (lastPlayer == null) {
@@ -571,7 +583,7 @@ public class Maze {
 				executeCommands(configProps.fightPlayerOutCommand, player);
 			}
 		}
-		if (!canBeEntered && fightStarted && joinedPlayerProps.isEmpty()) {
+		if (!canBeEntered && fightStarted && !wasSpectating && joinedPlayerProps.isEmpty()) {
 			lastPlayer = null;
 			fightStarted = false;
 			fightStartTimer = 0;
@@ -640,7 +652,7 @@ public class Maze {
 			Player player = Bukkit.getPlayer(entry.getKey());
 			if (propsEmpty) {
 				PlayerProps props = new PlayerProps(player.getLocation(), MazePvP.cloneItems(player.getInventory().getContents()),
-													MazePvP.getClonedArmor(player.getEquipment()), MazePvP.cloneItems(player.getEnderChest().getContents()));
+													MazePvP.getClonedArmor(player.getEquipment()), MazePvP.cloneItems(player.getEnderChest().getContents()), false);
 				joinedPlayerProps.put(player.getName(), props);
 			}
 			Point2D.Double loc = getMazeBossNewLocation(mazeWorld);
@@ -656,8 +668,8 @@ public class Maze {
 	public void stopFight(boolean sendMessage) {
 		fightStarted = false;
 		fightStartTimer = 0;
-		while(!playerInsideMaze.isEmpty()) {
-			Player player = Bukkit.getPlayer(playerInsideMaze.keySet().iterator().next());
+		while(!joinedPlayerProps.isEmpty()) {
+			Player player = Bukkit.getPlayer(joinedPlayerProps.keySet().iterator().next());
 			if (sendMessage) this.sendStringListToPlayer(player, MazePvP.theMazePvP.fightStoppedText);
 			playerQuit(player);
 		}

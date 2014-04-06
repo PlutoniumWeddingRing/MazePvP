@@ -133,7 +133,7 @@ public class MazeTick extends BukkitRunnable {
 						maze.playerQuit(player);
 					}
 				}
-				if (!maze.canBeEntered && maze.fightStarted && maze.playerInsideMaze.containsKey(player.getName()) && maze.playerInsideMaze.get(player.getName())) {
+				if (!maze.canBeEntered && maze.fightStarted && maze.joinedPlayerProps.containsKey(player.getName())) {
 					if (!maze.isInsideMaze(player.getLocation())) {
 						PlayerProps props = maze.joinedPlayerProps.get(player.getName());
 						if (player != maze.lastPlayer && props.deathCount < maze.configProps.playerMaxDeaths) {

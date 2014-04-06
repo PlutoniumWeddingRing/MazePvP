@@ -36,6 +36,7 @@ public final class MazePvP extends JavaPlugin {
 	public int wallChangeTimer = 0;
 	public int mazeBossRestoreTimer = 0;
 	public boolean showHeads = true;
+	public boolean canSpectate = true;
 	public boolean replaceBoss = true;
 	public int fightStartDelay = 5*20;
 	public List<String> joinSignText;
@@ -102,7 +103,7 @@ public final class MazePvP extends JavaPlugin {
 		 Iterator<Maze> it = mazes.iterator();
          while (it.hasNext()) {
          	Maze maze = it.next();
-	        if (!maze.canBeEntered && !maze.playerInsideMaze.isEmpty()) {
+	        if (!maze.canBeEntered && !maze.joinedPlayerProps.isEmpty()) {
 		        maze.stopFight(false);
 	        }
          }
@@ -170,6 +171,7 @@ public final class MazePvP extends JavaPlugin {
 		Configuration config = getConfig();
 		rootConfig = new MazeConfig(false);
 		showHeads = config.getBoolean("showHeadsOnSpikes");
+		canSpectate = config.getBoolean("canPlayersSpectate");
 		replaceBoss = config.getBoolean("replaceMobsWithBoss");
 		fightStartDelay = config.getInt("fightStartDelay")*20;
 		MazePvP.loadConfigFromYml(rootConfig, getConfig(), getConfig(), true);
@@ -602,6 +604,7 @@ public final class MazePvP extends JavaPlugin {
 	@SuppressWarnings("deprecation")
 	public static void writeConfigToYml(MazeConfig config, Configuration ymlConf) {
 		if (config == MazePvP.theMazePvP.rootConfig) ymlConf.set("showHeadsOnSpikes", MazePvP.theMazePvP.showHeads);
+		if (config == MazePvP.theMazePvP.rootConfig) ymlConf.set("canPlayersSpectate", MazePvP.theMazePvP.canSpectate);
 		if (config == MazePvP.theMazePvP.rootConfig) ymlConf.set("replaceMobsWithBoss", MazePvP.theMazePvP.replaceBoss);
 		if (config == MazePvP.theMazePvP.rootConfig) ymlConf.set("fightStartDelay", MazePvP.theMazePvP.fightStartDelay/20);
 		ymlConf.set("playerLives", config.playerMaxDeaths);

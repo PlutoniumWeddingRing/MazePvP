@@ -27,7 +27,7 @@ public class CommandStopFight implements CommandExecutor {
         	sender.sendMessage("There's no maze with that name");
 			return true;
         }
-        if (maze.canBeEntered || !maze.fightStarted && maze.playerInsideMaze.isEmpty()) {
+        if (maze.canBeEntered || !maze.fightStarted && maze.joinedPlayerProps.isEmpty()) {
         	sender.sendMessage("No fight is going on in this maze");
 			return true;
         }

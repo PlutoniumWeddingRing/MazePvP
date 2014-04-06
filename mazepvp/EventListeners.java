@@ -427,7 +427,8 @@ public final class EventListeners implements Listener {
 		Iterator<Maze> mit = MazePvP.theMazePvP.mazes.iterator();
 		while (mit.hasNext()) {
 			Maze maze = mit.next();
-			if (maze.playerInsideMaze.containsKey(event.getPlayer().getName()) && maze.playerInsideMaze.get(event.getPlayer().getName())) {
+			if ((maze.playerInsideMaze.containsKey(event.getPlayer().getName()) && maze.playerInsideMaze.get(event.getPlayer().getName()))
+					|| maze.joinedPlayerProps.containsKey(event.getPlayer().getName())) {
 				if (!maze.canBeEntered) {
 					maze.playerQuit(event.getPlayer());
 					maze.updateSigns();
@@ -483,13 +484,15 @@ public final class EventListeners implements Listener {
 					int[] sign = maze.findSign(event.getClickedBlock().getLocation(), maze.joinSigns);
 					if (sign != null) {
 						String pName = event.getPlayer().getName();
-						if (maze.playerInsideMaze.containsKey(pName) && maze.playerInsideMaze.get(pName)) {
+						if (maze.joinedPlayerProps.containsKey(pName)) {
 							maze.sendStringListToPlayer(event.getPlayer(), MazePvP.theMazePvP.leaveMazeText);
 							maze.playerQuit(event.getPlayer());
 							maze.updateSigns();
 						} else {
 							if (maze.fightStarted) {
-								maze.sendStringListToPlayer(event.getPlayer(), MazePvP.theMazePvP.fightAlreadyStartedText);
+								if (MazePvP.theMazePvP.canSpectate) {
+									//Continue from here
+								} else maze.sendStringListToPlayer(event.getPlayer(), MazePvP.theMazePvP.fightAlreadyStartedText);
 							} else if (maze.configProps.maxPlayers <= maze.playerInsideMaze.size()) {
 								maze.sendStringListToPlayer(event.getPlayer(), MazePvP.theMazePvP.mazeFullText);
 							} else if (Maze.playerInsideAMaze.containsKey(pName) && Maze.playerInsideAMaze.get(pName)) {
@@ -505,7 +508,7 @@ public final class EventListeners implements Listener {
 					sign = maze.findSign(event.getClickedBlock().getLocation(), maze.leaveSigns);
 					if (sign != null) {
 						String pName = event.getPlayer().getName();
-						if (maze.playerInsideMaze.containsKey(pName) && maze.playerInsideMaze.get(pName)) {
+						if (maze.joinedPlayerProps.containsKey(pName)) {
 							maze.sendStringListToPlayer(event.getPlayer(), MazePvP.theMazePvP.leaveMazeText);
 							maze.playerQuit(event.getPlayer());
 							maze.updateSigns();

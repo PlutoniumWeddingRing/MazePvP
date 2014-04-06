@@ -33,7 +33,7 @@ public class CommandDeleteMaze implements CommandExecutor {
         	sender.sendMessage("There's no maze with that name");
 			return true;
         }
-        if (!maze.canBeEntered && !maze.playerInsideMaze.isEmpty()) {
+        if (!maze.canBeEntered && !maze.joinedPlayerProps.isEmpty()) {
 	        maze.stopFight(false);
         }
         File mazeFile = new File(world.getWorldFolder(), mazeName+".maze");
