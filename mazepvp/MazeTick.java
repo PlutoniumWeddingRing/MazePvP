@@ -205,6 +205,8 @@ public class MazeTick extends BukkitRunnable {
 	          			playerMazeZ[pp][i] = -1;
 	          			playerMazeMatters[pp][i] = true;
 	          		}
+	          		if (!maze.canBeEntered && maze.fightStarted && maze.playerInsideMaze.get(currentPlayer.getName()) == null)
+	          			continue;
 	            	Location playerLoc = currentPlayer.getLocation();
 	            	playerMazeX[pp][0] = maze.blockToMazeCoord((int)Math.round(playerLoc.getX()-0.5-maze.mazeX));
 	            	playerMazeZ[pp][0] = maze.blockToMazeCoord((int)Math.round(playerLoc.getZ()-0.5-maze.mazeZ));

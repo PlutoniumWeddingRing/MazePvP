@@ -12,6 +12,7 @@ import java.util.Map;
 import org.bukkit.Bukkit;
 import org.bukkit.Color;
 import org.bukkit.Effect;
+import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -519,7 +520,7 @@ public class Maze {
 		if (canBeEntered || (!canBeEntered && !fightStarted)) playerInsideMaze.put(player.getName(), true);
 		if (canBeEntered || (!canBeEntered && hasWaitArea) || fightStarted) {
 			joinedPlayerProps.put(player.getName(), new PlayerProps(player.getLocation(), MazePvP.cloneItems(player.getInventory().getContents()),
-					MazePvP.getClonedArmor(player.getEquipment()), MazePvP.cloneItems(player.getEnderChest().getContents()), fightStarted));
+					MazePvP.getClonedArmor(player.getEquipment()), MazePvP.cloneItems(player.getEnderChest().getContents()), fightStarted, player.getGameMode()));
 		}
 		if (!canBeEntered) {
 			Maze.playerInsideAMaze.put(player.getName(), true);
@@ -535,7 +536,8 @@ public class Maze {
 					player.teleport(new Location(mazeWorld, loc.x, mazeY+1, loc.y));
 	        		MazePvP.cleanUpPlayer(player, canBeEntered);
 	        		player.setFallDistance(0);
-					giveStartItemsToPlayer(player);
+					//giveStartItemsToPlayer(player);
+	        		player.setGameMode(GameMode.CREATIVE);
 				} 
 			}
 		}
@@ -564,6 +566,7 @@ public class Maze {
 			MazePvP.cleanUpPlayer(player, canBeEntered);
 			player.getInventory().setContents(savedProps.savedInventory);
 			player.getEquipment().setArmorContents(savedProps.savedArmor);
+			player.setGameMode(savedProps.savedGM);
 			if (!canBeEntered) player.getEnderChest().setContents(savedProps.savedEnderChest);
 		}
 		joinedPlayerProps.remove(player.getName());
@@ -578,17 +581,18 @@ public class Maze {
 						lastPlayer = lPlayer;
 					}
 				}
-			} else {
+			} else if (players.size() != 0) {
 				sendPlayerOutMessageToPlayers();
 				executeCommands(configProps.fightPlayerOutCommand, player);
 			}
 		}
-		if (!canBeEntered && fightStarted && !wasSpectating && joinedPlayerProps.isEmpty()) {
+		if (!canBeEntered && fightStarted && !wasSpectating && playerInsideMaze.isEmpty()) {
 			lastPlayer = null;
 			fightStarted = false;
 			fightStartTimer = 0;
-			cleanUpMaze();
+			stopFight(false);
 		}
+		if (joinedPlayerProps.isEmpty()) cleanUpMaze();
 		if (!canBeEntered) updateSigns();
 	}
 
@@ -628,7 +632,7 @@ public class Maze {
 	}
 
 	public void sendPlayerOutMessageToPlayers() {
-		Iterator<Player> it = getPlayersInGame().iterator();
+		Iterator<Player> it = getPlayersInGame(true).iterator();
 		while(it.hasNext()) {
 			Player player = it.next();
 			sendStringListToPlayer(player, MazePvP.theMazePvP.playerOutText);
@@ -652,7 +656,7 @@ public class Maze {
 			Player player = Bukkit.getPlayer(entry.getKey());
 			if (propsEmpty) {
 				PlayerProps props = new PlayerProps(player.getLocation(), MazePvP.cloneItems(player.getInventory().getContents()),
-													MazePvP.getClonedArmor(player.getEquipment()), MazePvP.cloneItems(player.getEnderChest().getContents()), false);
+													MazePvP.getClonedArmor(player.getEquipment()), MazePvP.cloneItems(player.getEnderChest().getContents()), false, player.getGameMode());
 				joinedPlayerProps.put(player.getName(), props);
 			}
 			Point2D.Double loc = getMazeBossNewLocation(mazeWorld);
@@ -674,13 +678,18 @@ public class Maze {
 			playerQuit(player);
 		}
 	}
-
+	
 	public List<Player> getPlayersInGame() {
+		return getPlayersInGame(false);
+	}
+
+	public List<Player> getPlayersInGame(boolean includeSpect) {
 		Iterator<Map.Entry<String,PlayerProps>> it = joinedPlayerProps.entrySet().iterator();
 		ArrayList<Player> players = new ArrayList<Player>();
 		while(it.hasNext()) {
 			Map.Entry<String,PlayerProps> entry = it.next();
-			if (entry.getValue().deathCount < configProps.playerMaxDeaths) {
+			if (entry.getValue().deathCount < configProps.playerMaxDeaths
+				&& (includeSpect || this.playerInsideMaze.get(entry.getKey()) != null)) {
 				players.add(Bukkit.getPlayer(entry.getKey()));
 			}
 		}

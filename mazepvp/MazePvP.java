@@ -42,6 +42,7 @@ public final class MazePvP extends JavaPlugin {
 	public List<String> joinSignText;
 	public List<String> leaveSignText;
 	public List<String> joinMazeText;
+	public List<String> joinSpectateMazeText;
 	public List<String> leaveMazeText;
 	public List<String> fightAlreadyStartedText;
 	public List<String> mazeFullText;
@@ -247,6 +248,7 @@ public final class MazePvP extends JavaPlugin {
 		joinSignText = config.getStringList("texts.joinSign");
 		leaveSignText = config.getStringList("texts.leaveSign");
 		joinMazeText = config.getStringList("texts.onJoin");
+		joinSpectateMazeText = config.getStringList("texts.onJoinSpectate");
 		leaveMazeText = config.getStringList("texts.onLeave");
 		fightAlreadyStartedText = config.getStringList("texts.onJoinAfterFightStarted");
 		mazeFullText = config.getStringList("texts.onJoinWhenMazeFull");
@@ -514,6 +516,7 @@ public final class MazePvP extends JavaPlugin {
 
 	public static void cleanUpPlayer(Player player, boolean keepEnderChest) {
 		player.getInventory().clear();
+		System.out.println("CLEAR: "+player.getName());
 		if (!player.isDead()) {
 			player.setHealth(player.getMaxHealth());
 			player.setFoodLevel(20);
@@ -647,6 +650,7 @@ public final class MazePvP extends JavaPlugin {
 			ymlConf.set("texts.fightWin", MazePvP.theMazePvP.winText);
 			ymlConf.set("texts.fightStopped", MazePvP.theMazePvP.fightStoppedText);
 			ymlConf.set("texts.onJoin", MazePvP.theMazePvP.joinMazeText);
+			ymlConf.set("texts.onJoinSpectate", MazePvP.theMazePvP.joinSpectateMazeText);
 			ymlConf.set("texts.onLeave", MazePvP.theMazePvP.leaveMazeText);
 			ymlConf.set("texts.onJoinAfterFightStarted", MazePvP.theMazePvP.fightAlreadyStartedText);
 			ymlConf.set("texts.onJoinWhenMazeFull", MazePvP.theMazePvP.mazeFullText);

@@ -29,9 +29,11 @@ import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
+import org.bukkit.event.entity.EntityTargetEvent;
 import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerPickupItemEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
@@ -86,6 +88,12 @@ public final class EventListeners implements Listener {
 		while (it.hasNext()) {
 			Maze maze = it.next();
 			World world = event.getEntity().getWorld();
+			if (event.getEntity().getShooter() instanceof Player) {
+				Player player = (Player)event.getEntity().getShooter();
+				if (!maze.canBeEntered && (!maze.playerInsideMaze.containsKey(player.getName()) || !maze.playerInsideMaze.get(player.getName()))) {
+					continue;
+				}
+			}
 			if (event.getEntity() instanceof EnderPearl && event.getEntity().getShooter() != null && maze.isInsideMaze(((LivingEntity)event.getEntity().getShooter()).getLocation())) {
 	      		Point2D.Double loc = maze.getMazeBossNewLocation(world);
 	      		LivingEntity thrower = (LivingEntity)event.getEntity().getShooter();
@@ -331,7 +339,7 @@ public final class EventListeners implements Listener {
 				Player player = (Player)event.getEntity();
 				if (!maze.canBeEntered && maze.fightStarted) {
 					PlayerProps props = maze.joinedPlayerProps.get(player.getName());
-					if (props != null) {
+					if (props != null && maze.playerInsideMaze.get(player.getName()) != null) {
 						props.deathCount++;
 						if (maze.lastPlayer == null && props.deathCount >= maze.configProps.playerMaxDeaths) {
 	      					maze.executeCommands(maze.configProps.fightPlayerOutCommand, player);
@@ -474,16 +482,22 @@ public final class EventListeners implements Listener {
 	
 	@EventHandler
 	public void playerInteractListener(PlayerInteractEvent event) {
-		if (event.getAction() == Action.RIGHT_CLICK_BLOCK) {
-			if (event.getClickedBlock().getType() == Material.WALL_SIGN || event.getClickedBlock().getType() == Material.SIGN_POST) {
-				Iterator<Maze> mit = MazePvP.theMazePvP.mazes.iterator();
-				while (mit.hasNext()) {
-					Maze maze = mit.next();
-					if (maze.canBeEntered) continue;
-					if (maze.mazeWorld != event.getClickedBlock().getWorld()) continue;
+		boolean clickedSign = (event.getAction() == Action.RIGHT_CLICK_BLOCK && 
+				event.getClickedBlock().getType() == Material.WALL_SIGN || event.getClickedBlock().getType() == Material.SIGN_POST);
+		String pName = event.getPlayer().getName();
+		if (clickedSign || (Maze.playerInsideAMaze.containsKey(pName)) && Maze.playerInsideAMaze.get((pName))) {
+			Iterator<Maze> mit = MazePvP.theMazePvP.mazes.iterator();
+			while (mit.hasNext()) {
+				Maze maze = mit.next();
+				if (maze.canBeEntered) continue;
+				if (maze.mazeWorld != event.getClickedBlock().getWorld()) continue;
+				if (!maze.playerInsideMaze.containsKey(pName) || !maze.playerInsideMaze.get(pName)) {
+					event.setCancelled(true);
+					break;
+				}
+				if (clickedSign) {
 					int[] sign = maze.findSign(event.getClickedBlock().getLocation(), maze.joinSigns);
 					if (sign != null) {
-						String pName = event.getPlayer().getName();
 						if (maze.joinedPlayerProps.containsKey(pName)) {
 							maze.sendStringListToPlayer(event.getPlayer(), MazePvP.theMazePvP.leaveMazeText);
 							maze.playerQuit(event.getPlayer());
@@ -491,7 +505,9 @@ public final class EventListeners implements Listener {
 						} else {
 							if (maze.fightStarted) {
 								if (MazePvP.theMazePvP.canSpectate) {
-									//Continue from here
+									maze.sendStringListToPlayer(event.getPlayer(), MazePvP.theMazePvP.joinSpectateMazeText);
+									maze.playerJoin(event.getPlayer());
+									maze.updateSigns();
 								} else maze.sendStringListToPlayer(event.getPlayer(), MazePvP.theMazePvP.fightAlreadyStartedText);
 							} else if (maze.configProps.maxPlayers <= maze.playerInsideMaze.size()) {
 								maze.sendStringListToPlayer(event.getPlayer(), MazePvP.theMazePvP.mazeFullText);
@@ -507,7 +523,6 @@ public final class EventListeners implements Listener {
 					}
 					sign = maze.findSign(event.getClickedBlock().getLocation(), maze.leaveSigns);
 					if (sign != null) {
-						String pName = event.getPlayer().getName();
 						if (maze.joinedPlayerProps.containsKey(pName)) {
 							maze.sendStringListToPlayer(event.getPlayer(), MazePvP.theMazePvP.leaveMazeText);
 							maze.playerQuit(event.getPlayer());
@@ -530,28 +545,65 @@ public final class EventListeners implements Listener {
 				PlayerProps props = maze.joinedPlayerProps.get(player.getName());
 				if (props != null) {
 					if (event.getPlayer() != maze.lastPlayer && props.deathCount < maze.configProps.playerMaxDeaths) {
+						boolean spectating = (maze.playerInsideMaze.get(event.getPlayer().getName()) == null);
 						Point2D.Double loc = maze.getMazeBossNewLocation(maze.mazeWorld);
 						MazePvP.cleanUpPlayer(player, props.deathCount != 0);
-						maze.giveStartItemsToPlayer(player);
+						if (!spectating) maze.giveStartItemsToPlayer(player);
 						event.setRespawnLocation(new Location(maze.mazeWorld, loc.x, maze.mazeY+1, loc.y));
-					 	maze.mazeWorld.playEffect(event.getRespawnLocation(), Effect.MOBSPAWNER_FLAMES, 0);
-						if (props.deathCount+1 < maze.configProps.playerMaxDeaths) maze.sendStringListToPlayer(player, MazePvP.theMazePvP.fightRespawnText);
-						else maze.sendStringListToPlayer(player, MazePvP.theMazePvP.lastRespawnText);
-						
-						final Player constPlayer = player;
-						final Maze constMaze = maze;
-						new BukkitRunnable() {
-						    Maze maze = constMaze;
-						    Player player = constPlayer;
-						    public void run() {
-						    	maze.executeCommands(maze.configProps.fightRespawnCommand, player);
-						    }
-						}.runTaskLater(MazePvP.theMazePvP, 5L);
+						if (!spectating) {
+							maze.mazeWorld.playEffect(event.getRespawnLocation(), Effect.MOBSPAWNER_FLAMES, 0);
+							if (props.deathCount+1 < maze.configProps.playerMaxDeaths) maze.sendStringListToPlayer(player, MazePvP.theMazePvP.fightRespawnText);
+							else maze.sendStringListToPlayer(player, MazePvP.theMazePvP.lastRespawnText);
+							
+							final Player constPlayer = player;
+							final Maze constMaze = maze;
+							new BukkitRunnable() {
+							    Maze maze = constMaze;
+							    Player player = constPlayer;
+							    public void run() {
+							    	maze.executeCommands(maze.configProps.fightRespawnCommand, player);
+							    }
+							}.runTaskLater(MazePvP.theMazePvP, 5L);
+						}
 						
 					} else {
 						event.setRespawnLocation(props.prevLocation);
 						maze.playerQuit(player);
 					}
+					break;
+				}
+			}
+		}
+	}
+	
+	@EventHandler
+	public void entityTargetListener(EntityTargetEvent event) {
+		if (!(event.getEntity() instanceof Player)) return;
+		Player player = (Player)event.getEntity();
+		if (Maze.playerInsideAMaze.containsKey(player.getName()) && Maze.playerInsideAMaze.get((player.getName()))) {
+			Iterator<Maze> mit = MazePvP.theMazePvP.mazes.iterator();
+			while (mit.hasNext()) {
+				Maze maze = mit.next();
+				if (maze.canBeEntered || !maze.fightStarted) continue;
+				if (!maze.playerInsideMaze.containsKey(player.getName()) || !maze.playerInsideMaze.get(player.getName())) {
+					event.setCancelled(true);
+					System.out.println("ASDASD");
+					break;
+				}
+			}
+		}
+	}
+	
+	@EventHandler
+	public void playerPickupItemEventListener(PlayerPickupItemEvent event) {
+		Player player = (Player)event.getPlayer();
+		if (Maze.playerInsideAMaze.containsKey(player.getName()) && Maze.playerInsideAMaze.get((player.getName()))) {
+			Iterator<Maze> mit = MazePvP.theMazePvP.mazes.iterator();
+			while (mit.hasNext()) {
+				Maze maze = mit.next();
+				if (maze.canBeEntered || !maze.fightStarted) continue;
+				if (!maze.playerInsideMaze.containsKey(player.getName()) || !maze.playerInsideMaze.get(player.getName())) {
+					event.setCancelled(true);
 					break;
 				}
 			}
