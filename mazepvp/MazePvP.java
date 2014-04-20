@@ -516,7 +516,6 @@ public final class MazePvP extends JavaPlugin {
 
 	public static void cleanUpPlayer(Player player, boolean keepEnderChest) {
 		player.getInventory().clear();
-		System.out.println("CLEAR: "+player.getName());
 		if (!player.isDead()) {
 			player.setHealth(player.getMaxHealth());
 			player.setFoodLevel(20);

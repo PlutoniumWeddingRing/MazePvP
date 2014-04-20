@@ -29,7 +29,6 @@ import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
-import org.bukkit.event.entity.EntityTargetEvent;
 import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
@@ -46,6 +45,8 @@ import org.bukkit.util.BlockIterator;
 
 public final class EventListeners implements Listener {
 
+	private static double prevBossHp = -1;
+	
 	@EventHandler
     public void wLoadListener(WorldLoadEvent event) {
 		MazePvP.theMazePvP.loadMazeProps(event.getWorld());
@@ -367,6 +368,28 @@ public final class EventListeners implements Listener {
 		Iterator<Maze> mit = MazePvP.theMazePvP.mazes.iterator();
 		while (mit.hasNext()) {
 			Maze maze = mit.next();
+			if (event.getDamager() instanceof Player) {
+				Player attackingPlayer = (Player)event.getDamager();
+				if (!maze.canBeEntered && maze.fightStarted && maze.joinedPlayerProps.containsKey(attackingPlayer.getName())
+						&& (!maze.playerInsideMaze.containsKey(attackingPlayer.getName()) || !maze.playerInsideMaze.get(attackingPlayer.getName()))) {
+					event.setCancelled(true);
+					if (prevBossHp >= 0) {
+						Iterator<Boss> bit = maze.bosses.iterator();
+						int bPlace = 0;
+						while (bit.hasNext()) {
+							Boss boss = bit.next();
+							if (event.getEntity() == boss.entity) {
+								boss.hp = prevBossHp;
+								maze.updateBossHpStr(bPlace);
+								break;
+							}
+							bPlace++;
+						}
+						prevBossHp = -1;
+					}
+					break;
+				}
+			}
 			Boss damagerBoss = null;
 			Boss damagedBoss = null;
 			Iterator<Boss> bit = maze.bosses.iterator();
@@ -400,11 +423,13 @@ public final class EventListeners implements Listener {
 	    		}
 	    	}
 		}
+		prevBossHp = -1;
     }
 
 
 	@EventHandler
 	public void entityDamageListener(EntityDamageEvent event) {
+		prevBossHp = -1;
 		Iterator<Maze> mit = MazePvP.theMazePvP.mazes.iterator();
 		while (mit.hasNext()) {
 			Maze maze = mit.next();
@@ -413,6 +438,7 @@ public final class EventListeners implements Listener {
 			while (bit.hasNext()) {
 				Boss boss = bit.next();
 		    	if (boss.entity == event.getEntity()) {
+		    		prevBossHp = boss.hp;
 		    		boss.hp = Math.max(0.0,  boss.hp-event.getDamage());
 		    		maze.updateBossHpStr(bPlace);
 		    		if (boss.hp <= 0.0 && maze.configProps.bosses.get(bPlace).maxHp > 0) {
@@ -483,16 +509,36 @@ public final class EventListeners implements Listener {
 	@EventHandler
 	public void playerInteractListener(PlayerInteractEvent event) {
 		boolean clickedSign = (event.getAction() == Action.RIGHT_CLICK_BLOCK && 
-				event.getClickedBlock().getType() == Material.WALL_SIGN || event.getClickedBlock().getType() == Material.SIGN_POST);
+				(event.getClickedBlock().getType() == Material.WALL_SIGN || event.getClickedBlock().getType() == Material.SIGN_POST));
+		boolean clickedBlock = (event.getAction() == Action.RIGHT_CLICK_BLOCK);
 		String pName = event.getPlayer().getName();
-		if (clickedSign || (Maze.playerInsideAMaze.containsKey(pName)) && Maze.playerInsideAMaze.get((pName))) {
+		if (clickedSign || clickedBlock || (Maze.playerInsideAMaze.containsKey(pName) && Maze.playerInsideAMaze.get(pName))) {
 			Iterator<Maze> mit = MazePvP.theMazePvP.mazes.iterator();
 			while (mit.hasNext()) {
 				Maze maze = mit.next();
 				if (maze.canBeEntered) continue;
-				if (maze.mazeWorld != event.getClickedBlock().getWorld()) continue;
-				if (!maze.playerInsideMaze.containsKey(pName) || !maze.playerInsideMaze.get(pName)) {
+				if ((clickedBlock || clickedSign) && maze.mazeWorld != event.getClickedBlock().getWorld()) continue;
+				if (maze.joinedPlayerProps.containsKey(pName) && (!maze.playerInsideMaze.containsKey(pName) || !maze.playerInsideMaze.get(pName))) {
 					event.setCancelled(true);
+					if (clickedBlock) {
+						Location bLoc = event.getClickedBlock().getLocation();
+						Location pLoc = event.getPlayer().getLocation();
+						Location nLoc = event.getPlayer().getLocation();
+						if (bLoc.getBlockY() > maze.mazeY) {
+							int posX = maze.blockToMazeCoord(bLoc.getBlockX()-maze.mazeX);
+							int posZ = maze.blockToMazeCoord(bLoc.getBlockZ()-maze.mazeZ);
+							if (posX%2 != 0 && posZ%2 == 0) {
+								if (pLoc.getZ() < bLoc.getZ()) nLoc.setZ(bLoc.getZ()+1.5);
+								else nLoc.setZ(bLoc.getZ()-0.5);
+							} else if (posX%2 == 0 && posZ%2 != 0) {
+								if (pLoc.getX() < bLoc.getX()) nLoc.setX(bLoc.getX()+1.5);
+								else nLoc.setX(bLoc.getX()-0.5);
+							}
+						} else if (bLoc.getBlockY() == maze.mazeY) {
+							nLoc.setY(maze.mazeY+1);
+						}
+						event.getPlayer().teleport(nLoc);
+					}
 					break;
 				}
 				if (clickedSign) {
@@ -576,7 +622,7 @@ public final class EventListeners implements Listener {
 		}
 	}
 	
-	@EventHandler
+	/*@EventHandler
 	public void entityTargetListener(EntityTargetEvent event) {
 		if (!(event.getEntity() instanceof Player)) return;
 		Player player = (Player)event.getEntity();
@@ -587,12 +633,11 @@ public final class EventListeners implements Listener {
 				if (maze.canBeEntered || !maze.fightStarted) continue;
 				if (!maze.playerInsideMaze.containsKey(player.getName()) || !maze.playerInsideMaze.get(player.getName())) {
 					event.setCancelled(true);
-					System.out.println("ASDASD");
 					break;
 				}
 			}
 		}
-	}
+	}*/
 	
 	@EventHandler
 	public void playerPickupItemEventListener(PlayerPickupItemEvent event) {

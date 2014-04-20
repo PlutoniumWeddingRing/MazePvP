@@ -538,7 +538,14 @@ public class Maze {
 	        		player.setFallDistance(0);
 					//giveStartItemsToPlayer(player);
 	        		player.setGameMode(GameMode.CREATIVE);
-				} 
+	        		Iterator <Map.Entry<String,Boolean>>it = playerInsideMaze.entrySet().iterator();
+	        		while(it.hasNext()) {
+	        			Map.Entry<String,Boolean> entry = it.next();
+	        			if (entry.getValue() && Bukkit.getServer().getPlayer(entry.getKey()) != null) {
+	        				Bukkit.getServer().getPlayer(entry.getKey()).hidePlayer(player);
+	        			}
+	        		}
+				}
 			}
 		}
 		if (canBeEntered) {
@@ -567,7 +574,23 @@ public class Maze {
 			player.getInventory().setContents(savedProps.savedInventory);
 			player.getEquipment().setArmorContents(savedProps.savedArmor);
 			player.setGameMode(savedProps.savedGM);
-			if (!canBeEntered) player.getEnderChest().setContents(savedProps.savedEnderChest);
+			if (!canBeEntered) {
+				player.getEnderChest().setContents(savedProps.savedEnderChest);
+        		Iterator <Map.Entry<String,Boolean>>it = playerInsideMaze.entrySet().iterator();
+        		while(it.hasNext()) {
+        			Map.Entry<String,Boolean> entry = it.next();
+        			if (entry.getValue() && Bukkit.getServer().getPlayer(entry.getKey()) != null) {
+        				Bukkit.getServer().getPlayer(entry.getKey()).showPlayer(player);
+        			}
+        		}
+        		Iterator <Map.Entry<String,PlayerProps>>it2 = joinedPlayerProps.entrySet().iterator();
+        		while(it2.hasNext()) {
+        			Map.Entry<String,PlayerProps> entry = it2.next();
+        			if (Bukkit.getServer().getPlayer(entry.getKey()) != null) {
+        				player.showPlayer(Bukkit.getServer().getPlayer(entry.getKey()));
+        			}
+        		}
+			}
 		}
 		joinedPlayerProps.remove(player.getName());
 		if (!canBeEntered && fightStarted && !wasSpectating) {

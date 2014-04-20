@@ -137,9 +137,13 @@ public class MazeTick extends BukkitRunnable {
 					if (!maze.isInsideMaze(player.getLocation())) {
 						PlayerProps props = maze.joinedPlayerProps.get(player.getName());
 						if (player != maze.lastPlayer && props.deathCount < maze.configProps.playerMaxDeaths) {
-							Point2D.Double loc = maze.getMazeBossNewLocation(maze.mazeWorld);
-							player.teleport(new Location(maze.mazeWorld, loc.x, maze.mazeY+1, loc.y));
-							player.setFallDistance(0);
+							if (!maze.playerInsideMaze.containsKey(player.getName()) || !maze.playerInsideMaze.get(player.getName())) {
+								maze.playerQuit(player);
+							} else {
+								Point2D.Double loc = maze.getMazeBossNewLocation(maze.mazeWorld);
+								player.teleport(new Location(maze.mazeWorld, loc.x, maze.mazeY+1, loc.y));
+								player.setFallDistance(0);
+							}
 						} else {
 							player.teleport(props.prevLocation);
 							player.setFallDistance(0);
