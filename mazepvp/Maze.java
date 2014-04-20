@@ -538,12 +538,26 @@ public class Maze {
 	        		player.setFallDistance(0);
 					//giveStartItemsToPlayer(player);
 	        		player.setGameMode(GameMode.CREATIVE);
-	        		Iterator <Map.Entry<String,Boolean>>it = playerInsideMaze.entrySet().iterator();
-	        		while(it.hasNext()) {
-	        			Map.Entry<String,Boolean> entry = it.next();
-	        			if (entry.getValue() && Bukkit.getServer().getPlayer(entry.getKey()) != null) {
-	        				Bukkit.getServer().getPlayer(entry.getKey()).hidePlayer(player);
-	        			}
+	        		if (MazePvP.theMazePvP.specSeeOthers) {
+		        		Iterator <Map.Entry<String,Boolean>>it = playerInsideMaze.entrySet().iterator();
+		        		while(it.hasNext()) {
+		        			Map.Entry<String,Boolean> entry = it.next();
+		        			if (entry.getValue() && Bukkit.getServer().getPlayer(entry.getKey()) != null) {
+		        				Bukkit.getServer().getPlayer(entry.getKey()).hidePlayer(player);
+		        			}
+		        		}	
+	        		} else {
+	        			Iterator <Map.Entry<String,PlayerProps>>it = joinedPlayerProps.entrySet().iterator();
+		        		while(it.hasNext()) {
+		        			Map.Entry<String,PlayerProps> entry = it.next();
+		        			Player currentPlayer = Bukkit.getServer().getPlayer(entry.getKey());
+		        			if (currentPlayer != null && currentPlayer != player) {
+		        				currentPlayer.hidePlayer(player);
+		        				if (!playerInsideMaze.containsKey(currentPlayer.getName()) || !playerInsideMaze.get(currentPlayer.getName())) {
+		        					player.hidePlayer(currentPlayer);
+		        				}
+		        			}
+		        		}	
 	        		}
 				}
 			}
@@ -576,18 +590,13 @@ public class Maze {
 			player.setGameMode(savedProps.savedGM);
 			if (!canBeEntered) {
 				player.getEnderChest().setContents(savedProps.savedEnderChest);
-        		Iterator <Map.Entry<String,Boolean>>it = playerInsideMaze.entrySet().iterator();
+        		Iterator <Map.Entry<String,PlayerProps>>it = joinedPlayerProps.entrySet().iterator();
         		while(it.hasNext()) {
-        			Map.Entry<String,Boolean> entry = it.next();
-        			if (entry.getValue() && Bukkit.getServer().getPlayer(entry.getKey()) != null) {
-        				Bukkit.getServer().getPlayer(entry.getKey()).showPlayer(player);
-        			}
-        		}
-        		Iterator <Map.Entry<String,PlayerProps>>it2 = joinedPlayerProps.entrySet().iterator();
-        		while(it2.hasNext()) {
-        			Map.Entry<String,PlayerProps> entry = it2.next();
-        			if (Bukkit.getServer().getPlayer(entry.getKey()) != null) {
-        				player.showPlayer(Bukkit.getServer().getPlayer(entry.getKey()));
+        			Map.Entry<String,PlayerProps> entry = it.next();
+        			Player currentPlayer = Bukkit.getServer().getPlayer(entry.getKey());
+        			if (currentPlayer != null) {
+        				currentPlayer.showPlayer(player);
+        				player.showPlayer(currentPlayer);
         			}
         		}
 			}
