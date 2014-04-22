@@ -1,9 +1,12 @@
 package mazepvp;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -22,6 +25,9 @@ import org.bukkit.entity.Zombie;
 import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.util.io.BukkitObjectInputStream;
+import org.bukkit.util.io.BukkitObjectOutputStream;
+import org.yaml.snakeyaml.external.biz.base64Coder.Base64Coder;
 
 public final class MazePvP extends JavaPlugin {
 	
@@ -817,6 +823,22 @@ public final class MazePvP extends JavaPlugin {
 	public static boolean propIsCommand(String propName) {
 		return (propName.equals("commands.fightStarted") || propName.equals("commands.fightRespawn")
 			 || propName.equals("commands.fightPlayerOut") || propName.equals("commands.fightWin"));
+	}
+	
+	public static String toBase64(ItemStack is) throws IOException {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        BukkitObjectOutputStream oos = new BukkitObjectOutputStream(baos);
+        oos.writeObject(is);
+        oos.close();
+        return new String(Base64Coder.encode(baos.toByteArray()));
+    }
+	
+	public static ItemStack fromString(String s) throws IOException, ClassNotFoundException {
+		byte [] data = Base64Coder.decode(s);
+		BukkitObjectInputStream ois = new BukkitObjectInputStream(new ByteArrayInputStream(data));
+		ItemStack o  = (ItemStack)ois.readObject();
+		ois.close();
+		return o;
 	}
 
 }

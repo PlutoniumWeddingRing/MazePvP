@@ -1,6 +1,9 @@
 package mazepvp;
 
 import java.awt.geom.Point2D;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -8,6 +11,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Color;
@@ -521,6 +525,7 @@ public class Maze {
 		if (canBeEntered || (!canBeEntered && hasWaitArea) || fightStarted) {
 			joinedPlayerProps.put(player.getName(), new PlayerProps(player.getLocation(), MazePvP.cloneItems(player.getInventory().getContents()),
 					MazePvP.getClonedArmor(player.getEquipment()), MazePvP.cloneItems(player.getEnderChest().getContents()), fightStarted, player.getGameMode()));
+			savePlayerProps();
 		}
 		if (!canBeEntered) {
 			Maze.playerInsideAMaze.put(player.getName(), true);
@@ -690,6 +695,7 @@ public class Maze {
 				PlayerProps props = new PlayerProps(player.getLocation(), MazePvP.cloneItems(player.getInventory().getContents()),
 													MazePvP.getClonedArmor(player.getEquipment()), MazePvP.cloneItems(player.getEnderChest().getContents()), false, player.getGameMode());
 				joinedPlayerProps.put(player.getName(), props);
+				savePlayerProps();
 			}
 			Point2D.Double loc = getMazeBossNewLocation(mazeWorld);
 			if (!player.isDead()) {
@@ -699,6 +705,25 @@ public class Maze {
 				giveStartItemsToPlayer(player);
 			} 
 		}
+	}
+
+	public void savePlayerProps() {
+		File mazeFile = new File(mazeWorld.getWorldFolder(), name+".mazeSave");
+        PrintWriter writer = null;
+		try {
+			writer = new PrintWriter(new FileWriter(mazeFile, false));
+	        Iterator<Entry<String, PlayerProps>> it = joinedPlayerProps.entrySet().iterator();
+	        while (it.hasNext()) {
+	        	Entry<String, PlayerProps> entry = it.next();
+	        	writer.println(entry.getKey());
+	        	entry.getValue().writeToFile(writer);
+	        }
+			writer.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+			MazePvP.theMazePvP.getLogger().info("Failed to save player properties of maze \""+name+"\": "+e.toString());
+		}
+        if (writer !=null) writer.close();
 	}
 
 	public void stopFight(boolean sendMessage) {
