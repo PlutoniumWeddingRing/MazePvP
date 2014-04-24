@@ -1,7 +1,9 @@
 package mazepvp;
 
 import java.awt.geom.Point2D;
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.PrintWriter;
 import java.util.ArrayList;
@@ -573,6 +575,7 @@ public class Maze {
 		}
 	}
 
+	@SuppressWarnings("deprecation")
 	public void playerQuit(Player player) {
 		boolean wasSpectating = true;
 		if (playerInsideMaze.containsKey(player.getName()) && playerInsideMaze.get(player.getName())) {
@@ -592,6 +595,7 @@ public class Maze {
 			MazePvP.cleanUpPlayer(player, canBeEntered);
 			player.getInventory().setContents(savedProps.savedInventory);
 			player.getEquipment().setArmorContents(savedProps.savedArmor);
+			player.updateInventory();
 			player.setGameMode(savedProps.savedGM);
 			if (!canBeEntered) {
 				player.getEnderChest().setContents(savedProps.savedEnderChest);
@@ -720,10 +724,41 @@ public class Maze {
 	        }
 			writer.close();
 		} catch (Exception e) {
-			e.printStackTrace();
 			MazePvP.theMazePvP.getLogger().info("Failed to save player properties of maze \""+name+"\": "+e.toString());
 		}
         if (writer !=null) writer.close();
+	}
+
+	public boolean loadPlayerProps() {
+		File mazeFile = new File(mazeWorld.getWorldFolder(), name+".mazeSave");
+		if (!mazeFile.exists()) return false;
+		BufferedReader reader = null;
+		try {
+			reader = new BufferedReader(new FileReader(mazeFile));
+	        String str = "";
+	        while ((str = reader.readLine()) != null && str.length() > 0) {
+	        	PlayerProps prop = PlayerProps.readFromFile(reader);
+	        	Player player = Bukkit.getServer().getPlayer(str);
+	        	prop.prevLocation.setWorld(player.getWorld());
+	        	if (player != null) {
+	        		player.teleport(prop.prevLocation);
+	        		player.getInventory().setContents(prop.savedInventory);
+	        		player.getEquipment().setArmorContents(prop.savedArmor);
+	        		player.getEnderChest().setContents(prop.savedEnderChest);
+	        		player.setGameMode(prop.savedGM);
+	        	}
+	        }
+	        reader.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+			MazePvP.theMazePvP.getLogger().info("Failed to load player properties of maze \""+name+"\": "+e.toString());
+		}
+		return true;
+	}
+
+	public void deletePlayerProps() {
+		File mazeFile = new File(mazeWorld.getWorldFolder(), name+".mazeSave");
+        mazeFile.delete();
 	}
 
 	public void stopFight(boolean sendMessage) {
@@ -734,6 +769,7 @@ public class Maze {
 			if (sendMessage) this.sendStringListToPlayer(player, MazePvP.theMazePvP.fightStoppedText);
 			playerQuit(player);
 		}
+		deletePlayerProps();
 	}
 	
 	public List<Player> getPlayersInGame() {

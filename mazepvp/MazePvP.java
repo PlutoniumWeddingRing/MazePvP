@@ -92,6 +92,7 @@ public final class MazePvP extends JavaPlugin {
 		getCommand("mpaddboss").setExecutor(new CommandAddBoss(this));
 		getCommand("mpcopyboss").setExecutor(new CommandCopyBoss(this));
 		getCommand("mpremoveboss").setExecutor(new CommandRemoveBoss(this));
+		getCommand("mprecover").setExecutor(new CommandRecoverPlayers(this));
 		saveDefaultConfig();
 		loadConfiguration();
     	MazePvP.writeConfigToYml(rootConfig, getConfig());
@@ -522,6 +523,7 @@ public final class MazePvP extends JavaPlugin {
 		return posY;
 	}
 
+	@SuppressWarnings("deprecation")
 	public static void cleanUpPlayer(Player player, boolean keepEnderChest) {
 		player.getInventory().clear();
 		if (!player.isDead()) {
@@ -535,6 +537,7 @@ public final class MazePvP extends JavaPlugin {
 		player.getInventory().setLeggings(null);
 		player.getInventory().setBoots(null);
 		if (!keepEnderChest) player.getEnderChest().clear();
+		player.updateInventory();
 	}
 
 	public static ItemStack[] cloneItems(ItemStack[] items) {
@@ -833,7 +836,7 @@ public final class MazePvP extends JavaPlugin {
         return new String(Base64Coder.encode(baos.toByteArray()));
     }
 	
-	public static ItemStack fromString(String s) throws IOException, ClassNotFoundException {
+	public static ItemStack fromBase64(String s) throws IOException, ClassNotFoundException {
 		byte [] data = Base64Coder.decode(s);
 		BukkitObjectInputStream ois = new BukkitObjectInputStream(new ByteArrayInputStream(data));
 		ItemStack o  = (ItemStack)ois.readObject();
