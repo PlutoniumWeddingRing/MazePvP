@@ -1,6 +1,5 @@
 package mazepvp;
 
-import java.awt.geom.Point2D;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -44,12 +43,12 @@ public class Maze {
 	public static final int FIGHT_STOP_SPEED = 60;
 	
 	public World mazeWorld;
-	public int mazeSize;
+	public int mazeSize, height = 1;
 	public int mazeX, mazeY, mazeZ;
 	public ArrayList<Boss>bosses;
 	public MazeConfig configProps;
-	public int[][] maze;
-	public boolean[][] isBeingChanged;
+	public int[][][] maze;
+	public boolean[][][] isBeingChanged;
 	public List<MazeCoords> blocksToRemove = new LinkedList<MazeCoords>();
 	public List<MazeCoords> blocksToRestore = new LinkedList<MazeCoords>();
 	public HashMap<String, Boolean> playerInsideMaze = new HashMap<String, Boolean>();
@@ -79,19 +78,28 @@ public class Maze {
 	public int mazeToBlockCoord(int mazeCoord) {
 	 	if (mazeCoord%2 == 0) return (mazeCoord/2)*(MAZE_PASSAGE_WIDTH+1);
 	 	return (mazeCoord/2)*(MAZE_PASSAGE_WIDTH+1)+1;
-	 }
+	}
 	 
-	public Point2D.Double getMazeBossNewLocation(World worldObj) {
-	 	double bossX, bossZ;
+	public int mazeToBlockYCoord(int yCoord) {
+	 	return yCoord*(Maze.MAZE_PASSAGE_HEIGHT+2);
+	}
+	 
+	public int blockToMazeYCoord(int yCoord) {
+	 	return yCoord/(Maze.MAZE_PASSAGE_HEIGHT+2);
+	}
+	 
+	public Coord3D getMazeBossNewLocation(World worldObj) {
+	 	double bossX, bossZ, bossY;
 	 	int count = 0;
 	 	while (true) {
 	 		bossX = mazeToBlockCoord((int)Math.floor(Math.random()*mazeSize)*2+1);
 	 		bossZ = mazeToBlockCoord((int)Math.floor(Math.random()*mazeSize)*2+1);
-	 		if (!worldObj.getBlockAt((int)Math.floor(mazeX+bossX), mazeY, (int)Math.floor(mazeZ+bossZ)).isEmpty()) break;
+	 		bossY = mazeToBlockYCoord((int)Math.floor(Math.random()*height));
+	 		if (!worldObj.getBlockAt((int)Math.floor(mazeX+bossX), (int)Math.floor(mazeY+bossY), (int)Math.floor(mazeZ+bossZ)).isEmpty()) break;
 	 		count++;
 	 		if (count >= 100) break;
 	 	}
-	 	return new Point2D.Double(mazeX+bossX+MAZE_PASSAGE_WIDTH*0.5, mazeZ+bossZ+MAZE_PASSAGE_WIDTH*0.5);
+	 	return new Coord3D(mazeX+bossX+MAZE_PASSAGE_WIDTH*0.5, mazeY+bossY+1, mazeZ+bossZ+MAZE_PASSAGE_WIDTH*0.5);
 	 }
 	 
 	public void relocateMazeBoss(boolean coolDown, Boss boss) {
@@ -99,11 +107,11 @@ public class Maze {
 		relocateMazeBoss(coolDown, boss, getMazeBossNewLocation(worldObj));
 	}
 	
-	public void relocateMazeBoss(boolean coolDown, Boss boss, Point2D.Double bossLoc) {
+	public void relocateMazeBoss(boolean coolDown, Boss boss, Coord3D bossLoc) {
 		relocateMazeBoss(coolDown, boss, bossLoc, boss.entity.getLocation().getYaw(), boss.entity.getLocation().getPitch());
 	}
 
-	public void relocateMazeBoss(boolean coolDown, Boss boss, Point2D.Double bossLoc, float yaw, float pitch) {
+	public void relocateMazeBoss(boolean coolDown, Boss boss, Coord3D bossLoc, float yaw, float pitch) {
 		int j;
 	 	World worldObj = boss.entity.getWorld();
 		for (j = 0; j <= 8; j++) {
@@ -112,7 +120,7 @@ public class Maze {
 				worldObj.playEffect(new Location(worldObj, boss.entity.getLocation().getX(), boss.entity.getLocation().getY()+1, boss.entity.getLocation().getZ()), Effect.SMOKE, j);
 			}
 		}
-		boss.entity.teleport(new Location(worldObj, bossLoc.x, mazeY+1, bossLoc.y, yaw, pitch));
+		boss.entity.teleport(new Location(worldObj, bossLoc.x, bossLoc.y, bossLoc.z, yaw, pitch));
 		for (j = 0; j <= 8; j++) {
 			worldObj.playEffect(boss.entity.getLocation(), Effect.SMOKE, j);
 			if (j != 4) {
@@ -126,10 +134,10 @@ public class Maze {
 		makeNewMazeBoss(place, null);
 	}
 	 
-	public void makeNewMazeBoss(int place, Point2D.Double loc) {
+	public void makeNewMazeBoss(int place, Coord3D loc) {
 		Boss boss = bosses.get(place);
 	 	if (boss.entity != null) return;
-	 	Point2D.Double bossLoc;
+	 	Coord3D bossLoc;
 	 	if (loc == null) {
 	 		bossLoc = getMazeBossNewLocation(mazeWorld);
 		 	if (MazePvP.theMazePvP.replaceBoss) {
@@ -145,14 +153,14 @@ public class Maze {
 					}
 				}
 				if (switchEn != null) {
-					bossLoc = new Point2D.Double(switchEn.getLocation().getX(), switchEn.getLocation().getZ());
+					bossLoc = new Coord3D(switchEn.getLocation().getX(), switchEn.getLocation().getY(), switchEn.getLocation().getZ());
 					switchEn.remove();
-					final Point2D.Double constLoc = bossLoc;
+					final Coord3D constLoc = bossLoc;
 					final Maze constMaze = this;
 					final int constPlace = place;
 					new BukkitRunnable() {
 					    Maze maze = constMaze;
-					    Point2D.Double loc = constLoc;
+					    Coord3D loc = constLoc;
 					    int place = constPlace;
 					    public void run() {
 					        maze.makeNewMazeBoss(place, loc);
@@ -164,7 +172,7 @@ public class Maze {
 	 	} else bossLoc = loc;
 	 	boss.targetPlayer = "";
 	 	boss.targetTimer = 0;
-	 	boss.entity = (Zombie)mazeWorld.spawnEntity(new Location(mazeWorld, bossLoc.x, mazeY+1, bossLoc.y), EntityType.ZOMBIE);
+	 	boss.entity = (Zombie)mazeWorld.spawnEntity(new Location(mazeWorld, bossLoc.x, bossLoc.y, bossLoc.z), EntityType.ZOMBIE);
 	 	boss.id = boss.entity.getUniqueId();
 	 	boss.hp = configProps.bosses.get(place).maxHp;
 	 	updateBossHpStr(place);
@@ -198,24 +206,24 @@ public class Maze {
 		return false;
 	}
 
-	public void setToLookedAt(boolean[][] isLookedAt, int x, int z, boolean matters) {
+	public void setToLookedAt(boolean[][][] isLookedAt, int x, int z, int y, boolean matters) {
 	 	if (x%2 == 1 && z%2 == 1 && !matters) return;
-	 	isLookedAt[x][z] = true;
+	 	isLookedAt[x][z][y] = true;
 	 }
 	 
-	 public boolean canBeReached(int startX, int startZ, int endX, int endZ, int maxSteps, boolean[][] wasVisited) {
+	 public boolean canBeReached(int startX, int startZ, int endX, int endZ, int startY, int maxSteps, boolean[][] wasVisited) {
 	 	if (startX == endX && startZ == endZ) return true;
 	 	LinkedList<MazeCoords> elements = new LinkedList<MazeCoords>();
 	 	ArrayList<MazeCoords> prevElements = new ArrayList<MazeCoords>();
-	 	elements.add(new MazeCoords(startX, startZ));
-	 	elements.add(new MazeCoords(-1, -1));
+	 	elements.add(new MazeCoords(startX, startZ, startY));
+	 	elements.add(new MazeCoords(-1, -1, -1));
 	 	boolean reached = false;
 	 	int steps = 0;
 	 	MazeCoords coords;
 	 	while (steps < maxSteps && !elements.isEmpty()) {
 	 		coords = (MazeCoords)elements.remove();
 	 		if (coords.x == -1) {
-	 	    	if (!elements.isEmpty()) elements.push(new MazeCoords(-1, -1));
+	 	    	if (!elements.isEmpty()) elements.push(new MazeCoords(-1, -1, -1));
 	 			steps++;
 	 		} else {
 	 	    	wasVisited[coords.x][coords.z] = true;
@@ -225,10 +233,10 @@ public class Maze {
 		    			reached = true;
 		    			break;
 		    		}
-		    		if (coords.x > 0 && !wasVisited[coords.x-1][coords.z] && maze[coords.x-1][coords.z] != 1) elements.push(new MazeCoords(coords.x-1, coords.z));
-		    		if (coords.x < mazeSize*2 && !wasVisited[coords.x+1][coords.z] && maze[coords.x+1][coords.z] != 1) elements.push(new MazeCoords(coords.x+1, coords.z));
-		    		if (coords.z > 0 && !wasVisited[coords.x][coords.z-1] && maze[coords.x][coords.z-1] != 1) elements.push(new MazeCoords(coords.x, coords.z-1));
-		    		if (coords.z < mazeSize*2 && !wasVisited[coords.x][coords.z+1] && maze[coords.x][coords.z+1] != 1) elements.push(new MazeCoords(coords.x, coords.z+1));
+		    		if (coords.x > 0 && !wasVisited[coords.x-1][coords.z] && maze[coords.x-1][coords.z][startY] != 1) elements.push(new MazeCoords(coords.x-1, coords.z, coords.y));
+		    		if (coords.x < mazeSize*2 && !wasVisited[coords.x+1][coords.z] && maze[coords.x+1][coords.z][startY] != 1) elements.push(new MazeCoords(coords.x+1, coords.z, coords.y));
+		    		if (coords.z > 0 && !wasVisited[coords.x][coords.z-1] && maze[coords.x][coords.z-1][startY] != 1) elements.push(new MazeCoords(coords.x, coords.z-1, coords.y));
+		    		if (coords.z < mazeSize*2 && !wasVisited[coords.x][coords.z+1] && maze[coords.x][coords.z+1][startY] != 1) elements.push(new MazeCoords(coords.x, coords.z+1, coords.y));
 	 		}
 	 	}
 	 	Iterator<MazeCoords> it = prevElements.iterator();
@@ -239,33 +247,33 @@ public class Maze {
 	 	return reached;
 	 }
 	 
-	 public boolean pillarIsAlone(int x, int z, int rx, int rz) {
+	 public boolean pillarIsAlone(int x, int z, int rx, int rz, int y) {
 	 	if (rx < 0 || rx > mazeSize*2 || rz < 0 || rz > mazeSize*2) return false;
-	 	if (!(x-1 == rx && z == rz) && x > 0 && maze[x-1][z] == 1) return false;
-	 	if (!(x+1 == rx && z == rz) && x < mazeSize*2 && maze[x+1][z] == 1) return false;
-	 	if (!(x == rx && z-1 == rz) && z > 0 && maze[x][z-1] == 1) return false;
-	 	if (!(x == rx && z+1 == rz) && z < mazeSize*2 && maze[x][z+1] == 1) return false;
+	 	if (!(x-1 == rx && z == rz) && x > 0 && maze[x-1][z][y] == 1) return false;
+	 	if (!(x+1 == rx && z == rz) && x < mazeSize*2 && maze[x+1][z][y] == 1) return false;
+	 	if (!(x == rx && z-1 == rz) && z > 0 && maze[x][z-1][y] == 1) return false;
+	 	if (!(x == rx && z+1 == rz) && z < mazeSize*2 && maze[x][z+1][y] == 1) return false;
 	 	return true;
 	 }
 	   
-	   public void removeMazeBlocks(int mazeX, int mazeZ, World worldObj) {
+	   public void removeMazeBlocks(int mazeX, int mazeZ, int mazeY, World worldObj) {
 		if (mazeX <= 0 || mazeX >= mazeSize*2 || mazeZ <= 0 || mazeZ >= mazeSize*2) return;
-	   	if (isBeingChanged[mazeX][mazeZ]) return;
-	   	if ((maze[mazeX][mazeZ] != 1 && (mazeX%2 == 0 || mazeZ%2 == 0)) || (mazeX%2 == 0 && mazeZ%2 == 0)) return;
-	   	if (worldObj.getBlockAt(this.mazeX+mazeToBlockCoord(mazeX), mazeY, this.mazeZ+mazeToBlockCoord(mazeZ)).getType() == Material.AIR) return;
+	   	if (isBeingChanged[mazeX][mazeZ][mazeY]) return;
+	   	if ((maze[mazeX][mazeZ][mazeY] != 1 && (mazeX%2 == 0 || mazeZ%2 == 0)) || (mazeX%2 == 0 && mazeZ%2 == 0)) return;
+	   	if (worldObj.getBlockAt(this.mazeX+mazeToBlockCoord(mazeX), this.mazeY+mazeToBlockCoord(mazeY), this.mazeZ+mazeToBlockCoord(mazeZ)).getType() == Material.AIR) return;
 	   	blocksToRemove.add(new MazeCoords(mazeX, mazeZ, 20));
-	   	isBeingChanged[mazeX][mazeZ] = true;
+	   	isBeingChanged[mazeX][mazeZ][mazeY] = true;
 	   }
 	   
-	   public void restoreMazeBlocks(int mazeX, int mazeZ) {
+	   public void restoreMazeBlocks(int mazeX, int mazeZ, int mazeY) {
 	   	if (mazeX <= 0 || mazeX >= mazeSize*2 || mazeZ <= 0 || mazeZ >= mazeSize*2) return;
-	   	if (isBeingChanged[mazeX][mazeZ]) return;
-	   	if ((maze[mazeX][mazeZ] != 0 && (mazeX%2 == 0 || mazeZ%2 == 0)) || (mazeX%2 == 0 && mazeZ%2 == 0)) return;
+	   	if (isBeingChanged[mazeX][mazeZ][mazeY]) return;
+	   	if ((maze[mazeX][mazeZ][mazeY] != 0 && (mazeX%2 == 0 || mazeZ%2 == 0)) || (mazeX%2 == 0 && mazeZ%2 == 0)) return;
 	   	int blockNum;
 	   	if (mazeX%2 == 1 && mazeZ%2 == 1) blockNum = MAZE_PASSAGE_WIDTH*MAZE_PASSAGE_WIDTH;
 	   	else blockNum = MAZE_PASSAGE_WIDTH*(MAZE_PASSAGE_HEIGHT+1);
-	   	blocksToRestore.add(new MazeCoords(mazeX, mazeZ, blockNum));
-	   	isBeingChanged[mazeX][mazeZ] = true;
+	   	blocksToRestore.add(new MazeCoords(mazeX, mazeZ, mazeY, blockNum));
+	   	isBeingChanged[mazeX][mazeZ][mazeY] = true;
 	   }
 
 	public boolean isInsideMaze(Location location) {
@@ -296,27 +304,29 @@ public class Maze {
 
 	@SuppressWarnings("deprecation")
 	public void removeEntrances() {
-		for (int xx = 0; xx < mazeSize*2+1; xx ++) {
-			for (int zz = 0; zz < mazeSize*2+1; zz ++) {
-				if (!(xx == 0 || xx == mazeSize*2) && !(zz == 0 || zz == mazeSize*2)) continue;
-				if (maze[xx][zz] != 1) {
-					int sx = mazeToBlockCoord(xx);
-					int ex = sx+((zz == 0 || zz == mazeSize*2) ? MAZE_PASSAGE_WIDTH-1 : 0);
-					int sz = mazeToBlockCoord(zz);
-					int ez = sz+((xx == 0 || xx == mazeSize*2) ? MAZE_PASSAGE_WIDTH-1 : 0);
-					for (int xxx = sx; xxx <= ex; xxx++) {
-						for (int zzz = sz; zzz <= ez; zzz++) {
-							for (int yyy = 1; yyy <= MAZE_PASSAGE_HEIGHT+1; yyy++) {
-								int bId, bData;
-								if (xx%2 == 0) {
-		    						bId = configProps.blockTypes[1][configProps.blockTypes[1].length-1-yyy-Maze.MAZE_PASSAGE_DEPTH][zzz-sz][0];
-			    					bData = (byte)configProps.blockTypes[1][configProps.blockTypes[1].length-1-yyy-Maze.MAZE_PASSAGE_DEPTH][zzz-sz][1];
-		    					} else {
-		    						bId = configProps.blockTypes[1][configProps.blockTypes[1].length-1-yyy-Maze.MAZE_PASSAGE_DEPTH][xxx-sx][0];
-			    					bData = (byte)configProps.blockTypes[1][configProps.blockTypes[1].length-1-yyy-Maze.MAZE_PASSAGE_DEPTH][xxx-sx][1];
-		    					}
-			    				mazeWorld.getBlockAt(mazeX+xxx, mazeY+yyy, mazeZ+zzz).setTypeId(bId);
-			    				mazeWorld.getBlockAt(mazeX+xxx, mazeY+yyy, mazeZ+zzz).setData((byte)bData);
+		for (int yStart = 0; yStart < height; yStart ++) {
+			for (int xx = 0; xx < mazeSize*2+1; xx ++) {
+				for (int zz = 0; zz < mazeSize*2+1; zz ++) {
+					if (!(xx == 0 || xx == mazeSize*2) && !(zz == 0 || zz == mazeSize*2)) continue;
+					if (maze[xx][zz][yStart] != 1) {
+						int sx = mazeToBlockCoord(xx);
+						int ex = sx+((zz == 0 || zz == mazeSize*2) ? MAZE_PASSAGE_WIDTH-1 : 0);
+						int sz = mazeToBlockCoord(zz);
+						int ez = sz+((xx == 0 || xx == mazeSize*2) ? MAZE_PASSAGE_WIDTH-1 : 0);
+						for (int xxx = sx; xxx <= ex; xxx++) {
+							for (int zzz = sz; zzz <= ez; zzz++) {
+								for (int yyy = 1; yyy <= MAZE_PASSAGE_HEIGHT+1; yyy++) {
+									int bId, bData;
+									if (xx%2 == 0) {
+			    						bId = configProps.blockTypes[1][configProps.blockTypes[1].length-1-yyy-Maze.MAZE_PASSAGE_DEPTH][zzz-sz][0];
+				    					bData = (byte)configProps.blockTypes[1][configProps.blockTypes[1].length-1-yyy-Maze.MAZE_PASSAGE_DEPTH][zzz-sz][1];
+			    					} else {
+			    						bId = configProps.blockTypes[1][configProps.blockTypes[1].length-1-yyy-Maze.MAZE_PASSAGE_DEPTH][xxx-sx][0];
+				    					bData = (byte)configProps.blockTypes[1][configProps.blockTypes[1].length-1-yyy-Maze.MAZE_PASSAGE_DEPTH][xxx-sx][1];
+			    					}
+				    				mazeWorld.getBlockAt(mazeX+xxx, mazeY+yyy+mazeToBlockYCoord(yStart), mazeZ+zzz).setTypeId(bId);
+				    				mazeWorld.getBlockAt(mazeX+xxx, mazeY+yyy+mazeToBlockYCoord(yStart), mazeZ+zzz).setData((byte)bData);
+								}
 							}
 						}
 					}
@@ -326,18 +336,20 @@ public class Maze {
 	}
 
 	public void restoreEntrances() {
-		for (int xx = 0; xx < mazeSize*2+1; xx ++) {
-			for (int zz = 0; zz < mazeSize*2+1; zz ++) {
-				if (!(xx == 0 || xx == mazeSize*2) && !(zz == 0 || zz == mazeSize*2)) continue;
-				if (maze[xx][zz] != 1) {
-					int sx = mazeToBlockCoord(xx);
-					int ex = sx+((zz == 0 || zz == mazeSize*2) ? MAZE_PASSAGE_WIDTH-1 : 0);
-					int sz = mazeToBlockCoord(zz);
-					int ez = sz+((xx == 0 || xx == mazeSize*2) ? MAZE_PASSAGE_WIDTH-1 : 0);
-					for (int xxx = sx; xxx <= ex; xxx++) {
-						for (int zzz = sz; zzz <= ez; zzz++) {
-							for (int yyy = 1; yyy <= MAZE_PASSAGE_HEIGHT+1; yyy++) {
-			    				mazeWorld.getBlockAt(mazeX+xxx, mazeY+yyy, mazeZ+zzz).setType(Material.AIR);
+		for (int yStart = 0; yStart < height; yStart ++) {
+			for (int xx = 0; xx < mazeSize*2+1; xx ++) {
+				for (int zz = 0; zz < mazeSize*2+1; zz ++) {
+					if (!(xx == 0 || xx == mazeSize*2) && !(zz == 0 || zz == mazeSize*2)) continue;
+					if (maze[xx][zz][yStart] != 1) {
+						int sx = mazeToBlockCoord(xx);
+						int ex = sx+((zz == 0 || zz == mazeSize*2) ? MAZE_PASSAGE_WIDTH-1 : 0);
+						int sz = mazeToBlockCoord(zz);
+						int ez = sz+((xx == 0 || xx == mazeSize*2) ? MAZE_PASSAGE_WIDTH-1 : 0);
+						for (int xxx = sx; xxx <= ex; xxx++) {
+							for (int zzz = sz; zzz <= ez; zzz++) {
+								for (int yyy = 1; yyy <= MAZE_PASSAGE_HEIGHT+1; yyy++) {
+				    				mazeWorld.getBlockAt(mazeX+xxx, mazeY+yyy+mazeToBlockYCoord(yStart), mazeZ+zzz).setType(Material.AIR);
+								}
 							}
 						}
 					}
@@ -538,9 +550,9 @@ public class Maze {
 					player.teleport(new Location(mazeWorld, waitX+0.5, telepY, waitZ+0.5));
 				}
 			} else {
-				Point2D.Double loc = getMazeBossNewLocation(mazeWorld);
+				Coord3D loc = getMazeBossNewLocation(mazeWorld);
 				if (!player.isDead()) {
-					player.teleport(new Location(mazeWorld, loc.x, mazeY+1, loc.y));
+					player.teleport(new Location(mazeWorld, loc.x, loc.y, loc.z));
 	        		MazePvP.cleanUpPlayer(player, canBeEntered);
 	        		player.setFallDistance(0);
 					//giveStartItemsToPlayer(player);
@@ -701,9 +713,9 @@ public class Maze {
 				joinedPlayerProps.put(player.getName(), props);
 				savePlayerProps();
 			}
-			Point2D.Double loc = getMazeBossNewLocation(mazeWorld);
+			Coord3D loc = getMazeBossNewLocation(mazeWorld);
 			if (!player.isDead()) {
-				player.teleport(new Location(mazeWorld, loc.x, mazeY+1, loc.y));
+				player.teleport(new Location(mazeWorld, loc.x, loc.y, loc.z));
         		MazePvP.cleanUpPlayer(player, canBeEntered);
         		player.setFallDistance(0);
 				giveStartItemsToPlayer(player);
@@ -792,40 +804,45 @@ public class Maze {
 	@SuppressWarnings("deprecation")
 	public void cleanUpMaze() {
 		int xx, zz;
-		for (xx = 1; xx <= mazeSize*2-1; xx += 2) {
-    		for (zz = 1; zz <= mazeSize*2-1; zz += 2) {
-    			if (!isBeingChanged[xx][zz] &&
-    				mazeWorld.getBlockAt(mazeX+mazeToBlockCoord(xx), mazeY, mazeZ+mazeToBlockCoord(zz)).isEmpty()) {
-					int xCoord = mazeToBlockCoord(xx);
-    				for (int xxx = xCoord; xxx <= mazeToBlockCoord(xx)+Maze.MAZE_PASSAGE_WIDTH-1; xxx++) {
-    					int zCoord = mazeToBlockCoord(zz);
-    					for (int zzz = zCoord; zzz <= mazeToBlockCoord(zz)+Maze.MAZE_PASSAGE_WIDTH-1; zzz++) {
-    						int bId = configProps.blockTypes[4][zzz-zCoord][xxx-xCoord][0];
-    						int bData = (byte)configProps.blockTypes[4][zzz-zCoord][xxx-xCoord][1];
-    						mazeWorld.getBlockAt(mazeX+xxx, mazeY, mazeZ+zzz).setTypeId(bId);
-    						mazeWorld.getBlockAt(mazeX+xxx, mazeY, mazeZ+zzz).setData((byte)bData);
-	        				if (MazePvP.theMazePvP.showHeads) mazeWorld.getBlockAt(mazeX+xxx, mazeY-Maze.MAZE_PASSAGE_DEPTH+2, mazeZ+zzz).setType(Material.AIR);
-    					}
-    				}
-    			}
-    		}
+		for (int yStart = 0; yStart < height; yStart ++) {
+			for (xx = 1; xx <= mazeSize*2-1; xx += 2) {
+	    		for (zz = 1; zz <= mazeSize*2-1; zz += 2) {
+	    			if (!isBeingChanged[xx][zz][yStart] &&
+	    				mazeWorld.getBlockAt(mazeX+mazeToBlockCoord(xx), mazeY+mazeToBlockYCoord(yStart), mazeZ+mazeToBlockCoord(zz)).isEmpty()) {
+						int xCoord = mazeToBlockCoord(xx);
+	    				for (int xxx = xCoord; xxx <= mazeToBlockCoord(xx)+Maze.MAZE_PASSAGE_WIDTH-1; xxx++) {
+	    					int zCoord = mazeToBlockCoord(zz);
+	    					for (int zzz = zCoord; zzz <= mazeToBlockCoord(zz)+Maze.MAZE_PASSAGE_WIDTH-1; zzz++) {
+	    						int bId = configProps.blockTypes[4][zzz-zCoord][xxx-xCoord][0];
+	    						int bData = (byte)configProps.blockTypes[4][zzz-zCoord][xxx-xCoord][1];
+	    						mazeWorld.getBlockAt(mazeX+xxx, mazeY+mazeToBlockYCoord(yStart), mazeZ+zzz).setTypeId(bId);
+	    						mazeWorld.getBlockAt(mazeX+xxx, mazeToBlockYCoord(yStart), mazeZ+zzz).setData((byte)bData);
+		        				if (yStart == 0 && MazePvP.theMazePvP.showHeads) mazeWorld.getBlockAt(mazeX+xxx, mazeY-Maze.MAZE_PASSAGE_DEPTH+2, mazeZ+zzz).setType(Material.AIR);
+	    					}
+	    				}
+	    			}
+	    		}
+			}
     	}
-		
-		for (xx = 2; xx <= mazeSize*2; xx += 2) {
-    		for (zz = 2; zz <= mazeSize*2; zz += 2) {
-    			int posX = mazeToBlockCoord(xx);
-    			int posZ = mazeToBlockCoord(zz);
-    			if (mazeWorld.getBlockAt(mazeX+posX, mazeY+2, mazeZ+posZ) == null || mazeWorld.getBlockAt(mazeX+posX, mazeY+2, mazeZ+posZ).isEmpty()) {
-					if (mazeWorld.getBlockAt(mazeX+posX, mazeY+1, mazeZ+posZ).getType() == Material.CHEST) {
-						Chest chest = ((Chest)mazeWorld.getBlockAt(mazeX+posX, mazeY+1, mazeZ+posZ).getState());
-						chest.getInventory().clear();
+
+		for (int yStart = 0; yStart < height; yStart ++) {
+			for (xx = 2; xx <= mazeSize*2; xx += 2) {
+	    		for (zz = 2; zz <= mazeSize*2; zz += 2) {
+	    			int posX = mazeToBlockCoord(xx);
+	    			int posZ = mazeToBlockCoord(zz);
+	    			int posY = mazeToBlockYCoord(yStart);
+	    			if (mazeWorld.getBlockAt(mazeX+posX, mazeY+2+posY, mazeZ+posZ) == null || mazeWorld.getBlockAt(mazeX+posX, mazeY+2+posY, mazeZ+posZ).isEmpty()) {
+						if (mazeWorld.getBlockAt(mazeX+posX, mazeY+1+posY, mazeZ+posZ).getType() == Material.CHEST) {
+							Chest chest = ((Chest)mazeWorld.getBlockAt(mazeX+posX, mazeY+1+posY, mazeZ+posZ).getState());
+							chest.getInventory().clear();
+						}
+						mazeWorld.getBlockAt(mazeX+posX, mazeY+1+posY, mazeZ+posZ).setTypeId(configProps.blockTypes[2][6][0][0]);
+						mazeWorld.getBlockAt(mazeX+posX, mazeY+1+posY, mazeZ+posZ).setData((byte)configProps.blockTypes[2][6][0][1]);
+						mazeWorld.getBlockAt(mazeX+posX, mazeY+2+posY, mazeZ+posZ).setTypeId(configProps.blockTypes[2][5][0][0]);
+						mazeWorld.getBlockAt(mazeX+posX, mazeY+2+posY, mazeZ+posZ).setData((byte) configProps.blockTypes[2][5][0][1]);
 					}
-					mazeWorld.getBlockAt(mazeX+posX, mazeY+1, mazeZ+posZ).setTypeId(configProps.blockTypes[2][6][0][0]);
-					mazeWorld.getBlockAt(mazeX+posX, mazeY+1, mazeZ+posZ).setData((byte)configProps.blockTypes[2][6][0][1]);
-					mazeWorld.getBlockAt(mazeX+posX, mazeY+2, mazeZ+posZ).setTypeId(configProps.blockTypes[2][5][0][0]);
-					mazeWorld.getBlockAt(mazeX+posX, mazeY+2, mazeZ+posZ).setData((byte) configProps.blockTypes[2][5][0][1]);
-				}
-    		}
+	    		}
+			}
 		}
 
         Collection<Entity> entities = mazeWorld.getEntitiesByClass(Entity.class);

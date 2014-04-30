@@ -10,10 +10,10 @@ public class MazeConfig
 {
 	public final static String[] blockTypeNames = new String[] {
 		"wall", "outerWall", "pillar", "outerPillar", "floor",
-		"lowerFloor", "spikes", "ceiling"
+		"lowerFloor", "spikes", "ceiling", "higherFloor"
 	};
 	public final static int[][] blockTypeDimensions= new int[][] {
-		{4, 13}, {4, 13}, {1, 13}, {1, 13}, {4, 4}, {4, 4}, {4, 4}, {4, 4}
+		{4, 13}, {4, 13}, {1, 13}, {1, 13}, {4, 4}, {4, 4}, {4, 4}, {4, 4}, {4, 4}
 	};
 	
 	public int playerMaxDeaths = 3;

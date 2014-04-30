@@ -48,15 +48,17 @@ public class CommandDeleteMaze implements CommandExecutor {
         	if (maze.isInsideMaze(en.getLocation())) en.damage(en.getHealth()+10);
         }
 		sender.sendMessage("Deleting maze...");
-    	for (int xx = 0; xx <= maze.mazeSize*(1+Maze.MAZE_PASSAGE_WIDTH); xx++) {
-    		for (int zz = 0; zz <= maze.mazeSize*(1+Maze.MAZE_PASSAGE_WIDTH); zz++) {
-    			for (int yy = -Maze.MAZE_PASSAGE_DEPTH; yy <= Maze.MAZE_PASSAGE_HEIGHT+2; yy++) {
-    				if (yy == -Maze.MAZE_PASSAGE_DEPTH || yy == -Maze.MAZE_PASSAGE_DEPTH+1 || yy == -Maze.MAZE_PASSAGE_DEPTH+2 || yy == 0 || yy == Maze.MAZE_PASSAGE_HEIGHT+2 || maze.blockToMazeCoord(xx)%2 == 0 || maze.blockToMazeCoord(zz)%2 == 0) {
-    					world.getBlockAt(maze.mazeX+xx, maze.mazeY+yy, maze.mazeZ+zz).setType(Material.AIR);
-    				}
-    			}
-    		}
-    	}
+		for (int yStart = 0; yStart < maze.height; yStart++) {
+	    	for (int xx = 0; xx <= maze.mazeSize*(1+Maze.MAZE_PASSAGE_WIDTH); xx++) {
+	    		for (int zz = 0; zz <= maze.mazeSize*(1+Maze.MAZE_PASSAGE_WIDTH); zz++) {
+	    			for (int yy = (yStart==0)?(-Maze.MAZE_PASSAGE_DEPTH):0; yy <= Maze.MAZE_PASSAGE_HEIGHT+2; yy++) {
+	    				if (yy == -Maze.MAZE_PASSAGE_DEPTH || yy == -Maze.MAZE_PASSAGE_DEPTH+1 || yy == -Maze.MAZE_PASSAGE_DEPTH+2 || yy == 0 || yy == Maze.MAZE_PASSAGE_HEIGHT+2 || maze.blockToMazeCoord(xx)%2 == 0 || maze.blockToMazeCoord(zz)%2 == 0) {
+	    					world.getBlockAt(maze.mazeX+xx, maze.mazeY+yy+maze.mazeToBlockYCoord(yStart), maze.mazeZ+zz).setType(Material.AIR);
+	    				}
+	    			}
+	    		}
+	    	}
+		}
 		sender.sendMessage("Maze "+mazeName+" deleted");
     	return true;
 	}

@@ -1,6 +1,5 @@
 package mazepvp;
 
-import java.awt.geom.Point2D;
 import java.util.Iterator;
 import java.util.List;
 
@@ -96,7 +95,7 @@ public final class EventListeners implements Listener {
 				}
 			}
 			if (event.getEntity() instanceof EnderPearl && event.getEntity().getShooter() != null && maze.isInsideMaze(((LivingEntity)event.getEntity().getShooter()).getLocation())) {
-	      		Point2D.Double loc = maze.getMazeBossNewLocation(world);
+	      		Coord3D loc = maze.getMazeBossNewLocation(world);
 	      		LivingEntity thrower = (LivingEntity)event.getEntity().getShooter();
         		for (int j = 0; j <= 8; j++) {
         			world.playEffect(thrower.getLocation(), Effect.SMOKE, j);
@@ -104,7 +103,7 @@ public final class EventListeners implements Listener {
         				world.playEffect(new Location(world, thrower.getLocation().getX(), thrower.getLocation().getY()+1, thrower.getLocation().getZ()), Effect.SMOKE, j);
         			}
         		}
-            	thrower.teleport(new Location(world, loc.x, maze.mazeY+1, loc.y));
+            	thrower.teleport(new Location(world, loc.x, loc.y, loc.z));
         		for (int j = 0; j <= 8; j++) {
         			world.playEffect(thrower.getLocation(), Effect.SMOKE, j);
         			if (j != 4) {
@@ -135,6 +134,7 @@ public final class EventListeners implements Listener {
 			  			if (event.getEntity() instanceof Egg) {
 			  	      		int mazeX = maze.blockToMazeCoord(block.getX()-maze.mazeX);
 			  	      		int mazeZ = maze.blockToMazeCoord(block.getZ()-maze.mazeZ);
+			  	      		int mazeY = maze.blockToMazeYCoord(block.getY()-maze.mazeY);
 			  	      		int sideHit = 0;
 			  	      		//System.out.println("B: "+block.getLocation());
 			  	      		//System.out.println("S: "+event.getEntity().getLocation());
@@ -176,10 +176,11 @@ public final class EventListeners implements Listener {
 				      				else return;
 				      			}
 				      		}
-				      		maze.removeMazeBlocks(mazeX, mazeZ, world);
+				      		maze.removeMazeBlocks(mazeX, mazeZ, mazeY, world);
 			  			} else if (event.getEntity() instanceof Snowball) {
 			  	      		int mazeX = maze.blockToMazeCoord(block.getX()-maze.mazeX);
 			  	      		int mazeZ = maze.blockToMazeCoord(block.getZ()-maze.mazeZ);
+			  	      		int mazeY = maze.blockToMazeYCoord(block.getY()-maze.mazeY);
 			  	      		int sideHit = 0;
 			  	      		//System.out.println("B: "+block.getLocation());
 			  	      		//System.out.println("S: "+event.getEntity().getLocation());
@@ -250,7 +251,7 @@ public final class EventListeners implements Listener {
 			  	      				else if (sideHit == 2) mazeZ--;
 			  	      			}
 			  	      		}
-			  	      		maze.restoreMazeBlocks(mazeX, mazeZ);
+			  	      		maze.restoreMazeBlocks(mazeX, mazeZ, mazeY);
 				      	}
 					}
 				}
@@ -592,10 +593,10 @@ public final class EventListeners implements Listener {
 				if (props != null) {
 					if (event.getPlayer() != maze.lastPlayer && props.deathCount < maze.configProps.playerMaxDeaths) {
 						boolean spectating = (maze.playerInsideMaze.get(event.getPlayer().getName()) == null);
-						Point2D.Double loc = maze.getMazeBossNewLocation(maze.mazeWorld);
+						Coord3D loc = maze.getMazeBossNewLocation(maze.mazeWorld);
 						MazePvP.cleanUpPlayer(player, props.deathCount != 0);
 						if (!spectating) maze.giveStartItemsToPlayer(player);
-						event.setRespawnLocation(new Location(maze.mazeWorld, loc.x, maze.mazeY+1, loc.y));
+						event.setRespawnLocation(new Location(maze.mazeWorld, loc.x, loc.y, loc.z));
 						if (!spectating) {
 							maze.mazeWorld.playEffect(event.getRespawnLocation(), Effect.MOBSPAWNER_FLAMES, 0);
 							if (props.deathCount+1 < maze.configProps.playerMaxDeaths) maze.sendStringListToPlayer(player, MazePvP.theMazePvP.fightRespawnText);

@@ -134,18 +134,20 @@ public final class MazePvP extends JavaPlugin {
             	nameWriter.printf("%s\n", new Object[]{maze.name});
             	File mazeFile = new File(world.getWorldFolder(), maze.name+".maze");
             	PrintWriter var1 = new PrintWriter(new FileWriter(mazeFile, false));
-            	var1.printf("%d %d %d %d %s %d %d %d %d %d\n", new Object[] {maze.mazeX, maze.mazeY, maze.mazeZ, maze.mazeSize, "X", maze.canBeEntered?1:0, maze.hasWaitArea?1:0, maze.waitX, maze.waitY, maze.waitZ});
+            	var1.printf("%d %d %d %d %s %d %d %d %d %d %d\n", new Object[] {maze.mazeX, maze.mazeY, maze.mazeZ, maze.mazeSize, "X", maze.canBeEntered?1:0, maze.hasWaitArea?1:0, maze.waitX, maze.waitY, maze.waitZ, maze.height});
                 Iterator<Boss> bit = maze.bosses.iterator();
                 while (bit.hasNext()) {
                 	Boss boss = bit.next();
                 	var1.printf("%f\n%s\n", new Object[]{boss.hp, (boss.id==null)?"":boss.id.toString()});
                 }
-            	for (int i = 0; i < maze.mazeSize*2+1; i++) {
-            		for (int j = 0; j < maze.mazeSize*2+1; j++) {
-            			if (j == maze.mazeSize*2) var1.printf("%d\n", new Object[] {maze.maze[i][j]});
-            			else var1.printf("%d ", new Object[] {maze.maze[i][j]});
-            		}
-            	}
+                for (int yy = 0; yy < maze.height; yy++) {
+	            	for (int i = 0; i < maze.mazeSize*2+1; i++) {
+	            		for (int j = 0; j < maze.mazeSize*2+1; j++) {
+	            			if (j == maze.mazeSize*2) var1.printf("%d\n", new Object[] {maze.maze[i][j][yy]});
+	            			else var1.printf("%d ", new Object[] {maze.maze[i][j][yy]});
+	            		}
+	            	}
+                }
             	List<int[]> signList;
             	for (int s = 0; s < 2; s++) {
             		if (s == 0) signList = maze.joinSigns;
@@ -361,8 +363,9 @@ public final class MazePvP extends JavaPlugin {
 	        		if (var3.length >= 8) maze.waitX = Integer.parseInt(var3[7]);
 	        		if (var3.length >= 9) maze.waitY = Integer.parseInt(var3[8]);
 	        		if (var3.length >= 10) maze.waitZ = Integer.parseInt(var3[9]);
-                	if (var3.length >= 11) maze.configProps.minPlayers = Integer.parseInt(var3[10]);
+                	if (var3.length >= 12) maze.configProps.minPlayers = Integer.parseInt(var3[10]);
                 	if (var3.length >= 12) maze.configProps.maxPlayers = Integer.parseInt(var3[11]);
+                	if (var3.length >= 11) maze.height = Integer.parseInt(var3[10]);
 	                Iterator<Boss> bit = maze.bosses.iterator();
 	                int place = 0;
 	                while (bit.hasNext()) {
@@ -386,24 +389,32 @@ public final class MazePvP extends JavaPlugin {
 	                	place++;
 	                }
 	                maze.mazeWorld = world;
-	                maze.maze = new int[maze.mazeSize*2+1][];
-	                maze.isBeingChanged = new boolean[maze.mazeSize*2+1][];
-	            	for (int i = 0; i < maze.mazeSize*2+1; i++) {
-	            		if ((var2 = var1.readLine()) == null) {
-                        	var1.close();
-                        	throw new Exception("Malformed input");
-	            		}
-	                	var3 = var2.split("\\s");
-	                    if (var3.length != maze.mazeSize*2+1) {
-	                    	var1.close();
-	                    	throw new Exception("Malformed input");
-	                    }
-	                    maze.maze[i] = new int[maze.mazeSize*2+1];
-	                    maze.isBeingChanged[i] = new boolean[maze.mazeSize*2+1];
-	            		for (int j = 0; j < var3.length; j++) {
-	            			maze.maze[i][j] = Integer.parseInt(var3[j]);
-	            			maze.isBeingChanged[i][j] = false;
-	            		}
+	                maze.maze = new int[maze.mazeSize*2+1][][];
+	                maze.isBeingChanged = new boolean[maze.mazeSize*2+1][][];
+	            	for (int yy = 0; yy < maze.height; yy++) {
+		            	for (int i = 0; i < maze.mazeSize*2+1; i++) {
+		            		if ((var2 = var1.readLine()) == null) {
+	                        	var1.close();
+	                        	throw new Exception("Malformed input");
+		            		}
+		                	var3 = var2.split("\\s");
+		                    if (var3.length != maze.mazeSize*2+1) {
+		                    	var1.close();
+		                    	throw new Exception("Malformed input");
+		                    }
+		                    if (yy == 0) {
+		                    	maze.maze[i] = new int[maze.mazeSize*2+1][];
+			                    maze.isBeingChanged[i] = new boolean[maze.mazeSize*2+1][];
+		                    }
+		            		for (int j = 0; j < var3.length; j++) {
+			                    if (yy == 0) {
+			                    	maze.maze[i][j] = new int[maze.height];
+				                    maze.isBeingChanged[i][j] = new boolean[maze.height];
+			                    }
+		            			maze.maze[i][j][yy] = Integer.parseInt(var3[j]);
+		            			maze.isBeingChanged[i][j][yy] = false;
+		            		}
+		            	}
 	            	}
 	            	List<int[]> signList;
 	            	for (int s = 0; s < 2; s++) {

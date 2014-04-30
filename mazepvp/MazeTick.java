@@ -1,6 +1,5 @@
 package mazepvp;
 
-import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -140,8 +139,8 @@ public class MazeTick extends BukkitRunnable {
 							if (!maze.playerInsideMaze.containsKey(player.getName()) || !maze.playerInsideMaze.get(player.getName())) {
 								maze.playerQuit(player);
 							} else {
-								Point2D.Double loc = maze.getMazeBossNewLocation(maze.mazeWorld);
-								player.teleport(new Location(maze.mazeWorld, loc.x, maze.mazeY+1, loc.y));
+								Coord3D loc = maze.getMazeBossNewLocation(maze.mazeWorld);
+								player.teleport(new Location(maze.mazeWorld, loc.x, loc.y, loc.z));
 								player.setFallDistance(0);
 							}
 						} else {
@@ -170,7 +169,9 @@ public class MazeTick extends BukkitRunnable {
 	    				Location mloc = boss.entity.getLocation();
 	    				double angle = Math.atan2(mloc.getX()-ploc.getX(), mloc.getZ()-ploc.getZ());
 	    				angle +=  Math.PI;
-	    				maze.relocateMazeBoss(true, boss, new Point2D.Double(ploc.getX() + 1.0*Math.sin(angle), ploc.getZ() + 1.0*Math.cos(angle)), ploc.getYaw(), mloc.getPitch());
+	    				maze.relocateMazeBoss(true, boss, new Coord3D(ploc.getX() + 1.0*Math.sin(angle), 
+	    						maze.mazeToBlockYCoord(maze.blockToMazeYCoord((int)Math.round(boss.entity.getLocation().getY()))),
+	    						ploc.getZ() + 1.0*Math.cos(angle)), ploc.getYaw(), mloc.getPitch());
 	    			} else {
 	    				boss.targetPlayer = "";
 	    				boss.targetTimer = 0;
@@ -179,22 +180,27 @@ public class MazeTick extends BukkitRunnable {
 			}
 			
 	      	if (main.wallChangeTimer >= Maze.WALL_CHANGE_SPEED) {
-	      		boolean isLookedAt[][] = new boolean[maze.mazeSize*2+1][];
-	      		boolean shouldChange[][] = new boolean[maze.mazeSize*2+1][];
+	      		boolean isLookedAt[][][] = new boolean[maze.mazeSize*2+1][][];
+	      		boolean shouldChange[][][] = new boolean[maze.mazeSize*2+1][][];
 	      		boolean pathArray[][] = new boolean[maze.mazeSize*2+1][];
 	      		boolean updateBoss = false;
 	      		for (xx = 0; xx < maze.mazeSize*2+1; xx++) {
-	      			isLookedAt[xx] = new boolean[maze.mazeSize*2+1];
-	      			shouldChange[xx] = new boolean[maze.mazeSize*2+1];
+	      			isLookedAt[xx] = new boolean[maze.mazeSize*2+1][];
+	      			shouldChange[xx] = new boolean[maze.mazeSize*2+1][];
 	      			pathArray[xx] = new boolean[maze.mazeSize*2+1];
 	      			for (zz = 0; zz < maze.mazeSize*2+1; zz++) {
-	      				isLookedAt[xx][zz] = false;
-	      				shouldChange[xx][zz] = false;
+	      				isLookedAt[xx][zz] = new boolean[maze.height];
+	      				shouldChange[xx][zz] = new boolean[maze.height];
 	      				pathArray[xx][zz] = false;
+		      			for (int yy = 0; yy < maze.height; yy++) {
+		      				isLookedAt[xx][zz][yy] = false;
+		      				shouldChange[xx][zz][yy] = false;
+		      			}
 	      			}
 	      		}
 	      		int playerMazeX[][] = new int[players.size()][5];
 	      		int playerMazeZ[][] = new int[players.size()][5];
+	      		int playerMazeY[] = new int[players.size()];
 	      		boolean playerMazeMatters[][] = new boolean[players.size()][5];
 	      		Player currentPlayer;
 	      		pit = players.iterator();
@@ -214,6 +220,7 @@ public class MazeTick extends BukkitRunnable {
 	            	Location playerLoc = currentPlayer.getLocation();
 	            	playerMazeX[pp][0] = maze.blockToMazeCoord((int)Math.round(playerLoc.getX()-0.5-maze.mazeX));
 	            	playerMazeZ[pp][0] = maze.blockToMazeCoord((int)Math.round(playerLoc.getZ()-0.5-maze.mazeZ));
+	            	playerMazeY[pp] = maze.blockToMazeYCoord((int)Math.round(playerLoc.getY()-maze.mazeY));
 	            	if (playerMazeX[pp][0]%2 == 0) playerMazeX[pp][0]++;
 	            	if (playerMazeZ[pp][0]%2 == 0) playerMazeZ[pp][0]++;
 	            	if (!(playerLoc.getX()-0.5 < maze.mazeX || playerMazeX[pp][0] > maze.mazeSize*2 || playerLoc.getZ()-0.5 < maze.mazeZ || playerMazeZ[pp][0] > maze.mazeSize*2)) {
@@ -236,8 +243,8 @@ public class MazeTick extends BukkitRunnable {
 	            		if (playerMazeX[pp][i] < 0 || playerMazeX[pp][i] > maze.mazeSize*2 || playerMazeZ[pp][i] < 0 || playerMazeZ[pp][i] > maze.mazeSize*2)
 	            			playerMazeX[pp][i] = playerMazeZ[pp][i] = -1;
 	            		else if (playerMazeX[pp][i]%2 == 0 || playerMazeZ[pp][i]%2 == 0) playerMazeX[pp][i] = playerMazeZ[pp][i] = -1;
-	            		else if (maze.maze[(playerMazeX[pp][i]+playerMazeX[pp][0])/2][playerMazeZ[pp][i]] == 1
-		            		|| maze.maze[playerMazeX[pp][i]][(playerMazeZ[pp][i]+playerMazeZ[pp][0])/2] == 1) playerMazeX[pp][i] = playerMazeZ[pp][i] = -1;
+	            		else if (maze.maze[(playerMazeX[pp][i]+playerMazeX[pp][0])/2][playerMazeZ[pp][i]][playerMazeY[pp]] == 1
+		            		|| maze.maze[playerMazeX[pp][i]][(playerMazeZ[pp][i]+playerMazeZ[pp][0])/2][playerMazeY[pp]] == 1) playerMazeX[pp][i] = playerMazeZ[pp][i] = -1;
 	            	}
 	      			
 	      			int xOffs = 0, zOffs = 0;
@@ -252,85 +259,85 @@ public class MazeTick extends BukkitRunnable {
 	            			boolean lastPart = false;
 	            			if (xOffs == 1) {
 	            				for (xx = playerMazeX[pp][i]; xx < maze.mazeSize*2+1; xx++) {
-	            					if (!lastPart) maze.setToLookedAt(isLookedAt, xx, playerMazeZ[pp][i], playerMazeMatters[pp][i]);
-	            					if (playerMazeZ[pp][i] < maze.mazeSize*2 && (!lastPart || ((xx <= 0 || (playerMazeZ[pp][i]+1 < maze.mazeSize*2 && maze.maze[xx-1][playerMazeZ[pp][i]+2] != 1)) &&
-	            							(xx <= 1 || maze.maze[xx-2][playerMazeZ[pp][i]+1] != 1)))) {
-	            						maze.setToLookedAt(isLookedAt, xx, playerMazeZ[pp][i]+1, playerMazeMatters[pp][i]);
-	            						if (playerMazeZ[pp][i]+1 < maze.mazeSize*2 && !(maze.maze[xx][playerMazeZ[pp][i]+1] == 1 &&
-	            								((xx-1 < playerMazeX[pp][i] || maze.maze[xx-1][playerMazeZ[pp][i]+2] == 1) || (xx-1-xx%2 < playerMazeX[pp][i] || maze.maze[xx-1-xx%2][playerMazeZ[pp][i]+1] == 1))))
-	            							maze.setToLookedAt(isLookedAt, xx, playerMazeZ[pp][i]+2, playerMazeMatters[pp][i]);
+	            					if (!lastPart) maze.setToLookedAt(isLookedAt, xx, playerMazeZ[pp][i], playerMazeY[pp], playerMazeMatters[pp][i]);
+	            					if (playerMazeZ[pp][i] < maze.mazeSize*2 && (!lastPart || ((xx <= 0 || (playerMazeZ[pp][i]+1 < maze.mazeSize*2 && maze.maze[xx-1][playerMazeZ[pp][i]+2][playerMazeY[pp]] != 1)) &&
+	            							(xx <= 1 || maze.maze[xx-2][playerMazeZ[pp][i]+1][playerMazeY[pp]] != 1)))) {
+	            						maze.setToLookedAt(isLookedAt, xx, playerMazeZ[pp][i]+1, playerMazeY[pp], playerMazeMatters[pp][i]);
+	            						if (playerMazeZ[pp][i]+1 < maze.mazeSize*2 && !(maze.maze[xx][playerMazeZ[pp][i]+1][playerMazeY[pp]] == 1 &&
+	            								((xx-1 < playerMazeX[pp][i] || maze.maze[xx-1][playerMazeZ[pp][i]+2][playerMazeY[pp]] == 1) || (xx-1-xx%2 < playerMazeX[pp][i] || maze.maze[xx-1-xx%2][playerMazeZ[pp][i]+1][playerMazeY[pp]] == 1))))
+	            							maze.setToLookedAt(isLookedAt, xx, playerMazeZ[pp][i]+2, playerMazeY[pp], playerMazeMatters[pp][i]);
 	            					}
-	            					if (playerMazeZ[pp][i] > 0 && (!lastPart || ((xx <= 0 || (playerMazeZ[pp][i] > 1 && maze.maze[xx-1][playerMazeZ[pp][i]-2] != 1)) && 
-	            							(xx <= 1 || maze.maze[xx-2][playerMazeZ[pp][i]-1] != 1)))) {
-	            						maze.setToLookedAt(isLookedAt, xx, playerMazeZ[pp][i]-1, playerMazeMatters[pp][i]);
-	            						if (playerMazeZ[pp][i] > 1 && !(maze.maze[xx][playerMazeZ[pp][i]-1] == 1 &&
-	            								((xx-1 < playerMazeX[pp][i] || maze.maze[xx-1][playerMazeZ[pp][i]-2] == 1) || (xx-1-xx%2 < playerMazeX[pp][i] || maze.maze[xx-1-xx%2][playerMazeZ[pp][i]-1] == 1))))
-	            							maze.setToLookedAt(isLookedAt, xx, playerMazeZ[pp][i]-2, playerMazeMatters[pp][i]);
+	            					if (playerMazeZ[pp][i] > 0 && (!lastPart || ((xx <= 0 || (playerMazeZ[pp][i] > 1 && maze.maze[xx-1][playerMazeZ[pp][i]-2][playerMazeY[pp]] != 1)) && 
+	            							(xx <= 1 || maze.maze[xx-2][playerMazeZ[pp][i]-1][playerMazeY[pp]] != 1)))) {
+	            						maze.setToLookedAt(isLookedAt, xx, playerMazeZ[pp][i]-1, playerMazeY[pp], playerMazeMatters[pp][i]);
+	            						if (playerMazeZ[pp][i] > 1 && !(maze.maze[xx][playerMazeZ[pp][i]-1][playerMazeY[pp]] == 1 &&
+	            								((xx-1 < playerMazeX[pp][i] || maze.maze[xx-1][playerMazeZ[pp][i]-2][playerMazeY[pp]] == 1) || (xx-1-xx%2 < playerMazeX[pp][i] || maze.maze[xx-1-xx%2][playerMazeZ[pp][i]-1][playerMazeY[pp]] == 1))))
+	            							maze.setToLookedAt(isLookedAt, xx, playerMazeZ[pp][i]-2, playerMazeY[pp], playerMazeMatters[pp][i]);
 	            					}
 	            					if (lastPart) break;
-	            					if (maze.maze[xx][playerMazeZ[pp][i]] == 1) lastPart = true;
+	            					if (maze.maze[xx][playerMazeZ[pp][i]][playerMazeY[pp]] == 1) lastPart = true;
 	            				}
 	            			} else if (xOffs == -1) {
 	            				for (xx = playerMazeX[pp][i]; xx >= 0; xx--) {
-	            					if (!lastPart) maze.setToLookedAt(isLookedAt, xx, playerMazeZ[pp][i], playerMazeMatters[pp][i]);
-	            					if (playerMazeZ[pp][i] < maze.mazeSize*2 && (!lastPart || ((xx >= maze.mazeSize*2 || (playerMazeZ[pp][i]+1 < maze.mazeSize*2 && maze.maze[xx+1][playerMazeZ[pp][i]+2] != 1)) &&
-	            							(xx+1 >= maze.mazeSize*2 || maze.maze[xx+2][playerMazeZ[pp][i]+1] != 1)))) {
-	            						maze.setToLookedAt(isLookedAt, xx, playerMazeZ[pp][i]+1, playerMazeMatters[pp][i]);
-	            						if (playerMazeZ[pp][i]+1 < maze.mazeSize*2 && !(maze.maze[xx][playerMazeZ[pp][i]+1] == 1 &&
-	            								((xx >= playerMazeX[pp][i] || maze.maze[xx+1][playerMazeZ[pp][i]+2] == 1) || (xx+xx%2 >= playerMazeX[pp][i] || maze.maze[xx+1+xx%2][playerMazeZ[pp][i]+1] == 1))))
-	            							maze.setToLookedAt(isLookedAt, xx, playerMazeZ[pp][i]+2, playerMazeMatters[pp][i]);
+	            					if (!lastPart) maze.setToLookedAt(isLookedAt, xx, playerMazeZ[pp][i], playerMazeY[pp], playerMazeMatters[pp][i]);
+	            					if (playerMazeZ[pp][i] < maze.mazeSize*2 && (!lastPart || ((xx >= maze.mazeSize*2 || (playerMazeZ[pp][i]+1 < maze.mazeSize*2 && maze.maze[xx+1][playerMazeZ[pp][i]+2][playerMazeY[pp]] != 1)) &&
+	            							(xx+1 >= maze.mazeSize*2 || maze.maze[xx+2][playerMazeZ[pp][i]+1][playerMazeY[pp]] != 1)))) {
+	            						maze.setToLookedAt(isLookedAt, xx, playerMazeZ[pp][i]+1, playerMazeY[pp], playerMazeMatters[pp][i]);
+	            						if (playerMazeZ[pp][i]+1 < maze.mazeSize*2 && !(maze.maze[xx][playerMazeZ[pp][i]+1][playerMazeY[pp]] == 1 &&
+	            								((xx >= playerMazeX[pp][i] || maze.maze[xx+1][playerMazeZ[pp][i]+2][playerMazeY[pp]] == 1) || (xx+xx%2 >= playerMazeX[pp][i] || maze.maze[xx+1+xx%2][playerMazeZ[pp][i]+1][playerMazeY[pp]] == 1))))
+	            							maze.setToLookedAt(isLookedAt, xx, playerMazeZ[pp][i]+2, playerMazeY[pp], playerMazeMatters[pp][i]);
 	            					}
-	            					if (playerMazeZ[pp][i] > 0 && (!lastPart || ((xx >= maze.mazeSize*2 || (playerMazeZ[pp][i] > 1 && maze.maze[xx+1][playerMazeZ[pp][i]-2] != 1)) &&
-	            							(xx+1 >= maze.mazeSize*2 || maze.maze[xx+2][playerMazeZ[pp][i]-1] != 1)))) {
-	            						maze.setToLookedAt(isLookedAt, xx, playerMazeZ[pp][i]-1, playerMazeMatters[pp][i]);
-	            						if (playerMazeZ[pp][i] > 1 && !(maze.maze[xx][playerMazeZ[pp][i]-1] == 1 &&
-	            								((xx >= playerMazeX[pp][i] || maze.maze[xx+1][playerMazeZ[pp][i]-2] == 1) || (xx+xx%2 >= playerMazeX[pp][i] || maze.maze[xx+1+xx%2][playerMazeZ[pp][i]-1] == 1))))
-	            							maze.setToLookedAt(isLookedAt, xx, playerMazeZ[pp][i]-1, playerMazeMatters[pp][i]);
+	            					if (playerMazeZ[pp][i] > 0 && (!lastPart || ((xx >= maze.mazeSize*2 || (playerMazeZ[pp][i] > 1 && maze.maze[xx+1][playerMazeZ[pp][i]-2][playerMazeY[pp]] != 1)) &&
+	            							(xx+1 >= maze.mazeSize*2 || maze.maze[xx+2][playerMazeZ[pp][i]-1][playerMazeY[pp]] != 1)))) {
+	            						maze.setToLookedAt(isLookedAt, xx, playerMazeZ[pp][i]-1, playerMazeY[pp], playerMazeMatters[pp][i]);
+	            						if (playerMazeZ[pp][i] > 1 && !(maze.maze[xx][playerMazeZ[pp][i]-1][playerMazeY[pp]] == 1 &&
+	            								((xx >= playerMazeX[pp][i] || maze.maze[xx+1][playerMazeZ[pp][i]-2][playerMazeY[pp]] == 1) || (xx+xx%2 >= playerMazeX[pp][i] || maze.maze[xx+1+xx%2][playerMazeZ[pp][i]-1][playerMazeY[pp]] == 1))))
+	            							maze.setToLookedAt(isLookedAt, xx, playerMazeZ[pp][i]-1, playerMazeY[pp], playerMazeMatters[pp][i]);
 	            					}
 	            					if (lastPart) break;
-	            					if (maze.maze[xx][playerMazeZ[pp][i]] == 1) lastPart = true;
+	            					if (maze.maze[xx][playerMazeZ[pp][i]][playerMazeY[pp]] == 1) lastPart = true;
 	            				}
 	            			}
 	            			lastPart = false;
 	            			if (zOffs == 1) {
 	            				for (zz = playerMazeZ[pp][i]; zz < maze.mazeSize*2+1; zz++) {
-	            					if (!lastPart) maze.setToLookedAt(isLookedAt, playerMazeX[pp][i], zz, playerMazeMatters[pp][i]);
-	            					if (playerMazeX[pp][i] < maze.mazeSize*2 && (!lastPart || ((zz <= 0 || (playerMazeX[pp][i]+1 < maze.mazeSize*2 && maze.maze[playerMazeX[pp][i]+2][zz-1] != 1)) &&
-	            							(zz <= 1 || maze.maze[playerMazeX[pp][i]+1][zz-2] != 1)))) {
-	            						maze.setToLookedAt(isLookedAt, playerMazeX[pp][i]+1, zz, playerMazeMatters[pp][i]);
-	            						if (playerMazeX[pp][i]+1 < maze.mazeSize*2 && !(maze.maze[playerMazeX[pp][i]+1][zz] == 1 &&
-	            								((zz-1 >= 0 && maze.maze[playerMazeX[pp][i]+2][zz-1] == 1) || (zz-1-zz%2 >= 0 && maze.maze[playerMazeX[pp][i]+1][zz-1-zz%2] == 1))))
-	            							maze.setToLookedAt(isLookedAt, playerMazeX[pp][i]+2, zz, playerMazeMatters[pp][i]);
+	            					if (!lastPart) maze.setToLookedAt(isLookedAt, playerMazeX[pp][i], zz, playerMazeY[pp], playerMazeMatters[pp][i]);
+	            					if (playerMazeX[pp][i] < maze.mazeSize*2 && (!lastPart || ((zz <= 0 || (playerMazeX[pp][i]+1 < maze.mazeSize*2 && maze.maze[playerMazeX[pp][i]+2][zz-1][playerMazeY[pp]] != 1)) &&
+	            							(zz <= 1 || maze.maze[playerMazeX[pp][i]+1][zz-2][playerMazeY[pp]] != 1)))) {
+	            						maze.setToLookedAt(isLookedAt, playerMazeX[pp][i]+1, zz, playerMazeY[pp], playerMazeMatters[pp][i]);
+	            						if (playerMazeX[pp][i]+1 < maze.mazeSize*2 && !(maze.maze[playerMazeX[pp][i]+1][zz][playerMazeY[pp]] == 1 &&
+	            								((zz-1 >= 0 && maze.maze[playerMazeX[pp][i]+2][zz-1][playerMazeY[pp]] == 1) || (zz-1-zz%2 >= 0 && maze.maze[playerMazeX[pp][i]+1][zz-1-zz%2][playerMazeY[pp]] == 1))))
+	            							maze.setToLookedAt(isLookedAt, playerMazeX[pp][i]+2, zz, playerMazeY[pp], playerMazeMatters[pp][i]);
 	            					}
-	            					if (playerMazeX[pp][i] > 0 && (!lastPart || ((zz <= 0 || (playerMazeX[pp][i] > 1 && maze.maze[playerMazeX[pp][i]-2][zz-1] != 1)) &&
-	            							(zz <= 1 || maze.maze[playerMazeX[pp][i]-1][zz-2] != 1)))) {
-	            						maze.setToLookedAt(isLookedAt, playerMazeX[pp][i]-1, zz, playerMazeMatters[pp][i]);
-	            						if (playerMazeX[pp][i] > 1 && !(maze.maze[playerMazeX[pp][i]-1][zz] == 1 &&
-	            								((zz-1 < playerMazeZ[pp][i] || maze.maze[playerMazeX[pp][i]-2][zz-1] == 1) || (zz-1-zz%2 < playerMazeZ[pp][i] || maze.maze[playerMazeX[pp][i]-1][zz-1-zz%2] == 1))))
-	            							maze.setToLookedAt(isLookedAt, playerMazeX[pp][i]-2, zz, playerMazeMatters[pp][i]);
+	            					if (playerMazeX[pp][i] > 0 && (!lastPart || ((zz <= 0 || (playerMazeX[pp][i] > 1 && maze.maze[playerMazeX[pp][i]-2][zz-1][playerMazeY[pp]] != 1)) &&
+	            							(zz <= 1 || maze.maze[playerMazeX[pp][i]-1][zz-2][playerMazeY[pp]] != 1)))) {
+	            						maze.setToLookedAt(isLookedAt, playerMazeX[pp][i]-1, zz, playerMazeY[pp], playerMazeMatters[pp][i]);
+	            						if (playerMazeX[pp][i] > 1 && !(maze.maze[playerMazeX[pp][i]-1][zz][playerMazeY[pp]] == 1 &&
+	            								((zz-1 < playerMazeZ[pp][i] || maze.maze[playerMazeX[pp][i]-2][zz-1][playerMazeY[pp]] == 1) || (zz-1-zz%2 < playerMazeZ[pp][i] || maze.maze[playerMazeX[pp][i]-1][zz-1-zz%2][playerMazeY[pp]] == 1))))
+	            							maze.setToLookedAt(isLookedAt, playerMazeX[pp][i]-2, zz, playerMazeY[pp], playerMazeMatters[pp][i]);
 	            					}
 	            					if (lastPart) break;
-	            					if (maze.maze[playerMazeX[pp][i]][zz] == 1) lastPart = true;
+	            					if (maze.maze[playerMazeX[pp][i]][zz][playerMazeY[pp]] == 1) lastPart = true;
 	            				}
 	            			} else if (zOffs == -1) {
 	            				for (zz = playerMazeZ[pp][i]; zz >= 0; zz--) {
-	            					if (!lastPart) maze.setToLookedAt(isLookedAt, playerMazeX[pp][i], zz, playerMazeMatters[pp][i]);
-	            					if (playerMazeX[pp][i] < maze.mazeSize*2 && (!lastPart || ((zz >= maze.mazeSize*2 || (playerMazeX[pp][i]+1 < maze.mazeSize*2 && maze.maze[playerMazeX[pp][i]+2][zz+1] != 1)) &&
-	            							(zz+1 >= maze.mazeSize*2 || maze.maze[playerMazeX[pp][i]+1][zz+2] != 1)))) {
-	            						maze.setToLookedAt(isLookedAt, playerMazeX[pp][i]+1, zz, playerMazeMatters[pp][i]);
-	            						if (playerMazeX[pp][i]+1 < maze.mazeSize*2 && !(maze.maze[playerMazeX[pp][i]+1][zz] == 1 &&
-	            								((zz >= playerMazeZ[pp][i] || maze.maze[playerMazeX[pp][i]+2][zz+1] == 1) || (zz+zz%2 >= playerMazeZ[pp][i] || maze.maze[playerMazeX[pp][i]+1][zz+1+zz%2] == 1))))
-	            							maze.setToLookedAt(isLookedAt, playerMazeX[pp][i]+2, zz, playerMazeMatters[pp][i]);
+	            					if (!lastPart) maze.setToLookedAt(isLookedAt, playerMazeX[pp][i], zz, playerMazeY[pp], playerMazeMatters[pp][i]);
+	            					if (playerMazeX[pp][i] < maze.mazeSize*2 && (!lastPart || ((zz >= maze.mazeSize*2 || (playerMazeX[pp][i]+1 < maze.mazeSize*2 && maze.maze[playerMazeX[pp][i]+2][zz+1][playerMazeY[pp]] != 1)) &&
+	            							(zz+1 >= maze.mazeSize*2 || maze.maze[playerMazeX[pp][i]+1][zz+2][playerMazeY[pp]] != 1)))) {
+	            						maze.setToLookedAt(isLookedAt, playerMazeX[pp][i]+1, zz, playerMazeY[pp], playerMazeMatters[pp][i]);
+	            						if (playerMazeX[pp][i]+1 < maze.mazeSize*2 && !(maze.maze[playerMazeX[pp][i]+1][zz][playerMazeY[pp]] == 1 &&
+	            								((zz >= playerMazeZ[pp][i] || maze.maze[playerMazeX[pp][i]+2][zz+1][playerMazeY[pp]] == 1) || (zz+zz%2 >= playerMazeZ[pp][i] || maze.maze[playerMazeX[pp][i]+1][zz+1+zz%2][playerMazeY[pp]] == 1))))
+	            							maze.setToLookedAt(isLookedAt, playerMazeX[pp][i]+2, zz, playerMazeY[pp], playerMazeMatters[pp][i]);
 	            					}
-	            					if (playerMazeX[pp][i] > 0 && (!lastPart || ((zz >= maze.mazeSize*2 || (playerMazeX[pp][i] > 1 && maze.maze[playerMazeX[pp][i]-2][zz+1] != 1)) &&
-	            							(zz+1 >= maze.mazeSize*2 || maze.maze[playerMazeX[pp][i]-1][zz+2] != 1)))) {
-	            						maze.setToLookedAt(isLookedAt, playerMazeX[pp][i]-1, zz, playerMazeMatters[pp][i]);
-	            						if (playerMazeX[pp][i] > 1 && !(maze.maze[playerMazeX[pp][i]-1][zz] == 1 &&
-	            								((zz >= playerMazeZ[pp][i] || maze.maze[playerMazeX[pp][i]-2][zz+1] == 1) || (zz+zz%2 >= playerMazeZ[pp][i] || maze.maze[playerMazeX[pp][i]-1][zz+1+zz%2] == 1))))
-	            							maze.setToLookedAt(isLookedAt, playerMazeX[pp][i]-2, zz, playerMazeMatters[pp][i]);
+	            					if (playerMazeX[pp][i] > 0 && (!lastPart || ((zz >= maze.mazeSize*2 || (playerMazeX[pp][i] > 1 && maze.maze[playerMazeX[pp][i]-2][zz+1][playerMazeY[pp]] != 1)) &&
+	            							(zz+1 >= maze.mazeSize*2 || maze.maze[playerMazeX[pp][i]-1][zz+2][playerMazeY[pp]] != 1)))) {
+	            						maze.setToLookedAt(isLookedAt, playerMazeX[pp][i]-1, zz, playerMazeY[pp], playerMazeMatters[pp][i]);
+	            						if (playerMazeX[pp][i] > 1 && !(maze.maze[playerMazeX[pp][i]-1][zz][playerMazeY[pp]] == 1 &&
+	            								((zz >= playerMazeZ[pp][i] || maze.maze[playerMazeX[pp][i]-2][zz+1][playerMazeY[pp]] == 1) || (zz+zz%2 >= playerMazeZ[pp][i] || maze.maze[playerMazeX[pp][i]-1][zz+1+zz%2][playerMazeY[pp]] == 1))))
+	            							maze.setToLookedAt(isLookedAt, playerMazeX[pp][i]-2, zz, playerMazeY[pp], playerMazeMatters[pp][i]);
 	            					}
 	            					if (lastPart) break;
-	            					if (maze.maze[playerMazeX[pp][i]][zz] == 1) lastPart = true;
+	            					if (maze.maze[playerMazeX[pp][i]][zz][playerMazeY[pp]] == 1) lastPart = true;
 	            				}
 	            			}
 	            		}
@@ -341,56 +348,59 @@ public class MazeTick extends BukkitRunnable {
 	          	MazeCoords coords;
 	          	changedBlocks = new ArrayList<MazeCoords>();
 	        	if (!players.isEmpty()) { 
-	            	for (xx = 2; xx <= maze.mazeSize*2-2; xx += 2) {
-	            		for (zz = 2; zz <= maze.mazeSize*2-2; zz += 2) {
-	            			if (!maze.isBeingChanged[xx][zz] && !isLookedAt[xx][zz]) {
-	    	        			posX = maze.mazeToBlockCoord(xx);
-	    	        			posZ = maze.mazeToBlockCoord(zz);
-	        					if (maze.mazeWorld.getBlockAt(maze.mazeX+posX, maze.mazeY+2, maze.mazeZ+posZ) == null || maze.mazeWorld.getBlockAt(maze.mazeX+posX, maze.mazeY+2, maze.mazeZ+posZ).isEmpty()) {
-	        						if (maze.mazeWorld.getBlockAt(maze.mazeX+posX, maze.mazeY+1, maze.mazeZ+posZ).getType() == Material.CHEST) {
-		        						Chest chest = ((Chest)maze.mazeWorld.getBlockAt(maze.mazeX+posX, maze.mazeY+1, maze.mazeZ+posZ).getState());
-		        						boolean chestIsEmpty = true;
-		        						ItemStack[] chestInv = chest.getInventory().getContents();
-		        		    			for (j = 0; j < chestInv.length; j++) {
-		        		    				if (chestInv[j] != null && chestInv[j].getType() == Material.AIR && chestInv[j].getAmount() == 0) {
-		        		    					chestIsEmpty = false;
-		        		    					break;
-		        		    				}
-		        		    			}
-			            				if (chestIsEmpty || Math.random() < 0.1) {
-			            					chest.getInventory().clear();
-			            					maze.mazeWorld.getBlockAt(maze.mazeX+posX, maze.mazeY+1, maze.mazeZ+posZ).setTypeId(maze.configProps.blockTypes[2][6][0][0]);
-			            					maze.mazeWorld.getBlockAt(maze.mazeX+posX, maze.mazeY+1, maze.mazeZ+posZ).setData((byte)maze.configProps.blockTypes[2][6][0][1]);
-			            					maze.mazeWorld.getBlockAt(maze.mazeX+posX, maze.mazeY+2, maze.mazeZ+posZ).setTypeId(maze.configProps.blockTypes[2][5][0][0]);
-			            					maze.mazeWorld.getBlockAt(maze.mazeX+posX, maze.mazeY+2, maze.mazeZ+posZ).setData((byte)maze.configProps.blockTypes[2][5][0][1]);
-			            				}
-	        						} else {
-		            					maze.mazeWorld.getBlockAt(maze.mazeX+posX, maze.mazeY+1, maze.mazeZ+posZ).setTypeId(maze.configProps.blockTypes[2][6][0][0]);
-		            					maze.mazeWorld.getBlockAt(maze.mazeX+posX, maze.mazeY+1, maze.mazeZ+posZ).setData((byte)maze.configProps.blockTypes[2][6][0][1]);
-		            					maze.mazeWorld.getBlockAt(maze.mazeX+posX, maze.mazeY+2, maze.mazeZ+posZ).setTypeId(maze.configProps.blockTypes[2][5][0][0]);
-		            					maze.mazeWorld.getBlockAt(maze.mazeX+posX, maze.mazeY+2, maze.mazeZ+posZ).setData((byte)maze.configProps.blockTypes[2][5][0][1]);
-	        						}
-	        					}
-	            			}
-	            		}
-	            	}
-	            	for (xx = 1; xx <= maze.mazeSize*2-1; xx += 2) {
-	            		for (zz = 1; zz <= maze.mazeSize*2-1; zz += 2) {
-	            			if (!maze.isBeingChanged[xx][zz] && !isLookedAt[xx][zz] && Math.random() < maze.configProps.groundReappearProb &&
-	            				maze.mazeWorld.getBlockAt(maze.mazeX+maze.mazeToBlockCoord(xx), maze.mazeY, maze.mazeZ+maze.mazeToBlockCoord(zz)).isEmpty()) {
-	            				int xCoord = maze.mazeToBlockCoord(xx);
-	            				for (int xxx = xCoord; xxx <= maze.mazeToBlockCoord(xx)+Maze.MAZE_PASSAGE_WIDTH-1; xxx++) {
-		            				int zCoord = maze.mazeToBlockCoord(zz);
-	            					for (int zzz = zCoord; zzz <= maze.mazeToBlockCoord(zz)+Maze.MAZE_PASSAGE_WIDTH-1; zzz++) {
-	            						int bId = maze.configProps.blockTypes[4][zzz-zCoord][xxx-xCoord][0];
-	            						int bData = (byte)maze.configProps.blockTypes[4][zzz-zCoord][xxx-xCoord][1];
-	            						maze.mazeWorld.getBlockAt(maze.mazeX+xxx, maze.mazeY, maze.mazeZ+zzz).setTypeId(bId);
-	            						maze.mazeWorld.getBlockAt(maze.mazeX+xxx, maze.mazeY, maze.mazeZ+zzz).setData((byte)bData);
-	  		        					if (MazePvP.theMazePvP.showHeads) maze.mazeWorld.getBlockAt(maze.mazeX+xxx, maze.mazeY-Maze.MAZE_PASSAGE_DEPTH+2, maze.mazeZ+zzz).setType(Material.AIR);
-	            					}
-	            				}
-	            			}
-	            		}
+	            	for (int yy = 0; yy <= maze.height; yy++) {
+		            	for (xx = 2; xx <= maze.mazeSize*2-2; xx += 2) {
+		            		for (zz = 2; zz <= maze.mazeSize*2-2; zz += 2) {
+		            			if (!maze.isBeingChanged[xx][zz][yy] && !isLookedAt[xx][zz][yy]) {
+		    	        			posX = maze.mazeToBlockCoord(xx);
+		    	        			posZ = maze.mazeToBlockCoord(zz);
+		    	        			int posY = maze.mazeToBlockYCoord(yy);
+		        					if (maze.mazeWorld.getBlockAt(maze.mazeX+posX, maze.mazeY+2+posY, maze.mazeZ+posZ) == null || maze.mazeWorld.getBlockAt(maze.mazeX+posX, maze.mazeY+2+posY, maze.mazeZ+posZ).isEmpty()) {
+		        						if (maze.mazeWorld.getBlockAt(maze.mazeX+posX, maze.mazeY+1+posY, maze.mazeZ+posZ).getType() == Material.CHEST) {
+			        						Chest chest = ((Chest)maze.mazeWorld.getBlockAt(maze.mazeX+posX, maze.mazeY+1+posY, maze.mazeZ+posZ).getState());
+			        						boolean chestIsEmpty = true;
+			        						ItemStack[] chestInv = chest.getInventory().getContents();
+			        		    			for (j = 0; j < chestInv.length; j++) {
+			        		    				if (chestInv[j] != null && chestInv[j].getType() == Material.AIR && chestInv[j].getAmount() == 0) {
+			        		    					chestIsEmpty = false;
+			        		    					break;
+			        		    				}
+			        		    			}
+				            				if (chestIsEmpty || Math.random() < 0.1) {
+				            					chest.getInventory().clear();
+				            					maze.mazeWorld.getBlockAt(maze.mazeX+posX, maze.mazeY+1+posY, maze.mazeZ+posZ).setTypeId(maze.configProps.blockTypes[2][6][0][0]);
+				            					maze.mazeWorld.getBlockAt(maze.mazeX+posX, maze.mazeY+1+posY, maze.mazeZ+posZ).setData((byte)maze.configProps.blockTypes[2][6][0][1]);
+				            					maze.mazeWorld.getBlockAt(maze.mazeX+posX, maze.mazeY+2+posY, maze.mazeZ+posZ).setTypeId(maze.configProps.blockTypes[2][5][0][0]);
+				            					maze.mazeWorld.getBlockAt(maze.mazeX+posX, maze.mazeY+2+posY, maze.mazeZ+posZ).setData((byte)maze.configProps.blockTypes[2][5][0][1]);
+				            				}
+		        						} else {
+			            					maze.mazeWorld.getBlockAt(maze.mazeX+posX, maze.mazeY+1+posY, maze.mazeZ+posZ).setTypeId(maze.configProps.blockTypes[2][6][0][0]);
+			            					maze.mazeWorld.getBlockAt(maze.mazeX+posX, maze.mazeY+1+posY, maze.mazeZ+posZ).setData((byte)maze.configProps.blockTypes[2][6][0][1]);
+			            					maze.mazeWorld.getBlockAt(maze.mazeX+posX, maze.mazeY+2+posY, maze.mazeZ+posZ).setTypeId(maze.configProps.blockTypes[2][5][0][0]);
+			            					maze.mazeWorld.getBlockAt(maze.mazeX+posX, maze.mazeY+2+posY, maze.mazeZ+posZ).setData((byte)maze.configProps.blockTypes[2][5][0][1]);
+		        						}
+		        					}
+		            			}
+		            		}
+		            	}
+		            	for (xx = 1; xx <= maze.mazeSize*2-1; xx += 2) {
+		            		for (zz = 1; zz <= maze.mazeSize*2-1; zz += 2) {
+		            			if (!maze.isBeingChanged[xx][zz][yy] && !isLookedAt[xx][zz][yy] && Math.random() < maze.configProps.groundReappearProb &&
+		            				maze.mazeWorld.getBlockAt(maze.mazeX+maze.mazeToBlockCoord(xx), maze.mazeY+maze.mazeToBlockYCoord(yy), maze.mazeZ+maze.mazeToBlockCoord(zz)).isEmpty()) {
+		            				int xCoord = maze.mazeToBlockCoord(xx);
+		            				for (int xxx = xCoord; xxx <= maze.mazeToBlockCoord(xx)+Maze.MAZE_PASSAGE_WIDTH-1; xxx++) {
+			            				int zCoord = maze.mazeToBlockCoord(zz);
+		            					for (int zzz = zCoord; zzz <= maze.mazeToBlockCoord(zz)+Maze.MAZE_PASSAGE_WIDTH-1; zzz++) {
+		            						int bId = maze.configProps.blockTypes[4][zzz-zCoord][xxx-xCoord][0];
+		            						int bData = (byte)maze.configProps.blockTypes[4][zzz-zCoord][xxx-xCoord][1];
+		            						maze.mazeWorld.getBlockAt(maze.mazeX+xxx, maze.mazeY+maze.mazeToBlockYCoord(yy), maze.mazeZ+zzz).setTypeId(bId);
+		            						maze.mazeWorld.getBlockAt(maze.mazeX+xxx, maze.mazeY+maze.mazeToBlockYCoord(yy), maze.mazeZ+zzz).setData((byte)bData);
+		  		        					if (yy == 0 && MazePvP.theMazePvP.showHeads) maze.mazeWorld.getBlockAt(maze.mazeX+xxx, maze.mazeY-Maze.MAZE_PASSAGE_DEPTH+2, maze.mazeZ+zzz).setType(Material.AIR);
+		            					}
+		            				}
+		            			}
+		            		}
+		            	}
 	            	}
 	        	}
 	        	pit = players.iterator();
@@ -404,41 +414,45 @@ public class MazeTick extends BukkitRunnable {
 	            	while (true) {
 	            		boolean chestShouldAppear = (Math.random() < maze.configProps.chestAppearProb+maze.configProps.enderChestAppearProb);
 	            		if (chestShouldAppear) {
-			            	for (xx = Math.max(2, playerMazeX[pp][0]-distance); xx <= Math.min(maze.mazeSize*2-2, playerMazeX[pp][0]+distance); xx += 2) {
-			            		for (zz = Math.max(2, playerMazeZ[pp][0]-distance); zz <= Math.min(maze.mazeSize*2-2, playerMazeZ[pp][0]+distance); zz += 2) {
-			            			if (!maze.isBeingChanged[xx][zz] && !isLookedAt[xx][zz] && maze.canBeReached(playerMazeX[pp][0], playerMazeZ[pp][0], xx, zz, distance, pathArray)) {
-			            				pChangedBlocks.add(new MazeCoords(xx, zz, 20));
-			            				changedNum++;
-			            			}
-			            		}
-			            	}
+	            			for (int yy = 0; yy <  maze.height; yy++) {
+				            	for (xx = Math.max(2, playerMazeX[pp][0]-distance); xx <= Math.min(maze.mazeSize*2-2, playerMazeX[pp][0]+distance); xx += 2) {
+				            		for (zz = Math.max(2, playerMazeZ[pp][0]-distance); zz <= Math.min(maze.mazeSize*2-2, playerMazeZ[pp][0]+distance); zz += 2) {
+				            			if (!maze.isBeingChanged[xx][zz][yy] && !isLookedAt[xx][zz][yy] && maze.canBeReached(playerMazeX[pp][0], playerMazeZ[pp][0], xx, zz, yy, distance, pathArray)) {
+				            				pChangedBlocks.add(new MazeCoords(xx, zz, 20));
+				            				changedNum++;
+				            			}
+				            		}
+				            	}
+	            			}
 	            		} else {
-			            	for (xx = Math.max(2, playerMazeX[pp][0]-distance); xx <= Math.min(maze.mazeSize*2-2, playerMazeX[pp][0]+distance); xx += 2) {
-			            		for (zz = Math.max(1, playerMazeZ[pp][0]-distance+1); zz <= Math.min(maze.mazeSize*2-1, playerMazeZ[pp][0]+distance-1); zz += 2) {
-			            			if (!maze.isBeingChanged[xx][zz] && !isLookedAt[xx][zz] && !(maze.maze[xx][zz] == 1 && (maze.pillarIsAlone(xx, zz+1, xx, zz) || maze.pillarIsAlone(xx, zz-1, xx, zz)))
-			            					&& maze.canBeReached(playerMazeX[pp][0], playerMazeZ[pp][0], xx, zz, distance, pathArray)) {
-			            				pChangedBlocks.add(new MazeCoords(xx, zz, 1));
-			            				changedNum++;
-			            			}
-			            		}
-			            	}
-			            	for (zz = Math.max(2, playerMazeZ[pp][0]-distance); zz <= Math.min(maze.mazeSize*2-2, playerMazeZ[pp][0]+distance); zz += 2) {
-			            		for (xx = Math.max(1, playerMazeX[pp][0]-distance+1); xx <= Math.min(maze.mazeSize*2-1, playerMazeX[pp][0]+distance-1); xx += 2) {
-			            			if (!maze.isBeingChanged[xx][zz] && !isLookedAt[xx][zz] && !(maze.maze[xx][zz] == 1 && (maze.pillarIsAlone(xx+1, zz, xx, zz) || maze.pillarIsAlone(xx-1, zz, xx, zz)))
-			            					&& maze.canBeReached(playerMazeX[pp][0], playerMazeZ[pp][0], xx, zz, distance, pathArray)) {
-			            				pChangedBlocks.add(new MazeCoords(xx, zz, 1));
-			            				changedNum++;
-			            			}
-			            		}
-			            	}
-			            	for (xx = Math.max(1, playerMazeX[pp][0]-distance+1); xx <= Math.min(maze.mazeSize*2-1, playerMazeX[pp][0]+distance-1); xx += 2) {
-			            		for (zz = Math.max(1, playerMazeZ[pp][0]-distance+1); zz <= Math.min(maze.mazeSize*2-1, playerMazeZ[pp][0]+distance-1); zz += 2) {
-			            			if (!maze.isBeingChanged[xx][zz] && !isLookedAt[xx][zz] && maze.canBeReached(playerMazeX[pp][0], playerMazeZ[pp][0], xx, zz, distance, pathArray)) {
-			            				pChangedBlocks.add(new MazeCoords(xx, zz, 10));
-			            				changedNum++;
-			            			}
-			            		}
-			            	}
+	            			for (int yy = 0; yy <  maze.height; yy++) {
+				            	for (xx = Math.max(2, playerMazeX[pp][0]-distance); xx <= Math.min(maze.mazeSize*2-2, playerMazeX[pp][0]+distance); xx += 2) {
+				            		for (zz = Math.max(1, playerMazeZ[pp][0]-distance+1); zz <= Math.min(maze.mazeSize*2-1, playerMazeZ[pp][0]+distance-1); zz += 2) {
+				            			if (!maze.isBeingChanged[xx][zz][yy] && !isLookedAt[xx][zz][yy] && !(maze.maze[xx][zz][yy] == 1 && (maze.pillarIsAlone(xx, zz+1, xx, zz, yy) || maze.pillarIsAlone(xx, zz-1, xx, zz, yy)))
+				            					&& maze.canBeReached(playerMazeX[pp][0], playerMazeZ[pp][0], xx, zz, yy, distance, pathArray)) {
+				            				pChangedBlocks.add(new MazeCoords(xx, zz, 1));
+				            				changedNum++;
+				            			}
+				            		}
+				            	}
+				            	for (zz = Math.max(2, playerMazeZ[pp][0]-distance); zz <= Math.min(maze.mazeSize*2-2, playerMazeZ[pp][0]+distance); zz += 2) {
+				            		for (xx = Math.max(1, playerMazeX[pp][0]-distance+1); xx <= Math.min(maze.mazeSize*2-1, playerMazeX[pp][0]+distance-1); xx += 2) {
+				            			if (!maze.isBeingChanged[xx][zz][yy] && !isLookedAt[xx][zz][yy] && !(maze.maze[xx][zz][yy] == 1 && (maze.pillarIsAlone(xx+1, zz, xx, zz, yy) || maze.pillarIsAlone(xx-1, zz, xx, zz, yy)))
+				            					&& maze.canBeReached(playerMazeX[pp][0], playerMazeZ[pp][0], xx, zz, yy, distance, pathArray)) {
+				            				pChangedBlocks.add(new MazeCoords(xx, zz, 1));
+				            				changedNum++;
+				            			}
+				            		}
+				            	}
+				            	for (xx = Math.max(1, playerMazeX[pp][0]-distance+1); xx <= Math.min(maze.mazeSize*2-1, playerMazeX[pp][0]+distance-1); xx += 2) {
+				            		for (zz = Math.max(1, playerMazeZ[pp][0]-distance+1); zz <= Math.min(maze.mazeSize*2-1, playerMazeZ[pp][0]+distance-1); zz += 2) {
+				            			if (!maze.isBeingChanged[xx][zz][yy] && !isLookedAt[xx][zz][yy] && maze.canBeReached(playerMazeX[pp][0], playerMazeZ[pp][0], xx, zz, yy, distance, pathArray)) {
+				            				pChangedBlocks.add(new MazeCoords(xx, zz, 10));
+				            				changedNum++;
+				            			}
+				            		}
+				            	}
+	            			}
 	            		}
 		            	if (first) {
 		            		first = false;
@@ -459,8 +473,8 @@ public class MazeTick extends BukkitRunnable {
 		            			repeatNum++;
 		            			continue;
 		            		}
-		            		if (!shouldChange[coords.x][coords.z]) {
-		            			shouldChange[coords.x][coords.z] = true;
+		            		if (!shouldChange[coords.x][coords.z][coords.y]) {
+		            			shouldChange[coords.x][coords.z][coords.y] = true;
 		            			changedBlocks.add(coords);
 		            		}
 		            		break;
@@ -473,18 +487,18 @@ public class MazeTick extends BukkitRunnable {
 		        	while (chIt.hasNext()) {
 		        		coords = (MazeCoords)chIt.next();
 	        			posX = maze.mazeToBlockCoord(coords.x);
-	  					posY = 1;
+	  					posY = maze.mazeToBlockYCoord(coords.y);
 		        		posZ = maze.mazeToBlockCoord(coords.z);
 	      				endY = Maze.MAZE_PASSAGE_HEIGHT+1;
 	      				if (coords.type == 20) {
 	      					if (maze.mazeWorld.getBlockAt(maze.mazeX+posX, maze.mazeY+2, maze.mazeZ+posZ) != null && !maze.mazeWorld.getBlockAt(maze.mazeX+posX, maze.mazeY+2, maze.mazeZ+posZ).isEmpty()) {
 	          					if (Math.random()*(maze.configProps.chestAppearProb+maze.configProps.enderChestAppearProb) < maze.configProps.enderChestAppearProb) {
-	              					maze.mazeWorld.getBlockAt(maze.mazeX+posX, maze.mazeY+1, maze.mazeZ+posZ).setType(Material.ENDER_CHEST); 
-	          						maze.mazeWorld.getBlockAt(maze.mazeX+posX, maze.mazeY+2, maze.mazeZ+posZ).setType(Material.AIR);
+	              					maze.mazeWorld.getBlockAt(maze.mazeX+posX, maze.mazeY+posY+1, maze.mazeZ+posZ).setType(Material.ENDER_CHEST); 
+	          						maze.mazeWorld.getBlockAt(maze.mazeX+posX, maze.mazeY+posY+2, maze.mazeZ+posZ).setType(Material.AIR);
 	          					} else {
-	              					maze.mazeWorld.getBlockAt(maze.mazeX+posX, maze.mazeY+1, maze.mazeZ+posZ).setType(Material.CHEST); 
-	          						maze.mazeWorld.getBlockAt(maze.mazeX+posX, maze.mazeY+2, maze.mazeZ+posZ).setType(Material.AIR);
-	        						Chest chest = (Chest)(maze.mazeWorld.getBlockAt(maze.mazeX+posX, maze.mazeY+1, maze.mazeZ+posZ).getState());
+	              					maze.mazeWorld.getBlockAt(maze.mazeX+posX, maze.mazeY+posY+1, maze.mazeZ+posZ).setType(Material.CHEST); 
+	          						maze.mazeWorld.getBlockAt(maze.mazeX+posX, maze.mazeY+posY+2, maze.mazeZ+posZ).setType(Material.AIR);
+	        						Chest chest = (Chest)(maze.mazeWorld.getBlockAt(maze.mazeX+posX, maze.mazeY+posY+1, maze.mazeZ+posZ).getState());
 		    		    			int mazeItemNum = (int)Math.floor(Math.random()*20)+1;
 		    		    			if (mazeItemNum < 8) mazeItemNum = 1;
 		    		    			else if (mazeItemNum < 13) mazeItemNum = 2;
@@ -523,8 +537,8 @@ public class MazeTick extends BukkitRunnable {
 	        				posY = endY = 0;
 	        			}
 		        		if (coords.type == 1) {
-		        			if (maze.maze[coords.x][coords.z] == 1) maze.maze[coords.x][coords.z] = 0;
-		        			else if (maze.maze[coords.x][coords.z] == 0) maze.maze[coords.x][coords.z] = 1;
+		        			if (maze.maze[coords.x][coords.z][coords.y] == 1) maze.maze[coords.x][coords.z][coords.y] = 0;
+		        			else if (maze.maze[coords.x][coords.z][coords.y] == 0) maze.maze[coords.x][coords.z][coords.y] = 1;
 		        		}
 		        		boolean spawnMob = false;
 		        		if (coords.type == 10 && Math.random() < maze.configProps.spawnMobProb) spawnMob = true;
@@ -534,7 +548,7 @@ public class MazeTick extends BukkitRunnable {
 		            				int bId = 0;
 		            				byte bData = 0;
 		        					if (coords.type == 1) {
-			        					if (maze.maze[coords.x][coords.z] == 1) {
+			        					if (maze.maze[coords.x][coords.z][coords.y] == 1) {
 			        						if (coords.x%2 == 0) {
 			    	    						bId = maze.configProps.blockTypes[0][maze.configProps.blockTypes[0].length-1-yy-Maze.MAZE_PASSAGE_DEPTH][zz-posZ][0];
 			    		    					bData = (byte)maze.configProps.blockTypes[0][maze.configProps.blockTypes[0].length-1-yy-Maze.MAZE_PASSAGE_DEPTH][zz-posZ][1];
@@ -542,22 +556,22 @@ public class MazeTick extends BukkitRunnable {
 			    	    						bId = maze.configProps.blockTypes[0][maze.configProps.blockTypes[0].length-1-yy-Maze.MAZE_PASSAGE_DEPTH][xx-posX][0];
 			    		    					bData = (byte)maze.configProps.blockTypes[0][maze.configProps.blockTypes[0].length-1-yy-Maze.MAZE_PASSAGE_DEPTH][xx-posX][1];
 			    	    					}
-			        					} else if (maze.maze[coords.x][coords.z] == 0) {
+			        					} else if (maze.maze[coords.x][coords.z][coords.y] == 0) {
 			        						bId = 0;
 			        						bData = 0;
 			        					}
 		        					} else if (coords.type == 10) {
-			        					if (spawnMob || maze.mazeWorld.getBlockAt(maze.mazeX+xx, maze.mazeY+yy, maze.mazeZ+zz) == null || maze.mazeWorld.getBlockAt(maze.mazeX+xx, maze.mazeY+yy, maze.mazeZ+zz).isEmpty()) {
+			        					if (spawnMob || maze.mazeWorld.getBlockAt(maze.mazeX+xx, maze.mazeY+yy+maze.mazeToBlockYCoord(coords.y), maze.mazeZ+zz) == null || maze.mazeWorld.getBlockAt(maze.mazeX+xx, maze.mazeY+yy+maze.mazeToBlockYCoord(coords.y), maze.mazeZ+zz).isEmpty()) {
 			        						bId = maze.configProps.blockTypes[4][zz-posZ][xx-posX][0];
 			        						bData = (byte)maze.configProps.blockTypes[4][zz-posZ][xx-posX][1];
-				            				if (MazePvP.theMazePvP.showHeads) maze.mazeWorld.getBlockAt(maze.mazeX+xx, maze.mazeY-Maze.MAZE_PASSAGE_DEPTH+2, maze.mazeZ+zz).setType(Material.AIR);
+				            				if (MazePvP.theMazePvP.showHeads) maze.mazeWorld.getBlockAt(maze.mazeX+xx, maze.mazeY+maze.mazeToBlockYCoord(coords.y)-Maze.MAZE_PASSAGE_DEPTH+2, maze.mazeZ+zz).setType(Material.AIR);
 			        					} else {
 			        						bId = 0;
 			        						bData = 0;
 			        					}
 			        				}
-		            				maze.mazeWorld.getBlockAt(maze.mazeX+xx, maze.mazeY+yy, maze.mazeZ+zz).setTypeId(bId);
-		            				maze.mazeWorld.getBlockAt(maze.mazeX+xx, maze.mazeY+yy, maze.mazeZ+zz).setData(bData);
+		            				maze.mazeWorld.getBlockAt(maze.mazeX+xx, maze.mazeY+maze.mazeToBlockYCoord(coords.y)+yy, maze.mazeZ+zz).setTypeId(bId);
+		            				maze.mazeWorld.getBlockAt(maze.mazeX+xx, maze.mazeY+maze.mazeToBlockYCoord(coords.y)+yy, maze.mazeZ+zz).setData(bData);
 		            			}
 		        			}
 	        			}
@@ -620,16 +634,17 @@ public class MazeTick extends BukkitRunnable {
 	        				ez = sz+Maze.MAZE_PASSAGE_WIDTH-1;
 	        				sy = ey = 0;
 	        			}
-		        		if (maze.maze[coords.x][coords.z] == 1) maze.maze[coords.x][coords.z] = 0;
+		        		if (maze.maze[coords.x][coords.z][coords.y] == 1) maze.maze[coords.x][coords.z][coords.y] = 0;
 		        		for (xx = sx; xx <= ex; xx++) {
 		        			for (int yy = sy; yy <= ey; yy++) {
 		        				for (zz = sz; zz <= ez; zz++) {
-		        					maze.mazeWorld.playEffect(new Location(maze.mazeWorld, maze.mazeX+xx, maze.mazeY+yy, maze.mazeZ+zz), Effect.STEP_SOUND, maze.mazeWorld.getBlockAt(maze.mazeX+xx, maze.mazeY+yy, maze.mazeZ+zz).getTypeId() + (maze.mazeWorld.getBlockAt(maze.mazeX+xx, maze.mazeY+yy, maze.mazeZ+zz).getData() << 12));
-		        					maze.mazeWorld.getBlockAt(maze.mazeX+xx, maze.mazeY+yy, maze.mazeZ+zz).setType(Material.AIR);
+		        					maze.mazeWorld.playEffect(new Location(maze.mazeWorld, maze.mazeX+xx, maze.mazeY+yy, maze.mazeZ+zz), Effect.STEP_SOUND,
+		        							maze.mazeWorld.getBlockAt(maze.mazeX+xx, maze.mazeY+yy+maze.mazeToBlockYCoord(coords.y), maze.mazeZ+zz).getTypeId() + (maze.mazeWorld.getBlockAt(maze.mazeX+xx, maze.mazeY+yy+maze.mazeToBlockYCoord(coords.y), maze.mazeZ+zz).getData() << 12));
+		        					maze.mazeWorld.getBlockAt(maze.mazeX+xx, maze.mazeY+yy+maze.mazeToBlockYCoord(coords.y), maze.mazeZ+zz).setType(Material.AIR);
 		            			}
 		        			}
 		        		}
-		        		maze.isBeingChanged[coords.x][coords.z] = false;
+		        		maze.isBeingChanged[coords.x][coords.z][coords.y] = false;
 	      				it.remove();
 	      			} else if (coords.type%5 == 0) {
 		        		for (xx = maze.mazeToBlockCoord(coords.x); xx < maze.mazeToBlockCoord(coords.x)+Maze.MAZE_PASSAGE_WIDTH-1; xx++) {
@@ -682,7 +697,8 @@ public class MazeTick extends BukkitRunnable {
 	  		        		outerloop: for (xx = sx; xx <= ex; xx++) {
 	  		        			for (yy = sy; yy <= ey; yy++) {
 	  		        				for (zz = sz; zz <= ez; zz++) {
-	  			        				if (maze.mazeWorld.getBlockAt(maze.mazeX+xx, maze.mazeY+yy, maze.mazeZ+zz) == null || maze.mazeWorld.getBlockAt(maze.mazeX+xx, maze.mazeY+yy, maze.mazeZ+zz).isEmpty()) {
+	  			        				if (maze.mazeWorld.getBlockAt(maze.mazeX+xx, maze.mazeY+yy+maze.mazeToBlockYCoord(coords.y), maze.mazeZ+zz) == null
+	  			        				 || maze.mazeWorld.getBlockAt(maze.mazeX+xx, maze.mazeY+yy+maze.mazeToBlockYCoord(coords.y), maze.mazeZ+zz).isEmpty()) {
 	  			        					end = false;
 	  			        					break outerloop;
 	  			        				}
@@ -693,7 +709,8 @@ public class MazeTick extends BukkitRunnable {
 	  	        			xx = sx+(int)Math.floor(Math.random()*(ex-sx+1));
 	  	        			yy = sy+(int)Math.floor(Math.random()*(ey-sy+1));
 	  	        			zz = sz+(int)Math.floor(Math.random()*(ez-sz+1));
-	  	        			if (maze.mazeWorld.getBlockAt(maze.mazeX+xx, maze.mazeY+yy, maze.mazeZ+zz) == null || maze.mazeWorld.getBlockAt(maze.mazeX+xx, maze.mazeY+yy, maze.mazeZ+zz).isEmpty()) {
+	  	        			if (maze.mazeWorld.getBlockAt(maze.mazeX+xx, maze.mazeY+yy+maze.mazeToBlockYCoord(coords.y), maze.mazeZ+zz) == null
+	  	        			 || maze.mazeWorld.getBlockAt(maze.mazeX+xx, maze.mazeY+yy+maze.mazeToBlockYCoord(coords.y), maze.mazeZ+zz).isEmpty()) {
 	  	        				break;
 	  	        			}
 	  	        			itCount++;
@@ -702,13 +719,14 @@ public class MazeTick extends BukkitRunnable {
 	  	        			}
 	  	        		}
 	  	        		if (end) {
-	    	        		if (maze.maze[coords.x][coords.z] == 0 && !(coords.x%2 == 1 && coords.z%2 == 1)) maze.maze[coords.x][coords.z] = 1;
+	    	        		if (maze.maze[coords.x][coords.z][coords.y] == 0 && !(coords.x%2 == 1 && coords.z%2 == 1))
+	    	        			maze.maze[coords.x][coords.z][coords.y] = 1;
 	        				//save = true;
-	    	        		maze.isBeingChanged[coords.x][coords.z] = false;
+	    	        		maze.isBeingChanged[coords.x][coords.z][coords.y] = false;
 	    	        		if (restoreFloor && MazePvP.theMazePvP.showHeads) {
 	    	        			for (xx = sx; xx <= ex; xx++) {
 	  		        				for (zz = sz; zz <= ez; zz++) {
-	  		        					maze.mazeWorld.getBlockAt(maze.mazeX+xx, maze.mazeY-Maze.MAZE_PASSAGE_DEPTH+2, maze.mazeZ+zz).setType(Material.AIR);
+	  		        					maze.mazeWorld.getBlockAt(maze.mazeX+xx, maze.mazeY+maze.mazeToBlockYCoord(coords.y)-Maze.MAZE_PASSAGE_DEPTH+2, maze.mazeZ+zz).setType(Material.AIR);
 	  			        			}
 		  		        		}
 	    	        		}
@@ -728,8 +746,8 @@ public class MazeTick extends BukkitRunnable {
     		    					bData = (byte)maze.configProps.blockTypes[0][maze.configProps.blockTypes[0].length-1-yy-Maze.MAZE_PASSAGE_DEPTH][xx-sx][1];
     	    					}
 	  	        			}
-	  	        			maze.mazeWorld.getBlockAt(maze.mazeX+xx, maze.mazeY+yy, maze.mazeZ+zz).setTypeId(bId);
-	  	        			maze.mazeWorld.getBlockAt(maze.mazeX+xx, maze.mazeY+yy, maze.mazeZ+zz).setData((byte) bData);
+	  	        			maze.mazeWorld.getBlockAt(maze.mazeX+xx, maze.mazeY+maze.mazeToBlockYCoord(coords.y)+yy, maze.mazeZ+zz).setTypeId(bId);
+	  	        			maze.mazeWorld.getBlockAt(maze.mazeX+xx, maze.mazeY+maze.mazeToBlockYCoord(coords.y)+yy, maze.mazeZ+zz).setData((byte) bData);
 	  	        		}
 	  				}
 	      		}
