@@ -544,7 +544,7 @@ public final class EventListeners implements Listener {
 				if (clickedSign) {
 					int[] sign = maze.findSign(event.getClickedBlock().getLocation(), maze.joinSigns);
 					if (sign != null) {
-						if (maze.joinedPlayerProps.containsKey(pName)) {
+						if (maze.joinedPlayerProps.containsKey(pName) || maze.playerInsideMaze.containsKey(pName)) {
 							maze.sendStringListToPlayer(event.getPlayer(), MazePvP.theMazePvP.leaveMazeText);
 							maze.playerQuit(event.getPlayer());
 							maze.updateSigns();
@@ -596,12 +596,19 @@ public final class EventListeners implements Listener {
 						MazePvP.cleanUpPlayer(player, props.deathCount != 0);
 						if (!spectating) maze.giveStartItemsToPlayer(player);
 						event.setRespawnLocation(new Location(maze.mazeWorld, loc.x, maze.mazeY+1, loc.y));
+						final Player constPlayer = player;
+						final Location constLoc = new Location(maze.mazeWorld, loc.x, maze.mazeY+1, loc.y);
+						new BukkitRunnable() {
+						    Location loc = constLoc;
+						    Player player = constPlayer;
+						    public void run() {
+						    	player.teleport(loc);
+						    }
+						}.runTaskLater(MazePvP.theMazePvP, 10L);
 						if (!spectating) {
 							maze.mazeWorld.playEffect(event.getRespawnLocation(), Effect.MOBSPAWNER_FLAMES, 0);
 							if (props.deathCount+1 < maze.configProps.playerMaxDeaths) maze.sendStringListToPlayer(player, MazePvP.theMazePvP.fightRespawnText);
 							else maze.sendStringListToPlayer(player, MazePvP.theMazePvP.lastRespawnText);
-							
-							final Player constPlayer = player;
 							final Maze constMaze = maze;
 							new BukkitRunnable() {
 							    Maze maze = constMaze;
@@ -614,6 +621,15 @@ public final class EventListeners implements Listener {
 						
 					} else {
 						event.setRespawnLocation(props.prevLocation);
+						final Player constPlayer = player;
+						final Location constLoc = props.prevLocation.clone();
+						new BukkitRunnable() {
+						    Location loc = constLoc;
+						    Player player = constPlayer;
+						    public void run() {
+						    	player.teleport(loc);
+						    }
+						}.runTaskLater(MazePvP.theMazePvP, 10L);
 						maze.playerQuit(player);
 					}
 					break;
