@@ -348,7 +348,7 @@ public class MazeTick extends BukkitRunnable {
 	          	MazeCoords coords;
 	          	changedBlocks = new ArrayList<MazeCoords>();
 	        	if (!players.isEmpty()) { 
-	            	for (int yy = 0; yy <= maze.height; yy++) {
+	            	for (int yy = 0; yy < maze.height; yy++) {
 		            	for (xx = 2; xx <= maze.mazeSize*2-2; xx += 2) {
 		            		for (zz = 2; zz <= maze.mazeSize*2-2; zz += 2) {
 		            			if (!maze.isBeingChanged[xx][zz][yy] && !isLookedAt[xx][zz][yy]) {
@@ -418,7 +418,7 @@ public class MazeTick extends BukkitRunnable {
 				            	for (xx = Math.max(2, playerMazeX[pp][0]-distance); xx <= Math.min(maze.mazeSize*2-2, playerMazeX[pp][0]+distance); xx += 2) {
 				            		for (zz = Math.max(2, playerMazeZ[pp][0]-distance); zz <= Math.min(maze.mazeSize*2-2, playerMazeZ[pp][0]+distance); zz += 2) {
 				            			if (!maze.isBeingChanged[xx][zz][yy] && !isLookedAt[xx][zz][yy] && maze.canBeReached(playerMazeX[pp][0], playerMazeZ[pp][0], xx, zz, yy, distance, pathArray)) {
-				            				pChangedBlocks.add(new MazeCoords(xx, zz, 20));
+				            				pChangedBlocks.add(new MazeCoords(xx, yy, zz, 20));
 				            				changedNum++;
 				            			}
 				            		}
@@ -430,7 +430,7 @@ public class MazeTick extends BukkitRunnable {
 				            		for (zz = Math.max(1, playerMazeZ[pp][0]-distance+1); zz <= Math.min(maze.mazeSize*2-1, playerMazeZ[pp][0]+distance-1); zz += 2) {
 				            			if (!maze.isBeingChanged[xx][zz][yy] && !isLookedAt[xx][zz][yy] && !(maze.maze[xx][zz][yy] == 1 && (maze.pillarIsAlone(xx, zz+1, xx, zz, yy) || maze.pillarIsAlone(xx, zz-1, xx, zz, yy)))
 				            					&& maze.canBeReached(playerMazeX[pp][0], playerMazeZ[pp][0], xx, zz, yy, distance, pathArray)) {
-				            				pChangedBlocks.add(new MazeCoords(xx, zz, 1));
+				            				pChangedBlocks.add(new MazeCoords(xx, yy, zz, 1));
 				            				changedNum++;
 				            			}
 				            		}
@@ -439,7 +439,7 @@ public class MazeTick extends BukkitRunnable {
 				            		for (xx = Math.max(1, playerMazeX[pp][0]-distance+1); xx <= Math.min(maze.mazeSize*2-1, playerMazeX[pp][0]+distance-1); xx += 2) {
 				            			if (!maze.isBeingChanged[xx][zz][yy] && !isLookedAt[xx][zz][yy] && !(maze.maze[xx][zz][yy] == 1 && (maze.pillarIsAlone(xx+1, zz, xx, zz, yy) || maze.pillarIsAlone(xx-1, zz, xx, zz, yy)))
 				            					&& maze.canBeReached(playerMazeX[pp][0], playerMazeZ[pp][0], xx, zz, yy, distance, pathArray)) {
-				            				pChangedBlocks.add(new MazeCoords(xx, zz, 1));
+				            				pChangedBlocks.add(new MazeCoords(xx, yy, zz, 1));
 				            				changedNum++;
 				            			}
 				            		}
@@ -447,7 +447,7 @@ public class MazeTick extends BukkitRunnable {
 				            	for (xx = Math.max(1, playerMazeX[pp][0]-distance+1); xx <= Math.min(maze.mazeSize*2-1, playerMazeX[pp][0]+distance-1); xx += 2) {
 				            		for (zz = Math.max(1, playerMazeZ[pp][0]-distance+1); zz <= Math.min(maze.mazeSize*2-1, playerMazeZ[pp][0]+distance-1); zz += 2) {
 				            			if (!maze.isBeingChanged[xx][zz][yy] && !isLookedAt[xx][zz][yy] && maze.canBeReached(playerMazeX[pp][0], playerMazeZ[pp][0], xx, zz, yy, distance, pathArray)) {
-				            				pChangedBlocks.add(new MazeCoords(xx, zz, 10));
+				            				pChangedBlocks.add(new MazeCoords(xx, yy, zz, 10));
 				            				changedNum++;
 				            			}
 				            		}

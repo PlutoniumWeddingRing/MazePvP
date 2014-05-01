@@ -215,7 +215,7 @@ public class Maze {
 	 	if (startX == endX && startZ == endZ) return true;
 	 	LinkedList<MazeCoords> elements = new LinkedList<MazeCoords>();
 	 	ArrayList<MazeCoords> prevElements = new ArrayList<MazeCoords>();
-	 	elements.add(new MazeCoords(startX, startZ, startY));
+	 	elements.add(new MazeCoords(startX, startY, startZ));
 	 	elements.add(new MazeCoords(-1, -1, -1));
 	 	boolean reached = false;
 	 	int steps = 0;
@@ -233,10 +233,10 @@ public class Maze {
 		    			reached = true;
 		    			break;
 		    		}
-		    		if (coords.x > 0 && !wasVisited[coords.x-1][coords.z] && maze[coords.x-1][coords.z][startY] != 1) elements.push(new MazeCoords(coords.x-1, coords.z, coords.y));
-		    		if (coords.x < mazeSize*2 && !wasVisited[coords.x+1][coords.z] && maze[coords.x+1][coords.z][startY] != 1) elements.push(new MazeCoords(coords.x+1, coords.z, coords.y));
-		    		if (coords.z > 0 && !wasVisited[coords.x][coords.z-1] && maze[coords.x][coords.z-1][startY] != 1) elements.push(new MazeCoords(coords.x, coords.z-1, coords.y));
-		    		if (coords.z < mazeSize*2 && !wasVisited[coords.x][coords.z+1] && maze[coords.x][coords.z+1][startY] != 1) elements.push(new MazeCoords(coords.x, coords.z+1, coords.y));
+		    		if (coords.x > 0 && !wasVisited[coords.x-1][coords.z] && maze[coords.x-1][coords.z][startY] != 1) elements.push(new MazeCoords(coords.x-1, coords.y, coords.z));
+		    		if (coords.x < mazeSize*2 && !wasVisited[coords.x+1][coords.z] && maze[coords.x+1][coords.z][startY] != 1) elements.push(new MazeCoords(coords.x+1, coords.y, coords.z));
+		    		if (coords.z > 0 && !wasVisited[coords.x][coords.z-1] && maze[coords.x][coords.z-1][startY] != 1) elements.push(new MazeCoords(coords.x, coords.y, coords.z-1));
+		    		if (coords.z < mazeSize*2 && !wasVisited[coords.x][coords.z+1] && maze[coords.x][coords.z+1][startY] != 1) elements.push(new MazeCoords(coords.x, coords.y, coords.z+1));
 	 		}
 	 	}
 	 	Iterator<MazeCoords> it = prevElements.iterator();
@@ -261,7 +261,7 @@ public class Maze {
 	   	if (isBeingChanged[mazeX][mazeZ][mazeY]) return;
 	   	if ((maze[mazeX][mazeZ][mazeY] != 1 && (mazeX%2 == 0 || mazeZ%2 == 0)) || (mazeX%2 == 0 && mazeZ%2 == 0)) return;
 	   	if (worldObj.getBlockAt(this.mazeX+mazeToBlockCoord(mazeX), this.mazeY+mazeToBlockCoord(mazeY), this.mazeZ+mazeToBlockCoord(mazeZ)).getType() == Material.AIR) return;
-	   	blocksToRemove.add(new MazeCoords(mazeX, mazeZ, 20));
+	   	blocksToRemove.add(new MazeCoords(mazeX, mazeY, mazeZ, 20));
 	   	isBeingChanged[mazeX][mazeZ][mazeY] = true;
 	   }
 	   
@@ -272,7 +272,7 @@ public class Maze {
 	   	int blockNum;
 	   	if (mazeX%2 == 1 && mazeZ%2 == 1) blockNum = MAZE_PASSAGE_WIDTH*MAZE_PASSAGE_WIDTH;
 	   	else blockNum = MAZE_PASSAGE_WIDTH*(MAZE_PASSAGE_HEIGHT+1);
-	   	blocksToRestore.add(new MazeCoords(mazeX, mazeZ, mazeY, blockNum));
+	   	blocksToRestore.add(new MazeCoords(mazeX, mazeY, mazeZ, blockNum));
 	   	isBeingChanged[mazeX][mazeZ][mazeY] = true;
 	   }
 
@@ -731,7 +731,6 @@ public class Maze {
 	        Iterator<Entry<String, PlayerProps>> it = joinedPlayerProps.entrySet().iterator();
 	        while (it.hasNext()) {
 	        	Entry<String, PlayerProps> entry = it.next();
-	        	writer.println(entry.getKey());
 	        	entry.getValue().writeToFile(writer);
 	        }
 			writer.close();
