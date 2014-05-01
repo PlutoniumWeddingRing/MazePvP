@@ -195,7 +195,7 @@ public class CommandSetMazeProp implements CommandExecutor {
 		        			for (int zz = 0; zz < maze.mazeSize*2+1; zz++) {
 		        				int sx, ex, sy, ey, sz, ez;
 		        				int blockType;
-		        				if (place == 0 && ((xx%2 == 0 && zz%2 != 0) || (xx%2 != 0 && zz%2 == 0)) && xx > 0 && zz > 0 && xx < maze.mazeSize*2 && zz < maze.mazeSize*2) {
+		        				if (place == 0 && ((xx%2 == 0 && zz%2 != 0) || (xx%2 != 0 && zz%2 == 0)) && xx > 0 && zz > 0 && xx < maze.mazeSize*2 && zz < maze.mazeSize*2 && yStart == 0) {
 		        					sy = -Maze.MAZE_PASSAGE_DEPTH+maze.mazeY;
 		        					ey = Maze.MAZE_PASSAGE_HEIGHT+2+maze.mazeY;
 		        					if (xx%2 == 0) {
@@ -235,7 +235,7 @@ public class CommandSetMazeProp implements CommandExecutor {
 	        						sx = ex = maze.mazeToBlockCoord(xx)+maze.mazeX;
 	        						sz = ez = maze.mazeToBlockCoord(zz)+maze.mazeZ;
 	        						blockType = 1;
-		        				} else if (place == 4 && xx%2 != 0 && zz%2 != 0) {
+		        				} else if (place == 4 && xx%2 != 0 && zz%2 != 0 && yStart == 0) {
 		        					sy = maze.mazeY;
 		        					ey = maze.mazeY;
 	        						sx = maze.mazeToBlockCoord(xx)+maze.mazeX;
@@ -267,7 +267,7 @@ public class CommandSetMazeProp implements CommandExecutor {
 	        						sz = maze.mazeToBlockCoord(zz)+maze.mazeZ;
 	        						ez = sz+Maze.MAZE_PASSAGE_WIDTH-1;
 	        						blockType = 0;
-		        				} else if (place == 8 && xx%2 != 0 && zz%2 != 0) {
+		        				} else if (place == 8 && xx%2 != 0 && zz%2 != 0 && yStart > 0) {
 		        					sy = maze.mazeY;
 		        					ey = maze.mazeY;
 	        						sx = maze.mazeToBlockCoord(xx)+maze.mazeX;
@@ -275,6 +275,20 @@ public class CommandSetMazeProp implements CommandExecutor {
 	        						sz = maze.mazeToBlockCoord(zz)+maze.mazeZ;
 	        						ez = sz+Maze.MAZE_PASSAGE_WIDTH-1;
 	        						blockType = 0;
+		        				}  else if (place == 9 && ((xx%2 == 0 && zz%2 != 0) || (xx%2 != 0 && zz%2 == 0)) && xx > 0 && zz > 0 && xx < maze.mazeSize*2 && zz < maze.mazeSize*2 && yStart > 0) {
+		        					sy = -Maze.MAZE_PASSAGE_DEPTH+maze.mazeY;
+		        					ey = Maze.MAZE_PASSAGE_HEIGHT+2+maze.mazeY;
+		        					if (xx%2 == 0) {
+		        						sz = maze.mazeToBlockCoord(zz)+maze.mazeZ;
+		        						ez = sz+Maze.MAZE_PASSAGE_WIDTH-1;
+		        						sx = ex = maze.mazeToBlockCoord(xx)+maze.mazeX;
+		        						blockType = 1;
+		        					} else {
+		        						sx = maze.mazeToBlockCoord(xx)+maze.mazeX;
+		        						ex = sx+Maze.MAZE_PASSAGE_WIDTH-1;
+		        						sz = ez = maze.mazeToBlockCoord(zz)+maze.mazeZ;
+		        						blockType = 2;
+		        					}
 		        				} else continue;
 		        				sy += maze.mazeToBlockYCoord(yStart);
 		        				ey += maze.mazeToBlockYCoord(yStart);

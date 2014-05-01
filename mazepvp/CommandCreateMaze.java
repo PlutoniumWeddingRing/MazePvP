@@ -190,16 +190,17 @@ public class CommandCreateMaze implements CommandExecutor {
 		    					bData = (byte)maze.configProps.blockTypes[place][maze.configProps.blockTypes[place].length-1-yy-Maze.MAZE_PASSAGE_DEPTH][0][1];
 	    					} else {
 	    						if (edges) place = 1;
-	    						else place = 0;
+	    						else if (yStart == 0) place = 0;
+	    						else place = 9;
 	    						if (yy >= 1 && yy <= Maze.MAZE_PASSAGE_HEIGHT+1 && maze.maze[xCoord][zCoord][yStart] != 1) {
 	    							bId = 0;
 	    							bData = 0;
 	    						} else if (xCoord%2 == 0) {
-		    						bId = maze.configProps.blockTypes[place][maze.configProps.blockTypes[place].length-1-yy-Maze.MAZE_PASSAGE_DEPTH][zz-maze.mazeToBlockCoord(zCoord)][0];
-			    					bData = (byte)maze.configProps.blockTypes[place][maze.configProps.blockTypes[place].length-1-yy-Maze.MAZE_PASSAGE_DEPTH][zz-maze.mazeToBlockCoord(zCoord)][1];
+		    						bId = maze.configProps.blockTypes[place][maze.configProps.blockTypes[0].length-1-yy-Maze.MAZE_PASSAGE_DEPTH][zz-maze.mazeToBlockCoord(zCoord)][0];
+			    					bData = (byte)maze.configProps.blockTypes[place][maze.configProps.blockTypes[0].length-1-yy-Maze.MAZE_PASSAGE_DEPTH][zz-maze.mazeToBlockCoord(zCoord)][1];
 		    					} else {
-		    						bId = maze.configProps.blockTypes[place][maze.configProps.blockTypes[place].length-1-yy-Maze.MAZE_PASSAGE_DEPTH][xx-maze.mazeToBlockCoord(xCoord)][0];
-			    					bData = (byte)maze.configProps.blockTypes[place][maze.configProps.blockTypes[place].length-1-yy-Maze.MAZE_PASSAGE_DEPTH][xx-maze.mazeToBlockCoord(xCoord)][1];
+		    						bId = maze.configProps.blockTypes[place][maze.configProps.blockTypes[0].length-1-yy-Maze.MAZE_PASSAGE_DEPTH][xx-maze.mazeToBlockCoord(xCoord)][0];
+			    					bData = (byte)maze.configProps.blockTypes[place][maze.configProps.blockTypes[0].length-1-yy-Maze.MAZE_PASSAGE_DEPTH][xx-maze.mazeToBlockCoord(xCoord)][1];
 		    					}
 	    					}
 	    				} else if (yy == 0) {

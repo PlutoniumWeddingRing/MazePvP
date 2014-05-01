@@ -813,8 +813,8 @@ public class Maze {
 	    				for (int xxx = xCoord; xxx <= mazeToBlockCoord(xx)+Maze.MAZE_PASSAGE_WIDTH-1; xxx++) {
 	    					int zCoord = mazeToBlockCoord(zz);
 	    					for (int zzz = zCoord; zzz <= mazeToBlockCoord(zz)+Maze.MAZE_PASSAGE_WIDTH-1; zzz++) {
-	    						int bId = configProps.blockTypes[4][zzz-zCoord][xxx-xCoord][0];
-	    						int bData = (byte)configProps.blockTypes[4][zzz-zCoord][xxx-xCoord][1];
+	    						int bId = configProps.blockTypes[(yStart==0)?4:8][zzz-zCoord][xxx-xCoord][0];
+	    						int bData = (byte)configProps.blockTypes[(yStart==0)?4:8][zzz-zCoord][xxx-xCoord][1];
 	    						mazeWorld.getBlockAt(mazeX+xxx, mazeY+mazeToBlockYCoord(yStart), mazeZ+zzz).setTypeId(bId);
 	    						mazeWorld.getBlockAt(mazeX+xxx, mazeToBlockYCoord(yStart), mazeZ+zzz).setData((byte)bData);
 		        				if (yStart == 0 && MazePvP.theMazePvP.showHeads) mazeWorld.getBlockAt(mazeX+xxx, mazeY-Maze.MAZE_PASSAGE_DEPTH+2, mazeZ+zzz).setType(Material.AIR);
