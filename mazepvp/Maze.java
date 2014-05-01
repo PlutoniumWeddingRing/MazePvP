@@ -85,7 +85,8 @@ public class Maze {
 	}
 	 
 	public int blockToMazeYCoord(int yCoord) {
-	 	return yCoord/(Maze.MAZE_PASSAGE_HEIGHT+2);
+		int pos = yCoord/(Maze.MAZE_PASSAGE_HEIGHT+2);
+	 	return Math.max(Math.min(pos, height-1), 0);
 	}
 	 
 	public Coord3D getMazeBossNewLocation(World worldObj) {
@@ -258,10 +259,10 @@ public class Maze {
 	   
 	   public void removeMazeBlocks(int mazeX, int mazeZ, int mazeY, World worldObj) {
 		if (mazeX <= 0 || mazeX >= mazeSize*2 || mazeZ <= 0 || mazeZ >= mazeSize*2) return;
-	   	if (isBeingChanged[mazeX][mazeZ][mazeY]) return;
+		if (isBeingChanged[mazeX][mazeZ][mazeY]) return;
 	   	if ((maze[mazeX][mazeZ][mazeY] != 1 && (mazeX%2 == 0 || mazeZ%2 == 0)) || (mazeX%2 == 0 && mazeZ%2 == 0)) return;
-	   	if (worldObj.getBlockAt(this.mazeX+mazeToBlockCoord(mazeX), this.mazeY+mazeToBlockCoord(mazeY), this.mazeZ+mazeToBlockCoord(mazeZ)).getType() == Material.AIR) return;
-	   	blocksToRemove.add(new MazeCoords(mazeX, mazeY, mazeZ, 20));
+		if (worldObj.getBlockAt(this.mazeX+mazeToBlockCoord(mazeX), this.mazeY+mazeToBlockYCoord(mazeY), this.mazeZ+mazeToBlockCoord(mazeZ)).getType() == Material.AIR) return;
+		blocksToRemove.add(new MazeCoords(mazeX, mazeY, mazeZ, 20));
 	   	isBeingChanged[mazeX][mazeZ][mazeY] = true;
 	   }
 	   
@@ -280,7 +281,7 @@ public class Maze {
 		if (location.getWorld() != mazeWorld) return false;
 		return location.getX()-0.5 >= mazeX && location.getX()-0.5 <= mazeX+mazeSize*(1+Maze.MAZE_PASSAGE_WIDTH)
 		   &&  location.getZ()-0.5 >= mazeZ && location.getZ()-0.5 <= mazeZ+mazeSize*(1+Maze.MAZE_PASSAGE_WIDTH)
-		   &&  location.getY() >= mazeY-Maze.MAZE_PASSAGE_DEPTH && location.getY() <= mazeY+Maze.MAZE_PASSAGE_HEIGHT+1;
+		   &&  location.getY() >= mazeY-Maze.MAZE_PASSAGE_DEPTH && location.getY() <= mazeY+height*(Maze.MAZE_PASSAGE_HEIGHT+3)-2;
 	}
 
 	public void updateBossHpStr(int place) {

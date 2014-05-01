@@ -130,7 +130,7 @@ public final class EventListeners implements Listener {
 		  		if (block.getType() != Material.AIR) {
 			  		if (block.getX() >= maze.mazeX && block.getX() <= maze.mazeX+maze.mazeSize*(1+Maze.MAZE_PASSAGE_WIDTH)
 			      	&&  block.getZ() >= maze.mazeZ && block.getZ() <= maze.mazeZ+maze.mazeSize*(1+Maze.MAZE_PASSAGE_WIDTH)
-			      	&&  block.getY() >= maze.mazeY-Maze.MAZE_PASSAGE_DEPTH+yOffs && block.getY() <= maze.mazeY+Maze.MAZE_PASSAGE_HEIGHT+yOffs2) {
+			      	&&  block.getY() >= maze.mazeY-Maze.MAZE_PASSAGE_DEPTH+yOffs && block.getY() <= maze.mazeY+maze.height*(Maze.MAZE_PASSAGE_HEIGHT+3)-3+yOffs2) {
 			  			if (event.getEntity() instanceof Egg) {
 			  	      		int mazeX = maze.blockToMazeCoord(block.getX()-maze.mazeX);
 			  	      		int mazeZ = maze.blockToMazeCoord(block.getZ()-maze.mazeZ);
@@ -158,7 +158,7 @@ public final class EventListeners implements Listener {
 			  	      			else sideHit = 5;
 			  	      		}
 			  	      		//System.out.println("side: "+sideHit);
-				      		if (block.getY() > maze.mazeY) {
+				      		if (block.getY() > maze.mazeY && (block.getY()-maze.mazeY)%(Maze.MAZE_PASSAGE_HEIGHT+3) != 0) {
 				      			if (mazeX%2 == 0 && mazeZ%2 == 0) {
 				      				if (sideHit == 5) mazeZ++;
 				      				else if (sideHit == 4) mazeZ--;
@@ -204,7 +204,7 @@ public final class EventListeners implements Listener {
 			  	      			else sideHit = 5;
 			  	      		}
 			  	      		//System.out.println("side: "+sideHit);
-			  				if (block.getY() > maze.mazeY) {
+			  				if (block.getY() > maze.mazeY && (block.getY()-maze.mazeY)%(Maze.MAZE_PASSAGE_HEIGHT+3) != 0) {
 			  	              	float midPos;
 			  	      			if (mazeX%2 == 0 && mazeZ%2 == 0) {
 			  	      				if (sideHit == 2) mazeZ--;
