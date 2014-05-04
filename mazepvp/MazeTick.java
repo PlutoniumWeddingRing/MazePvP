@@ -414,46 +414,42 @@ public class MazeTick extends BukkitRunnable {
 	            	while (true) {
 	            		boolean chestShouldAppear = (Math.random() < maze.configProps.chestAppearProb+maze.configProps.enderChestAppearProb);
 	            		if (chestShouldAppear) {
-	            			for (int yy = 0; yy <  maze.height; yy++) {
-				            	for (xx = Math.max(2, playerMazeX[pp][0]-distance); xx <= Math.min(maze.mazeSize*2-2, playerMazeX[pp][0]+distance); xx += 2) {
-				            		for (zz = Math.max(2, playerMazeZ[pp][0]-distance); zz <= Math.min(maze.mazeSize*2-2, playerMazeZ[pp][0]+distance); zz += 2) {
-				            			if (!maze.isBeingChanged[xx][zz][yy] && !isLookedAt[xx][zz][yy] && maze.canBeReached(playerMazeX[pp][0], playerMazeZ[pp][0], xx, zz, yy, distance, pathArray)) {
-				            				pChangedBlocks.add(new MazeCoords(xx, yy, zz, 20));
-				            				changedNum++;
-				            			}
-				            		}
-				            	}
-	            			}
+			            	for (xx = Math.max(2, playerMazeX[pp][0]-distance); xx <= Math.min(maze.mazeSize*2-2, playerMazeX[pp][0]+distance); xx += 2) {
+			            		for (zz = Math.max(2, playerMazeZ[pp][0]-distance); zz <= Math.min(maze.mazeSize*2-2, playerMazeZ[pp][0]+distance); zz += 2) {
+			            			if (!maze.isBeingChanged[xx][zz][playerMazeY[pp]] && !isLookedAt[xx][zz][playerMazeY[pp]] && maze.canBeReached(playerMazeX[pp][0], playerMazeZ[pp][0], xx, zz, playerMazeY[pp], distance, pathArray)) {
+			            				pChangedBlocks.add(new MazeCoords(xx, playerMazeY[pp], zz, 20));
+			            				changedNum++;
+			            			}
+			            		}
+			            	}
 	            		} else {
-	            			for (int yy = 0; yy <  maze.height; yy++) {
-				            	for (xx = Math.max(2, playerMazeX[pp][0]-distance); xx <= Math.min(maze.mazeSize*2-2, playerMazeX[pp][0]+distance); xx += 2) {
-				            		for (zz = Math.max(1, playerMazeZ[pp][0]-distance+1); zz <= Math.min(maze.mazeSize*2-1, playerMazeZ[pp][0]+distance-1); zz += 2) {
-				            			if (!maze.isBeingChanged[xx][zz][yy] && !isLookedAt[xx][zz][yy] && !(maze.maze[xx][zz][yy] == 1 && (maze.pillarIsAlone(xx, zz+1, xx, zz, yy) || maze.pillarIsAlone(xx, zz-1, xx, zz, yy)))
-				            					&& maze.canBeReached(playerMazeX[pp][0], playerMazeZ[pp][0], xx, zz, yy, distance, pathArray)) {
-				            				pChangedBlocks.add(new MazeCoords(xx, yy, zz, 1));
-				            				changedNum++;
-				            			}
-				            		}
-				            	}
-				            	for (zz = Math.max(2, playerMazeZ[pp][0]-distance); zz <= Math.min(maze.mazeSize*2-2, playerMazeZ[pp][0]+distance); zz += 2) {
-				            		for (xx = Math.max(1, playerMazeX[pp][0]-distance+1); xx <= Math.min(maze.mazeSize*2-1, playerMazeX[pp][0]+distance-1); xx += 2) {
-				            			if (!maze.isBeingChanged[xx][zz][yy] && !isLookedAt[xx][zz][yy] && !(maze.maze[xx][zz][yy] == 1 && (maze.pillarIsAlone(xx+1, zz, xx, zz, yy) || maze.pillarIsAlone(xx-1, zz, xx, zz, yy)))
-				            					&& maze.canBeReached(playerMazeX[pp][0], playerMazeZ[pp][0], xx, zz, yy, distance, pathArray)) {
-				            				pChangedBlocks.add(new MazeCoords(xx, yy, zz, 1));
-				            				changedNum++;
-				            			}
-				            		}
-				            	}
-				            	for (xx = Math.max(1, playerMazeX[pp][0]-distance+1); xx <= Math.min(maze.mazeSize*2-1, playerMazeX[pp][0]+distance-1); xx += 2) {
-				            		for (zz = Math.max(1, playerMazeZ[pp][0]-distance+1); zz <= Math.min(maze.mazeSize*2-1, playerMazeZ[pp][0]+distance-1); zz += 2) {
-				            			if (!maze.isBeingChanged[xx][zz][yy] && !isLookedAt[xx][zz][yy] && maze.canBeReached(playerMazeX[pp][0], playerMazeZ[pp][0], xx, zz, yy, distance, pathArray)) {
-				            				pChangedBlocks.add(new MazeCoords(xx, yy, zz, 10));
-				            				changedNum++;
-				            			}
-				            		}
-				            	}
-	            			}
-	            		}
+			            	for (xx = Math.max(2, playerMazeX[pp][0]-distance); xx <= Math.min(maze.mazeSize*2-2, playerMazeX[pp][0]+distance); xx += 2) {
+			            		for (zz = Math.max(1, playerMazeZ[pp][0]-distance+1); zz <= Math.min(maze.mazeSize*2-1, playerMazeZ[pp][0]+distance-1); zz += 2) {
+			            			if (!maze.isBeingChanged[xx][zz][playerMazeY[pp]] && !isLookedAt[xx][zz][playerMazeY[pp]] && !(maze.maze[xx][zz][playerMazeY[pp]] == 1 && (maze.pillarIsAlone(xx, zz+1, xx, zz, playerMazeY[pp]) || maze.pillarIsAlone(xx, zz-1, xx, zz, playerMazeY[pp])))
+			            					&& maze.canBeReached(playerMazeX[pp][0], playerMazeZ[pp][0], xx, zz, playerMazeY[pp], distance, pathArray)) {
+			            				pChangedBlocks.add(new MazeCoords(xx, playerMazeY[pp], zz, 1));
+			            				changedNum++;
+			            			}
+			            		}
+			            	}
+			            	for (zz = Math.max(2, playerMazeZ[pp][0]-distance); zz <= Math.min(maze.mazeSize*2-2, playerMazeZ[pp][0]+distance); zz += 2) {
+			            		for (xx = Math.max(1, playerMazeX[pp][0]-distance+1); xx <= Math.min(maze.mazeSize*2-1, playerMazeX[pp][0]+distance-1); xx += 2) {
+			            			if (!maze.isBeingChanged[xx][zz][playerMazeY[pp]] && !isLookedAt[xx][zz][playerMazeY[pp]] && !(maze.maze[xx][zz][playerMazeY[pp]] == 1 && (maze.pillarIsAlone(xx+1, zz, xx, zz, playerMazeY[pp]) || maze.pillarIsAlone(xx-1, zz, xx, zz, playerMazeY[pp])))
+			            					&& maze.canBeReached(playerMazeX[pp][0], playerMazeZ[pp][0], xx, zz, playerMazeY[pp], distance, pathArray)) {
+			            				pChangedBlocks.add(new MazeCoords(xx, playerMazeY[pp], zz, 1));
+			            				changedNum++;
+			            			}
+			            		}
+			            	}
+			            	for (xx = Math.max(1, playerMazeX[pp][0]-distance+1); xx <= Math.min(maze.mazeSize*2-1, playerMazeX[pp][0]+distance-1); xx += 2) {
+			            		for (zz = Math.max(1, playerMazeZ[pp][0]-distance+1); zz <= Math.min(maze.mazeSize*2-1, playerMazeZ[pp][0]+distance-1); zz += 2) {
+			            			if (!maze.isBeingChanged[xx][zz][playerMazeY[pp]] && !isLookedAt[xx][zz][playerMazeY[pp]] && maze.canBeReached(playerMazeX[pp][0], playerMazeZ[pp][0], xx, zz, playerMazeY[pp], distance, pathArray)) {
+			            				pChangedBlocks.add(new MazeCoords(xx, playerMazeY[pp], zz, 10));
+			            				changedNum++;
+			            			}
+			            		}
+			            	}
+            			}
 		            	if (first) {
 		            		first = false;
 		            		distance += 2;
@@ -583,7 +579,7 @@ public class MazeTick extends BukkitRunnable {
 	        				else if (randNum < 6) mobType = EntityType.SKELETON;
 	        				else if (randNum < 9) mobType = EntityType.SPIDER;
 	        				else mobType = EntityType.CREEPER;
-	        				LivingEntity mob = (LivingEntity)maze.mazeWorld.spawnEntity(new Location(maze.mazeWorld, maze.mazeX+posX+Maze.MAZE_PASSAGE_WIDTH*0.5, maze.mazeY+posY+1.0, maze.mazeZ+posZ+Maze.MAZE_PASSAGE_WIDTH*0.5), mobType);
+	        				LivingEntity mob = (LivingEntity)maze.mazeWorld.spawnEntity(new Location(maze.mazeWorld, maze.mazeX+posX+Maze.MAZE_PASSAGE_WIDTH*0.5, maze.mazeY+maze.mazeToBlockYCoord(coords.y)+1.0, maze.mazeZ+posZ+Maze.MAZE_PASSAGE_WIDTH*0.5), mobType);
 	        				if (mobType == EntityType.SKELETON) {
 	        					Skeleton skeleton = (Skeleton)mob;
 	        					skeleton.getEquipment().setItemInHand(new ItemStack(Material.BOW));
