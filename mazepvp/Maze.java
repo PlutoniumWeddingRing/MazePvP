@@ -88,14 +88,23 @@ public class Maze {
 		int pos = yCoord/(Maze.MAZE_PASSAGE_HEIGHT+2);
 	 	return Math.max(Math.min(pos, height-1), 0);
 	}
-	 
+	
 	public Coord3D getMazeBossNewLocation(World worldObj) {
+		return getMazeBossNewLocation(worldObj, 0, false);
+	}
+	
+	public Coord3D getMazeBossNewLocation(World worldObj, int currentY) {
+		return getMazeBossNewLocation(worldObj, currentY, true);
+	}
+	
+	public Coord3D getMazeBossNewLocation(World worldObj, int currentY, boolean keepY) {
 	 	double bossX, bossZ, bossY;
 	 	int count = 0;
 	 	while (true) {
 	 		bossX = mazeToBlockCoord((int)Math.floor(Math.random()*mazeSize)*2+1);
 	 		bossZ = mazeToBlockCoord((int)Math.floor(Math.random()*mazeSize)*2+1);
-	 		bossY = mazeToBlockYCoord((int)Math.floor(Math.random()*height));
+	 		if (keepY) bossY = mazeToBlockYCoord(currentY);
+	 		else bossY = mazeToBlockYCoord((int)Math.floor(Math.random()*height));
 	 		if (!worldObj.getBlockAt((int)Math.floor(mazeX+bossX), (int)Math.floor(mazeY+bossY), (int)Math.floor(mazeZ+bossZ)).isEmpty()) break;
 	 		count++;
 	 		if (count >= 100) break;

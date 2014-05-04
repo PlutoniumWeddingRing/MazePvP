@@ -94,24 +94,6 @@ public final class EventListeners implements Listener {
 					continue;
 				}
 			}
-			if (event.getEntity() instanceof EnderPearl && event.getEntity().getShooter() != null && maze.isInsideMaze(((LivingEntity)event.getEntity().getShooter()).getLocation())) {
-	      		Coord3D loc = maze.getMazeBossNewLocation(world);
-	      		LivingEntity thrower = (LivingEntity)event.getEntity().getShooter();
-        		for (int j = 0; j <= 8; j++) {
-        			world.playEffect(thrower.getLocation(), Effect.SMOKE, j);
-        			if (j != 4) {
-        				world.playEffect(new Location(world, thrower.getLocation().getX(), thrower.getLocation().getY()+1, thrower.getLocation().getZ()), Effect.SMOKE, j);
-        			}
-        		}
-            	thrower.teleport(new Location(world, loc.x, loc.y, loc.z));
-        		for (int j = 0; j <= 8; j++) {
-        			world.playEffect(thrower.getLocation(), Effect.SMOKE, j);
-        			if (j != 4) {
-        				world.playEffect(new Location(world, thrower.getLocation().getX(), thrower.getLocation().getY()+1, thrower.getLocation().getZ()), Effect.SMOKE, j);
-        			}
-        		}
-                thrower.setFallDistance(0.0F);
-	      	}
 			BlockIterator bit = new BlockIterator(world, event.getEntity().getLocation().toVector(), event.getEntity().getVelocity().normalize(), 0.0D, 4);
 			Block block;
 			if (bit.hasNext()) {
@@ -123,6 +105,25 @@ public final class EventListeners implements Listener {
 		            }
 		            if (!bit.hasNext()) return;
 		        }
+				if (event.getEntity() instanceof EnderPearl && event.getEntity().getShooter() != null && maze.isInsideMaze(((LivingEntity)event.getEntity().getShooter()).getLocation())) {
+		      		int newY = maze.blockToMazeYCoord(block.getY()-maze.mazeY);
+					Coord3D loc = maze.getMazeBossNewLocation(world, newY);
+		      		LivingEntity thrower = (LivingEntity)event.getEntity().getShooter();
+	        		for (int j = 0; j <= 8; j++) {
+	        			world.playEffect(thrower.getLocation(), Effect.SMOKE, j);
+	        			if (j != 4) {
+	        				world.playEffect(new Location(world, thrower.getLocation().getX(), thrower.getLocation().getY()+1, thrower.getLocation().getZ()), Effect.SMOKE, j);
+	        			}
+	        		}
+	            	thrower.teleport(new Location(world, loc.x, loc.y, loc.z));
+	        		for (int j = 0; j <= 8; j++) {
+	        			world.playEffect(thrower.getLocation(), Effect.SMOKE, j);
+	        			if (j != 4) {
+	        				world.playEffect(new Location(world, thrower.getLocation().getX(), thrower.getLocation().getY()+1, thrower.getLocation().getZ()), Effect.SMOKE, j);
+	        			}
+	        		}
+	                thrower.setFallDistance(0.0F);
+		      	}
 				int yOffs = 0;
 				int yOffs2 = 0;
 				if (event.getEntity() instanceof Egg) yOffs = 1;
@@ -204,7 +205,7 @@ public final class EventListeners implements Listener {
 			  	      			else sideHit = 5;
 			  	      		}
 			  	      		//System.out.println("side: "+sideHit);
-			  				if (block.getY() > maze.mazeY && (block.getY()-maze.mazeY)%(Maze.MAZE_PASSAGE_HEIGHT+3) != 0) {
+			  				if (block.getY() > maze.mazeY && (block.getY()-maze.mazeY)%(Maze.MAZE_PASSAGE_HEIGHT+2) != 0) {
 			  	              	float midPos;
 			  	      			if (mazeX%2 == 0 && mazeZ%2 == 0) {
 			  	      				if (sideHit == 2) mazeZ--;
