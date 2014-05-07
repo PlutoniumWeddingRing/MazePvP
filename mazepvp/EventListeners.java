@@ -529,7 +529,15 @@ public final class EventListeners implements Listener {
 						Location bLoc = event.getClickedBlock().getLocation();
 						Location pLoc = event.getPlayer().getLocation();
 						Location nLoc = event.getPlayer().getLocation();
-						if (bLoc.getBlockY() > maze.mazeY) {
+						int clickMY = maze.blockToMazeYCoord(bLoc.getBlockY()-maze.mazeY);
+						boolean floorBlock = (bLoc.getBlockY() >= maze.mazeY && (bLoc.getBlockY()-maze.mazeY)%(Maze.MAZE_PASSAGE_HEIGHT+2) == 0);
+						if (floorBlock && (pLoc.getY() < maze.mazeY || bLoc.getBlockY() == maze.mazeY+(Maze.MAZE_PASSAGE_HEIGHT+2)*maze.height || maze.blockToMazeYCoord((int)Math.round(pLoc.getY())-maze.mazeY) == clickMY-1)) {
+							nLoc.setY(bLoc.getBlockY()+1);
+							System.out.println("UP "+((int)Math.round(pLoc.getY())-maze.mazeY)+" "+clickMY);
+						} else if (floorBlock && maze.blockToMazeYCoord((int)Math.round(pLoc.getY())-maze.mazeY) == clickMY) {
+							nLoc.setY(bLoc.getBlockY()-2);
+							System.out.println("DOWN "+((int)Math.round(pLoc.getY())-maze.mazeY)+" "+clickMY);
+						} else if (bLoc.getBlockY() > maze.mazeY) {
 							int posX = maze.blockToMazeCoord(bLoc.getBlockX()-maze.mazeX);
 							int posZ = maze.blockToMazeCoord(bLoc.getBlockZ()-maze.mazeZ);
 							if (posX%2 != 0 && posZ%2 == 0) {
@@ -539,8 +547,6 @@ public final class EventListeners implements Listener {
 								if (pLoc.getX() < bLoc.getX()) nLoc.setX(bLoc.getX()+1.5);
 								else nLoc.setX(bLoc.getX()-0.5);
 							}
-						} else if (bLoc.getBlockY() == maze.mazeY) {
-							nLoc.setY(maze.mazeY+1);
 						}
 						event.getPlayer().teleport(nLoc);
 					}

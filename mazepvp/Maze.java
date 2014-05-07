@@ -290,7 +290,7 @@ public class Maze {
 		if (location.getWorld() != mazeWorld) return false;
 		return location.getX()-0.5 >= mazeX && location.getX()-0.5 <= mazeX+mazeSize*(1+Maze.MAZE_PASSAGE_WIDTH)
 		   &&  location.getZ()-0.5 >= mazeZ && location.getZ()-0.5 <= mazeZ+mazeSize*(1+Maze.MAZE_PASSAGE_WIDTH)
-		   &&  location.getY() >= mazeY-Maze.MAZE_PASSAGE_DEPTH && location.getY() <= mazeY+height*(Maze.MAZE_PASSAGE_HEIGHT+3)-2;
+		   &&  location.getY() >= mazeY-Maze.MAZE_PASSAGE_DEPTH && location.getY() <= mazeY+height*(Maze.MAZE_PASSAGE_HEIGHT+3)-2-0.5;
 	}
 
 	public void updateBossHpStr(int place) {
