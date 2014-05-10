@@ -149,6 +149,13 @@ public class MazeTick extends BukkitRunnable {
 							maze.playerQuit(player);
 						}
 					}
+					if (maze.joinedPlayerProps.containsKey(player.getName()) && (!maze.playerInsideMaze.containsKey(player.getName()) || !maze.playerInsideMaze.get(player.getName()))) {
+						player.getInventory().clear();
+						player.getInventory().setHelmet(null);
+						player.getInventory().setChestplate(null);
+						player.getInventory().setLeggings(null);
+						player.getInventory().setBoots(null);	
+					}
 				}
 			}
 			bit = maze.bosses.iterator();
