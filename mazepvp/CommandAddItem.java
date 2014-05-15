@@ -97,7 +97,9 @@ public class CommandAddItem implements CommandExecutor {
 			configProps = MazePvP.theMazePvP.rootConfig;
 		}
 		boolean needWeigh = isWeighedProp(propName);
+		boolean needData = false;
 		int itemId, itemAmount;
+		ItemStack item = null;
 		double itemWeigh = 0.0;
 		if (itemIdStr != null) {
 			try {
@@ -109,13 +111,14 @@ public class CommandAddItem implements CommandExecutor {
 			}
 		} else {
 			if (sender instanceof Player) {
-				ItemStack item = ((Player)sender).getInventory().getItemInHand();
+				item = ((Player)sender).getInventory().getItemInHand();
 				if (item == null || item.getTypeId() == 0) {
 					sender.sendMessage("You don't have any item in hand");
 	        		return true;
 				}
 				itemId = item.getTypeId();
 				itemAmount = item.getAmount();
+				needData = true;
 			} else {
 				sender.sendMessage("You have to be a player to use the command without specifying item id");
         		return true;
@@ -159,7 +162,8 @@ public class CommandAddItem implements CommandExecutor {
 			newItems[i] = items[i];
 			if (needWeigh) newItemWeighs[i] = itemWeighs[i];
 		}
-		newItems[items.length] = new ItemStack(itemId, itemAmount);
+		if (needData) newItems[items.length] = item.clone();
+		else newItems[items.length] = new ItemStack(itemId, itemAmount);
 		if (needWeigh) newItemWeighs[itemWeighs.length] = itemWeigh;
 		if (propName.equals("startItems")) {
 			configProps.startItems = newItems;

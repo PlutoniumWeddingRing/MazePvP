@@ -81,6 +81,8 @@ public class CommandRemoveItem implements CommandExecutor {
 			configProps = MazePvP.theMazePvP.rootConfig;
 		}
 		int itemId = 0, itemAmount = 0;
+		ItemStack item = null;
+		boolean needData = false;
 		if (removeIndex < 0) {
 			if (itemIdStr != null) {
 				try {
@@ -92,11 +94,12 @@ public class CommandRemoveItem implements CommandExecutor {
 				}
 			} else {
 				if (sender instanceof Player) {
-					ItemStack item = ((Player)sender).getInventory().getItemInHand();
+					item = ((Player)sender).getInventory().getItemInHand();
 					if (item == null || item.getTypeId() == 0) {
 						sender.sendMessage("You don't have any item in hand");
 		        		return true;
 					}
+					needData = true;
 					itemId = item.getTypeId();
 					itemAmount = item.getAmount();
 				} else {
@@ -133,12 +136,13 @@ public class CommandRemoveItem implements CommandExecutor {
 		}
 		if (removeIndex < 0) {
 			for (int i = 0; i < items.length; i++) {
-				if (items[i].getTypeId() == itemId && items[i].getAmount() == itemAmount) {
+				if (items[i].getTypeId() == itemId && items[i].getAmount() == itemAmount && (!needData || item.equals(items[i]))) {
 					removeIndex = i;
 					break;
 				}
 				if (i+1 == items.length) {
-					sender.sendMessage("There's no item with id "+itemId+" and amount "+itemAmount+" in "+propName);
+					if (needData) sender.sendMessage("There's no item that matches the one in your hand");
+					else sender.sendMessage("There's no item with id "+itemId+" and amount "+itemAmount+" in "+propName);
 	        		return true;
 				}
 			}

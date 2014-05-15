@@ -177,7 +177,6 @@ public final class MazePvP extends JavaPlugin {
         }
     }
    
-   @SuppressWarnings("deprecation")
    public void loadConfiguration() {
 		Configuration config = getConfig();
 		rootConfig = new MazeConfig(false);
@@ -187,74 +186,6 @@ public final class MazePvP extends JavaPlugin {
 		replaceBoss = config.getBoolean("replaceMobsWithBoss");
 		fightStartDelay = config.getInt("fightStartDelay")*20;
 		MazePvP.loadConfigFromYml(rootConfig, getConfig(), getConfig(), true);
-		rootConfig.minPlayers = config.getInt("playerNum.min");
-		rootConfig.maxPlayers = config.getInt("playerNum.max");
-		rootConfig.playerMaxDeaths = config.getInt("playerLives");
-		rootConfig.bosses = new ArrayList<BossConfig>();
-		if (config.isString("boss.name") && config.isInt("boss.hp") && config.isInt("boss.attack")) {
-			BossConfig bossProps = new BossConfig();
-			loadBossProps(bossProps, config, -1);
-			rootConfig.bosses.add(bossProps);
-		} else {
-			int bossNum = config.getInt("bosses.bossCount");
-			for (int i = 0; i < bossNum; i++) {
-				BossConfig bossProps = new BossConfig(); 
-				loadBossProps(bossProps, config, i);
-				rootConfig.bosses.add(bossProps);
-			}
-		}
-		rootConfig.groundReappearProb = config.getDouble("probabilities.groundReappear");
-		rootConfig.chestAppearProb = config.getDouble("probabilities.chestAppear");
-		rootConfig.enderChestAppearProb = config.getDouble("probabilities.enderChestAppear");
-		rootConfig.spawnMobProb = config.getDouble("probabilities.mobAppear");
-		
-		int itemCount = config.getInt("chestItems.itemCount");
-		
-		ItemStack tempChestItems[] = new ItemStack[itemCount];
-		double tempChestWeighs[] = new double[itemCount];
-		int chestItemNum = 0;
-		for (int i = 0; i < itemCount; i++) {
-			int id = config.getInt("chestItems.item"+(i+1)+".id");
-			int amount = config.getInt("chestItems.item"+(i+1)+".amount");
-			double weigh = config.getDouble("chestItems.item"+(i+1)+".weigh");
-			if (id == 0) tempChestItems[i] = null;
-			else {
-				tempChestItems[i] = new ItemStack(id, amount);
-				tempChestWeighs[i] = weigh;
-				chestItemNum++;
-			}
-		}
-		rootConfig.chestWeighs = new double[chestItemNum];
-		rootConfig.chestItems = new ItemStack[chestItemNum];
-		int place = 0;
-		for (int i = 0; i < itemCount; i++) {
-			if (tempChestItems[i] != null) {
-				rootConfig.chestItems[place] = tempChestItems[i];
-				rootConfig.chestWeighs[place] = tempChestWeighs[i];
-				place++;
-			}
-		}
-		
-		itemCount = config.getInt("startItems.itemCount");
-		ItemStack tempStartItems[] = new ItemStack[itemCount];
-		int startItemNum = 0;
-		for (int i = 0; i < itemCount; i++) {
-			int id = config.getInt("startItems.item"+(i+1)+".id");
-			int amount = config.getInt("startItems.item"+(i+1)+".amount");
-			if (id == 0) tempStartItems[i] = null;
-			else {
-				tempStartItems[i] = new ItemStack(id, amount);
-				startItemNum++;
-			}
-		}
-		rootConfig.startItems = new ItemStack[startItemNum];
-		place = 0;
-		for (int i = 0; i < itemCount; i++) {
-			if (tempStartItems[i] != null) {
-				rootConfig.startItems[place] = tempStartItems[i];
-				place++;
-			}
-		}
 		
 		joinSignText = config.getStringList("texts.joinSign");
 		leaveSignText = config.getStringList("texts.leaveSign");
@@ -294,10 +225,12 @@ public final class MazePvP extends JavaPlugin {
 			int id = config.getInt(propStr+"drops.item"+(i+1)+".id");
 			int amount = config.getInt(propStr+"drops.item"+(i+1)+".amount");
 			double weigh = config.getDouble(propStr+"drops.item"+(i+1)+".weigh");
+			String nbt = config.getString(propStr+"drops.item"+(i+1)+".nbt");
 			if (id == 0) tempBossItems[i] = null;
 			else {
 				tempBossItems[i] = new ItemStack(id, amount);
 				tempBossWeighs[i] = weigh;
+				tempBossItems[i] = MazePvP.setItemData(tempBossItems[i], nbt);
 				bossItemNum++;
 			}
 		}
@@ -652,6 +585,7 @@ public final class MazePvP extends JavaPlugin {
                 ymlConf.set(propStr+"drops.item"+(i+1)+".id", bossProps.dropItems[i].getTypeId());
                 ymlConf.set(propStr+"drops.item"+(i+1)+".amount", bossProps.dropItems[i].getAmount());
                 ymlConf.set(propStr+"drops.item"+(i+1)+".weigh", bossProps.dropWeighs[i]);
+                ymlConf.set(propStr+"drops.item"+(i+1)+".nbt", MazePvP.getItemData(bossProps.dropItems[i]));
             }
         	bossNum++;
         }
@@ -690,12 +624,14 @@ public final class MazePvP extends JavaPlugin {
             ymlConf.set("chestItems.item"+(i+1)+".id", config.chestItems[i].getTypeId());
             ymlConf.set("chestItems.item"+(i+1)+".amount", config.chestItems[i].getAmount());
             ymlConf.set("chestItems.item"+(i+1)+".weigh", config.chestWeighs[i]);
+            ymlConf.set("chestItems.item"+(i+1)+".nbt", MazePvP.getItemData(config.chestItems[i]));
         }
         itemNum = config.startItems.length;
         ymlConf.set("startItems.itemCount", itemNum);
         for (int i = 0; i < itemNum; i++) {
             ymlConf.set("startItems.item"+(i+1)+".id", config.startItems[i].getTypeId());
             ymlConf.set("startItems.item"+(i+1)+".amount", config.startItems[i].getAmount());
+            ymlConf.set("startItems.item"+(i+1)+".nbt", MazePvP.getItemData(config.startItems[i]));
         }
         for (int place = 0; place < config.blockTypes.length; place++) {
             List<String> blockList = new LinkedList<String>();
@@ -712,7 +648,6 @@ public final class MazePvP extends JavaPlugin {
         	ymlConf.set("blocks."+MazeConfig.blockTypeNames[place], blockList);
         }
 	}
-	
 
 	@SuppressWarnings("deprecation")
 	public static void loadConfigFromYml(MazeConfig config, Configuration ymlConf, Configuration rootConf, boolean rootProps) {
@@ -750,9 +685,11 @@ public final class MazePvP extends JavaPlugin {
 			int id = MazeConfig.getInt(ymlConf, rootConf, rootProps, "chestItems.item"+(i+1)+".id");
 			int amount = MazeConfig.getInt(ymlConf, rootConf, rootProps, "chestItems.item"+(i+1)+".amount");
 			double weigh = MazeConfig.getDouble(ymlConf, rootConf, rootProps, "chestItems.item"+(i+1)+".weigh");
+			String nbt = MazeConfig.getString(ymlConf, rootConf, rootProps, "chestItems.item"+(i+1)+".nbt");
 			if (id == 0) tempChestItems[i] = null;
 			else {
 				tempChestItems[i] = new ItemStack(id, amount);
+				tempChestItems[i] = MazePvP.setItemData(tempChestItems[i], nbt);
 				tempChestWeighs[i] = weigh;
 				chestItemNum++;
 			}
@@ -774,9 +711,11 @@ public final class MazePvP extends JavaPlugin {
 		for (int i = 0; i < itemCount; i++) {
 			int id = MazeConfig.getInt(ymlConf, rootConf, rootProps, "startItems.item"+(i+1)+".id");
 			int amount = MazeConfig.getInt(ymlConf, rootConf, rootProps, "startItems.item"+(i+1)+".amount");
+			String nbt = MazeConfig.getString(ymlConf, rootConf, rootProps, "startItems.item"+(i+1)+".nbt");
 			if (id == 0) tempStartItems[i] = null;
 			else {
 				tempStartItems[i] = new ItemStack(id, amount);
+				tempStartItems[i] = MazePvP.setItemData(tempStartItems[i], nbt);
 				startItemNum++;
 			}
 		}
@@ -853,6 +792,28 @@ public final class MazePvP extends JavaPlugin {
 		ItemStack o  = (ItemStack)ois.readObject();
 		ois.close();
 		return o;
+	}
+
+	public static String getItemData(ItemStack itemStack) {
+		try {
+			String str =  toBase64(itemStack);
+			return str;
+		} catch (IOException e) {
+			return null;
+		}
+	}
+
+	@SuppressWarnings("deprecation")
+	public static ItemStack setItemData(ItemStack itemStack, String data) {
+		try {
+			if (data.length() == 0) throw new Exception();
+			ItemStack newItem = fromBase64(data);
+			newItem.setTypeId(itemStack.getTypeId());
+			newItem.setAmount(itemStack.getAmount());
+			return newItem;
+		} catch (Exception e) {
+			return itemStack;
+		}
 	}
 
 }
