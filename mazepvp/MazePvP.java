@@ -225,12 +225,12 @@ public final class MazePvP extends JavaPlugin {
 			int id = config.getInt(propStr+"drops.item"+(i+1)+".id");
 			int amount = config.getInt(propStr+"drops.item"+(i+1)+".amount");
 			double weigh = config.getDouble(propStr+"drops.item"+(i+1)+".weigh");
-			String nbt = config.getString(propStr+"drops.item"+(i+1)+".nbt");
+			String data = config.getString(propStr+"drops.item"+(i+1)+".data");
 			if (id == 0) tempBossItems[i] = null;
 			else {
 				tempBossItems[i] = new ItemStack(id, amount);
 				tempBossWeighs[i] = weigh;
-				tempBossItems[i] = MazePvP.setItemData(tempBossItems[i], nbt);
+				tempBossItems[i] = MazePvP.setItemData(tempBossItems[i], data);
 				bossItemNum++;
 			}
 		}
@@ -585,7 +585,7 @@ public final class MazePvP extends JavaPlugin {
                 ymlConf.set(propStr+"drops.item"+(i+1)+".id", bossProps.dropItems[i].getTypeId());
                 ymlConf.set(propStr+"drops.item"+(i+1)+".amount", bossProps.dropItems[i].getAmount());
                 ymlConf.set(propStr+"drops.item"+(i+1)+".weigh", bossProps.dropWeighs[i]);
-                ymlConf.set(propStr+"drops.item"+(i+1)+".nbt", MazePvP.getItemData(bossProps.dropItems[i]));
+                ymlConf.set(propStr+"drops.item"+(i+1)+".data", MazePvP.getItemData(bossProps.dropItems[i]));
             }
         	bossNum++;
         }
@@ -624,14 +624,14 @@ public final class MazePvP extends JavaPlugin {
             ymlConf.set("chestItems.item"+(i+1)+".id", config.chestItems[i].getTypeId());
             ymlConf.set("chestItems.item"+(i+1)+".amount", config.chestItems[i].getAmount());
             ymlConf.set("chestItems.item"+(i+1)+".weigh", config.chestWeighs[i]);
-            ymlConf.set("chestItems.item"+(i+1)+".nbt", MazePvP.getItemData(config.chestItems[i]));
+            ymlConf.set("chestItems.item"+(i+1)+".data", MazePvP.getItemData(config.chestItems[i]));
         }
         itemNum = config.startItems.length;
         ymlConf.set("startItems.itemCount", itemNum);
         for (int i = 0; i < itemNum; i++) {
             ymlConf.set("startItems.item"+(i+1)+".id", config.startItems[i].getTypeId());
             ymlConf.set("startItems.item"+(i+1)+".amount", config.startItems[i].getAmount());
-            ymlConf.set("startItems.item"+(i+1)+".nbt", MazePvP.getItemData(config.startItems[i]));
+            ymlConf.set("startItems.item"+(i+1)+".data", MazePvP.getItemData(config.startItems[i]));
         }
         for (int place = 0; place < config.blockTypes.length; place++) {
             List<String> blockList = new LinkedList<String>();
@@ -685,11 +685,11 @@ public final class MazePvP extends JavaPlugin {
 			int id = MazeConfig.getInt(ymlConf, rootConf, rootProps, "chestItems.item"+(i+1)+".id");
 			int amount = MazeConfig.getInt(ymlConf, rootConf, rootProps, "chestItems.item"+(i+1)+".amount");
 			double weigh = MazeConfig.getDouble(ymlConf, rootConf, rootProps, "chestItems.item"+(i+1)+".weigh");
-			String nbt = MazeConfig.getString(ymlConf, rootConf, rootProps, "chestItems.item"+(i+1)+".nbt");
+			String data = MazeConfig.getString(ymlConf, rootConf, rootProps, "chestItems.item"+(i+1)+".data");
 			if (id == 0) tempChestItems[i] = null;
 			else {
 				tempChestItems[i] = new ItemStack(id, amount);
-				tempChestItems[i] = MazePvP.setItemData(tempChestItems[i], nbt);
+				tempChestItems[i] = MazePvP.setItemData(tempChestItems[i], data);
 				tempChestWeighs[i] = weigh;
 				chestItemNum++;
 			}
@@ -711,11 +711,11 @@ public final class MazePvP extends JavaPlugin {
 		for (int i = 0; i < itemCount; i++) {
 			int id = MazeConfig.getInt(ymlConf, rootConf, rootProps, "startItems.item"+(i+1)+".id");
 			int amount = MazeConfig.getInt(ymlConf, rootConf, rootProps, "startItems.item"+(i+1)+".amount");
-			String nbt = MazeConfig.getString(ymlConf, rootConf, rootProps, "startItems.item"+(i+1)+".nbt");
+			String data = MazeConfig.getString(ymlConf, rootConf, rootProps, "startItems.item"+(i+1)+".data");
 			if (id == 0) tempStartItems[i] = null;
 			else {
 				tempStartItems[i] = new ItemStack(id, amount);
-				tempStartItems[i] = MazePvP.setItemData(tempStartItems[i], nbt);
+				tempStartItems[i] = MazePvP.setItemData(tempStartItems[i], data);
 				startItemNum++;
 			}
 		}
