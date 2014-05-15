@@ -50,6 +50,7 @@ public class CommandGetMazeProp implements CommandExecutor {
 		else if (propName.matches("^boss.*")) {
 			String propEnd = "";
 			if (propName.matches(".*\\.attack$")) propEnd = "attack";
+			else if (propName.matches(".*\\.mazeLevel$")) propEnd = "mazeLevel";
 			else if (propName.matches(".*\\.hp$")) propEnd = "hp";
 			else if (propName.matches(".*\\.name$")) propEnd = "name";
 			else if (propName.matches(".*\\.drops.*")) propEnd = "";
@@ -77,6 +78,7 @@ public class CommandGetMazeProp implements CommandExecutor {
 			}
 			bNum--;
 			if (propEnd.equals("attack")) printStr = Integer.toString(configProps.bosses.get(bNum).strength);
+			else if (propEnd.equals("mazeLevel")) printStr = Integer.toString(configProps.bosses.get(bNum).mazeFloor);
 			else if (propEnd.equals("hp")) printStr = Integer.toString(configProps.bosses.get(bNum).maxHp);
 			else if (propEnd.equals("name")) printStr = configProps.bosses.get(bNum).name;
 		} else if (propName.equals("probabilities.groundReappear")) printStr = Double.toString(configProps.groundReappearProb);

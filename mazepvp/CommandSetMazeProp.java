@@ -67,6 +67,7 @@ public class CommandSetMazeProp implements CommandExecutor {
         		} else if (propName.matches("^boss.*") && !propName.matches("boss[0-9]+\\.drops.*")) {
         			String propEnd = "";
         			if (propName.matches(".*\\.attack$")) propEnd = "attack";
+        			else if (propName.matches(".*\\.mazeLevel$")) propEnd = "mazeLevel";
         			else if (propName.matches(".*\\.hp$")) propEnd = "hp";
         			else if (propName.matches(".*\\.name$")) propEnd = "name";
         			else {
@@ -92,6 +93,12 @@ public class CommandSetMazeProp implements CommandExecutor {
             			if (maze != null) maze.bosses.get(bNum).hp = value;
             			if (maze != null) maze.updateBossHpStr(bNum);
             		} else if (propEnd.equals("attack")) configProps.bosses.get(bNum).strength = value;
+            		else if (propEnd.equals("mazeLevel")) {
+        				configProps.bosses.get(bNum).mazeFloor = value;
+            			if (value != 0 && maze != null && maze.blockToMazeYCoord(
+            				(int)Math.round(maze.bosses.get(bNum).entity.getLocation().getY()-maze.mazeY)) != value-1)
+            				maze.relocateMazeBoss(false, bNum);
+            		}
         		}
         	} catch (NumberFormatException e) {
             	sender.sendMessage("The value for "+propName+" must be an integer");

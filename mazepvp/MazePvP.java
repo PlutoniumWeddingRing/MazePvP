@@ -216,6 +216,7 @@ public final class MazePvP extends JavaPlugin {
 		bossProps.name = config.getString(propStr+"name");
 		bossProps.maxHp = config.getInt(propStr+"hp");
 		bossProps.strength = config.getInt(propStr+"attack");
+		bossProps.mazeFloor = config.getInt(propStr+"mazeLevel");
 		
 		int itemCount = config.getInt(propStr+"drops.itemCount");
 		ItemStack tempBossItems[] = new ItemStack[itemCount];
@@ -510,7 +511,7 @@ public final class MazePvP extends JavaPlugin {
 
 	public static boolean propHasIntValue(String prop) {
 		return (prop.equals("playerLives") || prop.equals("playerNum.min") || prop.equals("playerNum.max") || prop.matches("boss[0-9]*\\.hp")
-			 || prop.matches("boss[0-9]*\\.attack"));
+				 || prop.matches("boss[0-9]*\\.attack") || prop.matches("boss[0-9]*\\.mazeLevel"));
 	}
 
 	public static boolean propHasDoubleValue(String prop) {
@@ -579,6 +580,7 @@ public final class MazePvP extends JavaPlugin {
             ymlConf.set(propStr+"name", bossProps.name);
             ymlConf.set(propStr+"hp", bossProps.maxHp);
             ymlConf.set(propStr+"attack", bossProps.strength);
+            ymlConf.set(propStr+"mazeLevel", bossProps.mazeFloor);
             int itemNum = bossProps.dropItems.length;
             ymlConf.set(propStr+"drops.itemCount", itemNum);
             for (int i = 0; i < itemNum; i++) {

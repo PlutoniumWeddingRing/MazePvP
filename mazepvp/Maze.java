@@ -89,15 +89,21 @@ public class Maze {
 	 	return Math.max(Math.min(pos, height-1), 0);
 	}
 	
-	public Coord3D getMazeBossNewLocation(World worldObj) {
-		return getMazeBossNewLocation(worldObj, 0, false);
+	public Coord3D getMazeBossNewLocation(World worldObj, int bPlace) {
+		if (configProps.bosses.get(bPlace).mazeFloor == 0)
+			return getRandomSafeLocation(worldObj);
+		return getRandomSafeLocation(worldObj, configProps.bosses.get(bPlace).mazeFloor-1);
 	}
 	
-	public Coord3D getMazeBossNewLocation(World worldObj, int currentY) {
-		return getMazeBossNewLocation(worldObj, currentY, true);
+	public Coord3D getRandomSafeLocation(World worldObj) {
+		return getRandomSafeLocation(worldObj, 0, false);
 	}
 	
-	public Coord3D getMazeBossNewLocation(World worldObj, int currentY, boolean keepY) {
+	public Coord3D getRandomSafeLocation(World worldObj, int currentY) {
+		return getRandomSafeLocation(worldObj, currentY, true);
+	}
+	
+	public Coord3D getRandomSafeLocation(World worldObj, int currentY, boolean keepY) {
 	 	double bossX, bossZ, bossY;
 	 	int count = 0;
 	 	while (true) {
@@ -112,9 +118,10 @@ public class Maze {
 	 	return new Coord3D(mazeX+bossX+MAZE_PASSAGE_WIDTH*0.5, mazeY+bossY+1, mazeZ+bossZ+MAZE_PASSAGE_WIDTH*0.5);
 	 }
 	 
-	public void relocateMazeBoss(boolean coolDown, Boss boss) {
+	public void relocateMazeBoss(boolean coolDown, int place) {
+		Boss boss = bosses.get(place);
 	 	World worldObj = boss.entity.getWorld();
-		relocateMazeBoss(coolDown, boss, getMazeBossNewLocation(worldObj));
+		relocateMazeBoss(coolDown, boss, getMazeBossNewLocation(worldObj, place));
 	}
 	
 	public void relocateMazeBoss(boolean coolDown, Boss boss, Coord3D bossLoc) {
@@ -149,7 +156,7 @@ public class Maze {
 	 	if (boss.entity != null) return;
 	 	Coord3D bossLoc;
 	 	if (loc == null) {
-	 		bossLoc = getMazeBossNewLocation(mazeWorld);
+	 		bossLoc = getMazeBossNewLocation(mazeWorld, place);
 		 	if (MazePvP.theMazePvP.replaceBoss) {
 		 		Monster switchEn = null;
 		 		int switchNum = 1;
@@ -560,7 +567,7 @@ public class Maze {
 					player.teleport(new Location(mazeWorld, waitX+0.5, telepY, waitZ+0.5));
 				}
 			} else {
-				Coord3D loc = getMazeBossNewLocation(mazeWorld);
+				Coord3D loc = getRandomSafeLocation(mazeWorld);
 				if (!player.isDead()) {
 					player.teleport(new Location(mazeWorld, loc.x, loc.y, loc.z));
 	        		MazePvP.cleanUpPlayer(player, canBeEntered);
@@ -723,7 +730,7 @@ public class Maze {
 				joinedPlayerProps.put(player.getName(), props);
 				savePlayerProps();
 			}
-			Coord3D loc = getMazeBossNewLocation(mazeWorld);
+			Coord3D loc = getRandomSafeLocation(mazeWorld);
 			if (!player.isDead()) {
 				player.teleport(new Location(mazeWorld, loc.x, loc.y, loc.z));
         		MazePvP.cleanUpPlayer(player, canBeEntered);

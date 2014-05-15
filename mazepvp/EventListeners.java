@@ -110,7 +110,7 @@ public final class EventListeners implements Listener {
 		      		Coord3D loc;
 		      		if (block.getY() < maze.mazeY+(Maze.MAZE_PASSAGE_HEIGHT+2)*maze.height && maze.blockToMazeYCoord(event.getEntity().getShooter().getLocation().getBlockY()-maze.mazeY) == newY-1) {
 		      			loc = new Coord3D(block.getLocation().getX(), block.getLocation().getBlockY()+1, block.getLocation().getZ());
-		      		} else loc = maze.getMazeBossNewLocation(world, newY);
+		      		} else loc = maze.getRandomSafeLocation(world, newY);
 		      		LivingEntity thrower = (LivingEntity)event.getEntity().getShooter();
 	        		for (int j = 0; j <= 8; j++) {
 	        			world.playEffect(thrower.getLocation(), Effect.SMOKE, j);
@@ -452,7 +452,7 @@ public final class EventListeners implements Listener {
 		    			event.setDamage(0);
 		    		}
 		    		if (event.getCause() == DamageCause.SUFFOCATION) {
-		    			maze.relocateMazeBoss(false, boss);
+		    			maze.relocateMazeBoss(false, bPlace);
 		    		}
 		    		break;
 		    	}
@@ -603,7 +603,7 @@ public final class EventListeners implements Listener {
 				if (props != null) {
 					if (event.getPlayer() != maze.lastPlayer && props.deathCount < maze.configProps.playerMaxDeaths) {
 						boolean spectating = (maze.playerInsideMaze.get(event.getPlayer().getName()) == null);
-						Coord3D loc = maze.getMazeBossNewLocation(maze.mazeWorld);
+						Coord3D loc = maze.getRandomSafeLocation(maze.mazeWorld);
 						MazePvP.cleanUpPlayer(player, props.deathCount != 0);
 						if (!spectating) maze.giveStartItemsToPlayer(player);
 						event.setRespawnLocation(new Location(maze.mazeWorld, loc.x, loc.y, loc.z));

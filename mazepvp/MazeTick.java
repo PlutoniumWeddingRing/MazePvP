@@ -84,7 +84,13 @@ public class MazeTick extends BukkitRunnable {
 			while (bit.hasNext()) {
 				Boss boss = bit.next();
 	      		if (boss.entity!= null) {
-	      			if (!maze.isInsideMaze(boss.entity.getLocation())) maze.relocateMazeBoss(false, boss);
+	      			if (!maze.isInsideMaze(boss.entity.getLocation())) maze.relocateMazeBoss(false, place);
+	      			else {
+	      				int mazeFloor = maze.configProps.bosses.get(place).mazeFloor;
+	      				if (mazeFloor != 0 && boss.entity.getLocation().getY()+2 < maze.mazeToBlockYCoord(mazeFloor-1)+maze.mazeY) 
+	      					maze.relocateMazeBoss(false, place);
+	      				
+	      			}
 	      			int maxHp = maze.configProps.bosses.get(place).maxHp;
 	      			if (maxHp > 0 && boss.hp > 0) {
 		      			if (!boss.hpStr.equals(boss.entity.getCustomName())) {
@@ -104,10 +110,12 @@ public class MazeTick extends BukkitRunnable {
 						if (maze.bosses.isEmpty()) en.damage(en.getHealth()+10);
 						else {
 							bit = maze.bosses.iterator();
+							int bPlace = 0;
 							while (bit.hasNext()) {
 								Boss boss = bit.next();
-								if (boss.entity== en) maze.relocateMazeBoss(false, boss);
+								if (boss.entity== en) maze.relocateMazeBoss(false, bPlace);
 								else if (!bit.hasNext()) en.damage(en.getHealth()+10);
+								bPlace++;
 							}
 						}
 					}
@@ -139,7 +147,7 @@ public class MazeTick extends BukkitRunnable {
 							if (!maze.playerInsideMaze.containsKey(player.getName()) || !maze.playerInsideMaze.get(player.getName())) {
 								maze.playerQuit(player);
 							} else {
-								Coord3D loc = maze.getMazeBossNewLocation(maze.mazeWorld);
+								Coord3D loc = maze.getRandomSafeLocation(maze.mazeWorld);
 								player.teleport(new Location(maze.mazeWorld, loc.x, loc.y, loc.z));
 								player.setFallDistance(0);
 							}
@@ -602,7 +610,7 @@ public class MazeTick extends BukkitRunnable {
 	    				Boss boss = bit.next();
 		        		if (boss.entity == null) maze.makeNewMazeBoss(place);
 		        		else if (Math.random() < 0.05) {
-		        			maze.relocateMazeBoss(false, boss);
+		        			maze.relocateMazeBoss(false, place);
 		        		}
 		        		place++;
 	    			}
