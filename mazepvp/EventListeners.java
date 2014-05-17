@@ -108,7 +108,7 @@ public final class EventListeners implements Listener {
 				if (event.getEntity() instanceof EnderPearl && event.getEntity().getShooter() != null && maze.isInsideMaze(((LivingEntity)event.getEntity().getShooter()).getLocation())) {
 		      		int newY = maze.blockToMazeYCoord(block.getY()-maze.mazeY);
 		      		Coord3D loc;
-		      		if (block.getY() < maze.mazeY+(Maze.MAZE_PASSAGE_HEIGHT+2)*maze.height && maze.blockToMazeYCoord(event.getEntity().getShooter().getLocation().getBlockY()-maze.mazeY) == newY-1) {
+		      		if (block.getY() < maze.mazeY+(Maze.MAZE_PASSAGE_HEIGHT+2)*maze.height && maze.blockToMazeYCoord(((LivingEntity)event.getEntity().getShooter()).getLocation().getBlockY()-maze.mazeY) == newY-1) {
 		      			loc = new Coord3D(block.getLocation().getX(), block.getLocation().getBlockY()+1, block.getLocation().getZ());
 		      		} else loc = maze.getRandomSafeLocation(world, newY);
 		      		LivingEntity thrower = (LivingEntity)event.getEntity().getShooter();
@@ -507,6 +507,14 @@ public final class EventListeners implements Listener {
 					maze.removeSign(sign, maze.leaveSigns);
 					break;
 				}
+			}
+		}
+		if (MazePvP.theMazePvP.protectMazes && event.getPlayer() != null && Maze.playerInsideAMaze.containsKey(event.getPlayer().getName()) && Maze.playerInsideAMaze.get(event.getPlayer().getName())) {
+			Iterator<Maze> mit = MazePvP.theMazePvP.mazes.iterator();
+			while (mit.hasNext()) {
+				Maze maze = mit.next();
+				if (maze.joinedPlayerProps.containsKey(event.getPlayer().getName()))
+					event.setCancelled(true);
 			}
 		}
 	}

@@ -45,6 +45,7 @@ public final class MazePvP extends JavaPlugin {
 	public boolean canSpectate = true;
 	public boolean specSeeOthers = true;
 	public boolean replaceBoss = true;
+	public boolean protectMazes = true;
 	public int fightStartDelay = 5*20;
 	public List<String> joinSignText;
 	public List<String> leaveSignText;
@@ -184,6 +185,7 @@ public final class MazePvP extends JavaPlugin {
 		canSpectate = config.getBoolean("canPlayersSpectate");
 		specSeeOthers = config.getBoolean("canSpectatorsSeeEachOther");
 		replaceBoss = config.getBoolean("replaceMobsWithBoss");
+		protectMazes = config.getBoolean("protectMazes");
 		fightStartDelay = config.getInt("fightStartDelay")*20;
 		MazePvP.loadConfigFromYml(rootConfig, getConfig(), getConfig(), true);
 		
@@ -566,6 +568,7 @@ public final class MazePvP extends JavaPlugin {
 			ymlConf.set("canPlayersSpectate", MazePvP.theMazePvP.canSpectate);
 			ymlConf.set("canSpectatorsSeeEachOther", MazePvP.theMazePvP.specSeeOthers);
 			ymlConf.set("replaceMobsWithBoss", MazePvP.theMazePvP.replaceBoss);
+			ymlConf.set("protectMazes", MazePvP.theMazePvP.protectMazes);
 			ymlConf.set("fightStartDelay", MazePvP.theMazePvP.fightStartDelay/20);
 		}
 		ymlConf.set("playerLives", config.playerMaxDeaths);
